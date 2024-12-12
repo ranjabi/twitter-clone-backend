@@ -1,6 +1,11 @@
 # twitter-clone-backend
 
-## Development
+## How to run
+```
+air
+```
+
+## Development Process
 ### Stage 1
 Features:
 - [ ] Sign up
