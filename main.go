@@ -6,15 +6,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func healthCheckHandler(conn *pgx.Conn, ctx context.Context) http.HandlerFunc {
+func healthCheckHandler(db *pgxpool.Pool, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Server OK")
 
 		var test string
-		err := conn.QueryRow(ctx, "select 'OK'").Scan(&test)
+		err := db.QueryRow(ctx, "select 'OK'").Scan(&test)
 		if err != nil {
 			fmt.Fprintf(w, "Database NOT OK: %v\n", err)
 		} else {
@@ -27,13 +27,13 @@ func main() {
 	ctx := context.Background()
 
 	databaseUrl := "postgres://postgres:123456@localhost:5432/postgres"
-	conn, err := pgx.Connect(ctx, databaseUrl)
+	db, err := pgxpool.New(ctx, databaseUrl)
 	if err != nil {
 		log.Fatal("Error opening database connection: ", err)
 	}
-	defer conn.Close(ctx)
+	defer db.Close()
 
-	http.HandleFunc("/health-check", healthCheckHandler(conn, ctx))
+	http.HandleFunc("/health-check", healthCheckHandler(db, ctx))
 
 	fmt.Println("Server started at http://localhost:8080")
 	err = http.ListenAndServe(":8080", nil)
