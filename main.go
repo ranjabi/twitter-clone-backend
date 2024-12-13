@@ -162,12 +162,18 @@ func main() {
 	}
 	defer db.Close()
 
-	http.Handle("/health-check", appHandler(healthCheckHandler(db, ctx)))
-	http.Handle("/register", appHandler(registerHandler(db, ctx)))
-	http.Handle("/login", appHandler(loginHandler(db, ctx)))
+	mux := new(AppMux)
+
+	mux.Handle("/health-check", appHandler(healthCheckHandler(db, ctx)))
+	mux.Handle("/register", appHandler(registerHandler(db, ctx)))
+	mux.Handle("/login", appHandler(loginHandler(db, ctx)))
+
+	server := new(http.Server)
+	server.Addr = ":8080"
+	server.Handler = mux
 
 	fmt.Println("Server started at http://localhost:8080")
-	err = http.ListenAndServe(":8080", nil)
+	err = server.ListenAndServe()
     if err != nil {
         log.Fatal("Error starting server: ", err)
     }
