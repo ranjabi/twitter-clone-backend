@@ -47,15 +47,16 @@ func healthCheckHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 
 func registerHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) *appError {
-		if r.Method == "POST" {
+		switch r.Method {
+		case "POST":
 			decoder := json.NewDecoder(r.Body)
 			payload := struct {
-				Username	string `json:"username"`
-				Email		string `json:"email"`
-				Password	string `json:"password"`
+				Username	string	`json:"username"`
+				Email		string	`json:"email"`
+				Password	string	`json:"password"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &appError{err, "Invalid JSON", 500}
+				return &appError{err, "Fail to decode JSON request payload", 500}
 			}
 
 			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 10)
@@ -75,13 +76,13 @@ func registerHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 			}
 
 			type userResponse struct {
-				Username	string `json:"username"`
-				Email		string `json:"email"`
+				Username	string	`json:"username"`
+				Email		string	`json:"email"`
 			}
 
 			newUser := userResponse{}
 
-			err = db.QueryRow(ctx, query, args).Scan(&newUser.Username, &newUser.Email) // why can't use := ?
+			err = db.QueryRow(ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 			if err != nil {
 				return &appError{err, "Fail to insert user credential", 500}
 			}
@@ -93,8 +94,50 @@ func registerHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write([]byte(res))
-		} else {
+		default:
 			return &appError{nil, "Only accept POST request", 400} // will error in serveHTTP if caught
+		}
+
+		return nil
+	}
+}
+
+func loginHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
+	return func(w http.ResponseWriter, r *http.Request) *appError {
+		switch r.Method {
+		case "POST":
+			decoder := json.NewDecoder(r.Body)
+			payload := struct {
+				Email	string `json:"email"`
+				Password	string `json:"password"`
+			}{}
+			if err := decoder.Decode(&payload); err != nil {
+				return &appError{err, "Fail to decode JSON request payload", 500}
+			}
+			fmt.Printf("Decoded payload: %+v\n", payload)
+
+			// TODO: check if user with email exist
+
+			query := `SELECT password FROM users WHERE email=@email`
+			args := pgx.NamedArgs{
+				"email": payload.Email,
+			}
+
+			var hashedPassword string
+			err := db.QueryRow(ctx, query, args).Scan(&hashedPassword)
+			if err != nil {
+				return &appError{err, "Fail to get password", 500}
+			}
+
+			err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(payload.Password))
+			if err != nil {
+				return &appError{err, "Fail to compare password", 500}
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte("Login success"))
+		default:
+			return &appError{nil, "Only accept POST request", 400}
 		}
 
 		return nil
@@ -113,6 +156,7 @@ func main() {
 
 	http.Handle("/health-check", appHandler(healthCheckHandler(db, ctx)))
 	http.Handle("/register", appHandler(registerHandler(db, ctx)))
+	http.Handle("/login", appHandler(loginHandler(db, ctx)))
 
 	fmt.Println("Server started at http://localhost:8080")
 	err = http.ListenAndServe(":8080", nil)
