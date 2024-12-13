@@ -9,10 +9,16 @@ import (
 	"net/http"
 )
 
-const RED = "\033[31m"
-const GREEN = "\033[32m"
-const YELLOW = "\033[33m"
-const BLUE = "\033[34m"
+const (
+    ErrMsgFailedToParseRequestBody = "Failed to parse request body"
+	ErrMsgFailedToSerializeResponseBody = "Failed to serialize response body"
+	ErrMsgMethodNotAllowed = "Method not allowed"
+
+	RED = "\033[31m"
+	GREEN = "\033[32m"
+	YELLOW = "\033[33m"
+	BLUE = "\033[34m"
+)
 
 type SuccessResponse[T any] struct {
 	Data	T		`json:"data"`
