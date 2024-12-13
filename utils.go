@@ -1,10 +1,18 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 )
+
+const RED = "\033[31m"
+const GREEN = "\033[32m"
+const YELLOW = "\033[33m"
+const BLUE = "\033[34m"
 
 type SuccessResponse[T any] struct {
 	Data	T		`json:"data"`
@@ -29,10 +37,24 @@ func colorLog(message string, colorCode string) string {
 }
 
 func (mux *AppMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	methodColor := "\033[32m" // green
-	urlColor := "\033[32m" // green
-	
-	log.Println(colorLog(r.Method, methodColor), colorLog(r.URL.String(), urlColor))
+	log.Println(colorLog(r.Method, GREEN), colorLog(r.URL.String(), GREEN))
+
+	requestBodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("Error reading request body stream:", err)
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(requestBodyBytes))
+	var requestBody map[string]interface{}
+	_ = json.Unmarshal(requestBodyBytes, &requestBody)
+
+	prettyRequestBody, err := json.MarshalIndent(requestBody, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling:", err)
+		return
+	}
+	fmt.Println(colorLog("Request body:", BLUE))
+	fmt.Printf("%s\n", prettyRequestBody)
 
 	var current http.Handler = &mux.ServeMux // routing logic of http.ServeMux (maps URL paths to handlers)
 

@@ -24,7 +24,7 @@ type appHandler func(http.ResponseWriter, *http.Request) *appError
 // The ServeHTTP method calls the appHandler function and displays the returned error
 func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if e := fn(w, r); e != nil {
-		println(e.Error.Error())
+		fmt.Println(colorLog("error:", RED), e.Error.Error())
 		http.Error(w, e.Message, e.Code)
 	}
 }
@@ -49,7 +49,7 @@ func registerHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) *appError {
 		switch r.Method {
 		case "POST":
-			decoder := json.NewDecoder(r.Body)
+			decoder := json.NewDecoder(r.Body) // request body is a stream
 			payload := struct {
 				Username	string	`json:"username"`
 				Email		string	`json:"email"`
@@ -87,7 +87,7 @@ func registerHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 				return &appError{err, "Fail to insert user credential", 500}
 			}
 
-			res, err := json.Marshal(newUser)
+			res, err := json.Marshal(newUser) // write to a string
 			if err != nil {
 				return &appError{err, "Fail to encode JSON", 500}
 			}
@@ -114,7 +114,6 @@ func loginHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 			if err := decoder.Decode(&payload); err != nil {
 				return &appError{err, "Fail to decode JSON request payload", 500}
 			}
-			fmt.Printf("Decoded payload: %+v\n", payload)
 
 			// TODO: check if user with email exist
 
