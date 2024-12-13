@@ -89,7 +89,7 @@ func registerHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 
 			res, err := json.Marshal(newUser)
 			if err != nil {
-				return &appError{err, "Fail to encode new user JSON", 500}
+				return &appError{err, "Fail to encode JSON", 500}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -134,8 +134,16 @@ func loginHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 				return &appError{err, "Fail to compare password", 500}
 			}
 
+			response := SuccessResponseMessage{
+				Message: "Login success",
+			}
+			res, err := json.Marshal(response)
+			if err != nil {
+				return &appError{err, "Fail to encode JSON", 500}
+			}
+
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("Login success"))
+			w.Write([]byte(res))
 		default:
 			return &appError{nil, "Only accept POST request", 400}
 		}
