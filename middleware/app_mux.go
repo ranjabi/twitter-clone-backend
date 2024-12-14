@@ -34,9 +34,9 @@ type AppMux struct {
 	middlewares		[]func(next http.Handler)	http.Handler
 }
 
-// func (mux *AppMux) registerMiddleware(next func(next http.Handler) http.Handler) { // next func(next http.Handler) http.Handler ???
-// 	mux.middlewares = append(mux.middlewares, next)
-// }
+func (mux *AppMux) RegisterMiddleware(next func(next http.Handler) http.Handler) { // next func(next http.Handler) http.Handler ???
+	mux.middlewares = append(mux.middlewares, next)
+}
 
 /*
 Not in order with struct

@@ -22,6 +22,7 @@ func main() {
 	defer db.Close()
 
 	mux := new(middleware.AppMux)
+	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
 	mux.Handle("/health-check", handler.HealthCheck(db, ctx))
 	mux.Handle("/register", handler.Register(db, ctx))

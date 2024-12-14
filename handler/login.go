@@ -16,15 +16,6 @@ import (
 	"twitter-clone-backend/utils"
 )
 
-var JWT_SIGNING_METHOD = jwt.SigningMethodHS256
-var JWT_SIGNATURE_KEY = []byte("secret")
-
-type appClaims struct {
-	jwt.RegisteredClaims
-	userId		string
-	username	string
-}
-
 func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 	return func(w http.ResponseWriter, r *http.Request) *models.AppError {
 		switch r.Method {
@@ -73,12 +64,12 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Error: err, Message: "Email/password is wrong", Code: 500}
 			}
 
-			claims := appClaims{
-				userId: userId,
-				username: username,
+			claims := jwt.MapClaims{
+				"userId": userId,
+				"username": username,
 			}
-			token := jwt.NewWithClaims(JWT_SIGNING_METHOD, claims)
-			signedToken, err := token.SignedString(JWT_SIGNATURE_KEY)
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+			signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
 			if err != nil {
 				return &models.AppError{Error: err, Message: "Failed to sign token", Code: 500}
 			}

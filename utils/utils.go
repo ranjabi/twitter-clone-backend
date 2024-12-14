@@ -13,6 +13,8 @@ const (
 	GREEN = "\033[32m"
 	YELLOW = "\033[33m"
 	BLUE = "\033[34m"
+
+	JWT_SIGNATURE_KEY = "secret"
 )
 
 func ColorLog(message string, colorCode string) string {
