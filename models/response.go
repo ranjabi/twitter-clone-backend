@@ -8,3 +8,7 @@ type SuccessResponse[T any] struct {
 type SuccessResponseMessage struct {
 	Message	string	`json:"message"`
 }
+
+type ErrorResponseMessage struct {
+	Message	string	`json:"message"`
+}
