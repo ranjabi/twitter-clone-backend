@@ -38,19 +38,34 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
 			}
 
-			// TODO: check if user with email exist
-
-			query := `SELECT id, username, password FROM users WHERE email=@email`
+			var isUserExist bool
+			query := `SELECT EXISTS (SELECT 1 FROM users WHERE email=@email)`
 			args := pgx.NamedArgs{
 				"email": payload.Email,
 			}
+			err := db.QueryRow(ctx, query, args).Scan(&isUserExist)
+			if err != nil {
+				return &models.AppError{Error: err, Message: "Failed to check user", Code: 500}
+			}
+
+			if !isUserExist {
+				res, err := json.Marshal(models.SuccessResponseMessage{Message: "User not found. Please create an account"})
+				if err != nil {
+					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(res))
+				return nil
+			}
+
+			query = `SELECT id, username, password FROM users WHERE email=@email`
 
 			var userId string
 			var username string
 			var hashedPassword string
-			err := db.QueryRow(ctx, query, args).Scan(&userId, &username, &hashedPassword)
+			err = db.QueryRow(ctx, query, args).Scan(&userId, &username, &hashedPassword)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to get password", Code: 500}
+				return &models.AppError{Error: err, Message: "Failed to get user credential", Code: 500}
 			}
 
 			err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(payload.Password))
