@@ -151,6 +151,23 @@ func loginHandler(db *pgxpool.Pool, ctx context.Context) appHandler {
 	}
 }
 
+func (mux *AppMux) Handle(pattern string, handler interface{}) {
+	var wrappedHandler http.Handler
+
+	switch h := handler.(type) {
+	case func(http.ResponseWriter, *http.Request) *appError:
+		wrappedHandler = appHandler(h)
+	case http.HandlerFunc:
+		wrappedHandler = h
+	case http.Handler:
+		wrappedHandler = h
+	default:
+		panic("Unsupported handler type") // todo: vs fatal?
+	}
+
+	mux.ServeMux.Handle(pattern, wrappedHandler)
+}
+
 func main() {
 	ctx := context.Background()
 
@@ -163,9 +180,9 @@ func main() {
 
 	mux := new(AppMux)
 
-	mux.Handle("/health-check", appHandler(healthCheckHandler(db, ctx)))
-	mux.Handle("/register", appHandler(registerHandler(db, ctx)))
-	mux.Handle("/login", appHandler(loginHandler(db, ctx)))
+	mux.Handle("/health-check", healthCheckHandler(db, ctx))
+	mux.Handle("/register", registerHandler(db, ctx))
+	mux.Handle("/login", loginHandler(db, ctx))
 
 	server := new(http.Server)
 	server.Addr = ":8080"
