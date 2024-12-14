@@ -21,7 +21,7 @@ const (
 
 type AppHandler func(http.ResponseWriter, *http.Request) *models.AppError
 
-// The ServeHTTP method calls the appHandler function and displays the returned error
+// The ServeHTTP method called by the appHandler function and displays the returned error
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if e := fn(w, r); e != nil {
 		fmt.Println(utils.ColorLog("error:", RED), e.Error.Error()) // goes to logging

@@ -49,12 +49,11 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				Username	string	`json:"username"`
 				Email		string	`json:"email"`
 			}
-
 			newUser := newUserResponse{}
 
 			err = db.QueryRow(ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to create new user", Code: 500}
+				return &models.AppError{Error: err, Message: "Failed to create account", Code: 500}
 			}
 
 			res, err := json.Marshal(models.SuccessResponse[newUserResponse]{Message: "Account created successfully", Data: newUser}) // write to a string

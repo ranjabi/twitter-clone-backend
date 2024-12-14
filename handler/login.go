@@ -80,13 +80,13 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				Token		string	`json:"token"`
 			}
 
-			resData := loginResponse{
+			userInfo := loginResponse{
 				UserId: userId,
 				Username: username,
 				Token: signedToken,
 			}
 
-			res, err := json.Marshal(models.SuccessResponse[loginResponse]{Message: "Login success", Data: resData})
+			res, err := json.Marshal(models.SuccessResponse[loginResponse]{Message: "Login success", Data: userInfo})
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
 			}

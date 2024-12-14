@@ -27,6 +27,7 @@ func main() {
 	mux.Handle("/health-check", handler.HealthCheck(db, ctx))
 	mux.Handle("/register", handler.Register(db, ctx))
 	mux.Handle("/login", handler.Login(db, ctx))
+	mux.Handle("/tweet", handler.Tweet(db, ctx))
 
 	server := new(http.Server)
 	server.Addr = ":8080"
