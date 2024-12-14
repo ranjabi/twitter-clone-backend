@@ -134,11 +134,13 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			if !isTweetExist {
-				res, err := json.Marshal(models.SuccessResponseMessage{Message: "Tweet not found"})
+				res, err := json.Marshal(models.ErrorResponseMessage{Message: "Tweet not found"})
 				if err != nil {
-					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 404}
+					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusNotFound}
 				}
+
 				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
 				w.Write([]byte(res))
 				return nil
 			}
