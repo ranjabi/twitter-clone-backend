@@ -42,7 +42,7 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			if !isUserExist {
 				res, err := json.Marshal(models.SuccessResponseMessage{Message: "User not found. Please create an account"})
 				if err != nil {
-					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
+					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 404}
 				}
 				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte(res))
