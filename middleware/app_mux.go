@@ -38,6 +38,20 @@ type AppMux struct {
 // 	mux.middlewares = append(mux.middlewares, next)
 // }
 
+/*
+Not in order with struct
+struct {
+	Username	string	`json:"username"`
+	Email		string	`json:"email"`
+	Password	string	`json:"password"`
+}
+Request body:
+{
+  "email": "Heaven_Hegmann50@hotmail.com",
+  "password": "example",
+  "username": "Garrick"
+}
+*/
 func (mux *AppMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(utils.ColorLog(r.Method, GREEN), utils.ColorLog(r.URL.String(), GREEN))
 

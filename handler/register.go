@@ -38,26 +38,26 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			// assume everything is valid, continue to below
 			// insert to db
-			query := `INSERT INTO users (username, email, password) VALUES (@username, @email, @password) RETURNING username, email`
+			query := `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
 			args := pgx.NamedArgs{
 				"username": payload.Username,
 				"email": payload.Email,
 				"password": string(hashedPassword),
 			}
 
-			type userResponse struct {
+			type newUserResponse struct {
 				Username	string	`json:"username"`
 				Email		string	`json:"email"`
 			}
 
-			newUser := userResponse{}
+			newUser := newUserResponse{}
 
 			err = db.QueryRow(ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 			if err != nil {
 				return &models.AppError{Error: err, Message: "Failed to create new user", Code: 500}
 			}
 
-			res, err := json.Marshal(newUser) // write to a string
+			res, err := json.Marshal(models.SuccessResponse[newUserResponse]{Message: "Account created successfully", Data: newUser}) // write to a string
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
 			}
