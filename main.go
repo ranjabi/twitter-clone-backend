@@ -5,32 +5,33 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"twitter-clone-backend/middleware"
-	"twitter-clone-backend/handler"
+	
+	_ "github.com/joho/godotenv/autoload"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"twitter-clone-backend/db"
+	"twitter-clone-backend/handler"
+	"twitter-clone-backend/middleware"
+	"twitter-clone-backend/utils"
 )
 
 func main() {
 	ctx := context.Background()
-	// postgres://[user]:[password]@[host]:[port]/[dbname]?sslmode=[sslmode]
-	databaseUrl := "postgres://postgres:123456@localhost:5432/postgres"
 
-	db, err := pgxpool.New(ctx, databaseUrl)
+	conn, err := db.GetDbPool(utils.GetDbConnectionUrlFromEnv())
 	if err != nil {
-		log.Fatal("Error opening database connection: ", err)
+		log.Fatal("Error getting database pool:", err)
 	}
-	defer db.Close()
+	defer db.ClosePool()
 
 	mux := new(middleware.AppMux)
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
-	mux.Handle("/health-check", handler.HealthCheck(db, ctx))
-	mux.Handle("/register", handler.Register(db, ctx))
-	mux.Handle("/login", handler.Login(db, ctx))
-	mux.Handle("/tweet", handler.Tweet(db, ctx))
-	mux.Handle("/users/follow", handler.Follow(db, ctx))
-	mux.Handle("/users/unfollow", handler.Unfollow(db, ctx))
+	mux.Handle("/health-check", handler.HealthCheck(conn, ctx))
+	mux.Handle("/register", handler.Register(conn, ctx))
+	mux.Handle("/login", handler.Login(conn, ctx))
+	mux.Handle("/tweet", handler.Tweet(conn, ctx))
+	mux.Handle("/users/follow", handler.Follow(conn, ctx))
+	mux.Handle("/users/unfollow", handler.Unfollow(conn, ctx))
 
 	server := new(http.Server)
 	server.Addr = ":8080"

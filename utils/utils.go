@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 )
 
 const (
@@ -19,4 +20,21 @@ const (
 
 func ColorLog(message string, colorCode string) string {
 	return fmt.Sprintf("%s%s\033[0m", colorCode, message)
+}
+
+func GetDbConnectionUrl(username string, password string, host string, port string, dbName string) string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", username, password, host, port, dbName)
+}
+
+func GetDbConnectionUrlFromEnv() string {
+	// postgres://[user]:[password]@[host]:[port]/[dbname]
+	connString := GetDbConnectionUrl(
+		os.Getenv("POSTGRES_USER"), 
+		os.Getenv("POSTGRES_PASSWORD"), 
+		os.Getenv("POSTGRES_HOST"), 
+		os.Getenv("POSTGRES_PORT"), 
+		os.Getenv("POSTGRES_DB"),
+	)
+
+	return connString
 }
