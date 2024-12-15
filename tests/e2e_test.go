@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -23,27 +23,18 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-type testSuite struct {
-	suite.Suite
-}
-
-func TestLoadTestSuite(t *testing.T) {
-	suite.Run(t, &testSuite{})
-}
-
-func(s *testSuite) TestHealthCheck() {
-	fmt.Println("BASE URL:", os.Getenv("BASE_URL"))
+func TestHealthCheck(t *testing.T) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/health-check", os.Getenv("BASE_URL")), nil)
-	s.NoError(err)
+	assert.NoError(t, err)
 
 	client := http.Client{}
 	res, err := client.Do(req)
-	s.NoError(err)
-	s.Equal(http.StatusOK, res.StatusCode)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 
 	resBody, err := io.ReadAll(res.Body)
-	s.NoError(err)
+	assert.NoError(t, err)
 
-	s.Equal(`{"data":{"Database":"OK","Server":"OK"}}`, string(resBody))
+	assert.Equal(t, `{"data":{"Database":"OK","Server":"OK"}}`, string(resBody))
 	res.Body.Close()
 }
