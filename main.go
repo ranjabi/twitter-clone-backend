@@ -13,8 +13,9 @@ import (
 
 func main() {
 	ctx := context.Background()
-
+	// postgres://[user]:[password]@[host]:[port]/[dbname]?sslmode=[sslmode]
 	databaseUrl := "postgres://postgres:123456@localhost:5432/postgres"
+
 	db, err := pgxpool.New(ctx, databaseUrl)
 	if err != nil {
 		log.Fatal("Error opening database connection: ", err)
