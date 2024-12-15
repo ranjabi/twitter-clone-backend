@@ -36,18 +36,18 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 			err := db.QueryRow(ctx, query, args).Scan(&isUserExist)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to check user", Code: 500}
+				return &models.AppError{Error: err, Message: "Failed to check user account", Code: 500}
 			}
 
 			if !isUserExist {
 				res, err := json.Marshal(models.ErrorResponseMessage{Message: "User not found. Please create an account"})
 				if err != nil {
-					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusNotFound}
+					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 				}
 
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				w.Write([]byte(res))
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write(res)
 				return nil
 			}
 
