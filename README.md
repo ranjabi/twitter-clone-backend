@@ -8,7 +8,11 @@ air
 ## Development Process
 ### Stage 1
 Features:
-- [ ] Sign up
-- [ ] Login
-- [ ] Tweet (create, edit, delete, like)
-- [ ] Follow/unfollow
+- [x] Sign up
+- [x] Login
+- [x] Tweet (create, edit, delete)
+- [x] Follow/unfollow
+
+## ERD
+Migration version: 20241214113457
+![](images/2024-12-15-10-07-22.png)
