@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 ALTER TABLE follows
-ADD CONSTRAINT unique_follow UNIQUE (following_id, followers_id);
+ADD CONSTRAINT unique_follow UNIQUE (followers_id, following_id);
 -- +goose StatementEnd
 
 -- +goose Down
