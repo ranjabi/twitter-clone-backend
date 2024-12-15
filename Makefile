@@ -17,11 +17,18 @@ db.seed.up:
 db.seed.reset:
 	goose -dir ./db/seed -no-versioning reset
 
-db.migrate.up:
+db.seed.status:
+	goose -dir ./db/seed status
+
+db.up:
 	goose -dir ./db/migrations up
 
-db.migrate.reset:
+db.reset:
 	goose -dir ./db/migrations reset
+
+db.clean:
+	make db.mig.reset
+	make db.mig.up
 
 db.status:
 	goose -dir ./db/migrations status
