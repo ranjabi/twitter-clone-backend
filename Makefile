@@ -8,7 +8,7 @@ ENV_LOCAL_TEST=\
 #   POSTGRES_PASSWORD=
 #   JWT_SECRET=
 
-test-e2e:
+test:
 	$(ENV_LOCAL_TEST) go test ${E2E_TEST_PATH} -v
 
 db.seed.up:

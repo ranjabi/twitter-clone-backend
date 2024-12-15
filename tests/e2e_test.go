@@ -1,50 +1,49 @@
 package tests
 
 import (
-	"context"
-	"database/sql"
+	"fmt"
+	"io"
 	"log"
-	"math"
-	"os"
-	"path/filepath"
-	"testing"
-	"github.com/joho/godotenv"
+	"net/http"
 
-	_ "github.com/jackc/pgx/v5/stdlib" // for sql driver
-	"github.com/pressly/goose/v3"
+	"os"
+	"testing"
+
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestAbs(t *testing.T) {
+func TestMain(m *testing.M) {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	fmt.Println("LOADED BASE URL:", os.Getenv("BASE_URL"))
 
-	db, err := sql.Open("pgx", "postgres://postgres:123456@localhost:5432/postgres")
-	if err != nil {
-		log.Fatal("Error opening database connection: ", err)
-	}
-	
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// TODO: make dynamic and accept from env
-	migrationsPath := filepath.Join(cwd, "..", "db", "seed")
-	if err := goose.RunWithOptionsContext(context.Background(), "status", db, migrationsPath, []string{}, goose.WithNoVersioning()); err != nil {
-		log.Fatal("Goose failed: ", err)
-	}
-
-    got := math.Abs(-1)
-    if got != 1 {
-        t.Errorf("Abs(-1) = %v; want 1", got)
-    }
+	m.Run()
 }
 
-// func TestAbs2(t *testing.T) {
-//     got := math.Abs(-1)
-//     if got != 2 {
-//         t.Errorf("Abs(-1) = %v; want 1", got)
-//     }
-// }
+type testSuite struct {
+	suite.Suite
+}
+
+func TestLoadTestSuite(t *testing.T) {
+	suite.Run(t, &testSuite{})
+}
+
+func(s *testSuite) TestHealthCheck() {
+	fmt.Println("BASE URL:", os.Getenv("BASE_URL"))
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/health-check", os.Getenv("BASE_URL")), nil)
+	s.NoError(err)
+
+	client := http.Client{}
+	res, err := client.Do(req)
+	s.NoError(err)
+	s.Equal(http.StatusOK, res.StatusCode)
+
+	resBody, err := io.ReadAll(res.Body)
+	s.NoError(err)
+
+	s.Equal(`{"data":{"Database":"OK","Server":"OK"}}`, string(resBody))
+	res.Body.Close()
+}
