@@ -36,10 +36,32 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			// TODO: payload validation
 
-			// assume everything is valid, continue to below
-			// insert to db
-			query := `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
+			// assume payload is valid, continue to below
+
+			var isUserExist bool
+			query := `SELECT EXISTS (SELECT 1 FROM users WHERE email=@email)`
 			args := pgx.NamedArgs{
+				"email": payload.Email,
+			}
+			err = db.QueryRow(ctx, query, args).Scan(&isUserExist)
+			if err != nil {
+				return &models.AppError{Error: err, Message: "Failed to check user account", Code: http.StatusInternalServerError}
+			}
+
+			if isUserExist {
+				res, err := json.Marshal(models.ErrorResponseMessage{Message: "Email is already used"})
+				if err != nil {
+					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte(res))
+				return nil
+			}
+
+			query = `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
+			args = pgx.NamedArgs{
 				"username": payload.Username,
 				"email": payload.Email,
 				"password": string(hashedPassword),

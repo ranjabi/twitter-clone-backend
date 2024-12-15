@@ -27,7 +27,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if e.Error != nil {
 			fmt.Println(utils.ColorLog("error:", RED), e.Error.Error()) // goes to logging
 		}
-		
+		// TODO: wrap this with error response
 		http.Error(w, e.Message, e.Code) // returned as response
 		return
 	}
