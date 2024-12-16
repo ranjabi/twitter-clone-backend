@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	
+
 	_ "github.com/joho/godotenv/autoload"
 
 	"twitter-clone-backend/db"
@@ -17,11 +17,11 @@ import (
 func main() {
 	ctx := context.Background()
 
-	conn, err := db.GetDbPool(utils.GetDbConnectionUrlFromEnv())
+	conn, err := db.GetDbConnection(utils.GetDbConnectionUrlFromEnv())
 	if err != nil {
-		log.Fatal("Error getting database pool:", err)
+		log.Fatal("Error getting database connection:", err)
 	}
-	defer db.ClosePool()
+	defer db.CloseConnection()
 
 	mux := new(middleware.AppMux)
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
@@ -39,7 +39,7 @@ func main() {
 
 	fmt.Println("Server started at http://localhost:8080")
 	err = server.ListenAndServe()
-    if err != nil {
-        log.Fatal("Error starting server: ", err)
-    }
+	if err != nil {
+		log.Fatal("Error starting server: ", err)
+	}
 }

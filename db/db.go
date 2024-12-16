@@ -11,29 +11,29 @@ import (
 
 var (
 	once	sync.Once
-	pool	*pgxpool.Pool
+	conn	*pgxpool.Pool
 )
 
-func GetDbPool(connString string) (*pgxpool.Pool, error) {
+func GetDbConnection(connString string) (*pgxpool.Pool, error) {
 	var err error
 
 	once.Do(func() {
-		pool, err = pgxpool.New(context.Background(), connString)
+		conn, err = pgxpool.New(context.Background(), connString)
 		if err != nil {
-			log.Fatal("Error to create database pool:", err)
+			log.Fatal("Error to create database connection:", err)
 		}
-		fmt.Println("Database pool created")
+		fmt.Println("Database connection created")
 	})
-	
-	// todo: make it LOG: msg
-	fmt.Println("Successfully obtained database pool")
 
-	return pool, err
+	// todo: make it LOG: msg
+	fmt.Println("Successfully obtained database connection")
+
+	return conn, err
 }
 
-func ClosePool() {
-	if pool != nil {
-		pool.Close()
-		fmt.Println("Database pool closed")
+func CloseConnection() {
+	if conn != nil {
+		conn.Close()
+		fmt.Println("Database connection closed")
 	}
 }
