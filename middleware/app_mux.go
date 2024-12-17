@@ -28,11 +28,12 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// goes to logging
 		fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), RED), utils.ColorLog(http.StatusText(e.Code), RED))
 		fmt.Println(utils.ColorLog(e.Error(), RED))
-		fmt.Printf("LOG: e: %#v\n", e)
-		fmt.Printf("LOG: e.Err: %#v\n", e.Err)
+		fmt.Printf("LOG app_mux.go: e: %#v\n", e)
+		fmt.Printf("LOG app_mux.go: e.Err: %#v\n", e.Err)
 
 		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
 		if err != nil {
+			// todo: how should this behave?
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 

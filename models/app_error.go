@@ -23,7 +23,11 @@ func (e AppError) Error() string {
 	}
 
 	// fmt.Println("LOG: e.Err is type of built in error")
-	return e.Message + ": " + e.Err.Error()
+	if e.Err != nil {
+		return e.Message + ": " + e.Err.Error()
+	}
+
+	return e.Message
 }
 
 type ServiceError struct {
