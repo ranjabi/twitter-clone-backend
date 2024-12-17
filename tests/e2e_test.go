@@ -241,19 +241,18 @@ func TestUserLoginNotExist(t *testing.T) {
 }
 
 func TestUserFollow(t *testing.T) {
-	t.Skip()
 	reqBody := map[string]any{
-		"followeeId": user3Id,
+		"following_id": user3Id,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/follow", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/user/follow", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Authorization", "Bearer " + userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -275,6 +274,43 @@ func TestUserFollow(t *testing.T) {
 
 	assert.JSONEq(t, expected, string(resBodyStr))
 	assert.Equal(t, http.StatusOK, res.StatusCode)
+	res.Body.Close()
+}
+
+func TestUserFollowAlreadyFollowed(t *testing.T) {
+	reqBody := map[string]any{
+		"following_id": user2Id,
+	}
+	reqBodyByte, err := json.Marshal(reqBody)
+	assert.NoError(t, err)
+
+	reqBodyStr := string(reqBodyByte)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/user/follow", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
+	assert.NoError(t, err)
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer " + userToken)
+
+	client := http.Client{}
+	res, err := client.Do(req)
+	assert.NoError(t, err)
+
+	resBody, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
+
+	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
+	assert.NoError(t, err)
+
+	expected := `{
+    "message": "Failed to follow"
+}`
+
+	assert.JSONEq(t, expected, string(resBodyStr))
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
 	res.Body.Close()
 }
 

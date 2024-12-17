@@ -63,3 +63,18 @@ func (r Repository) GetUserByEmail(email string) (*model.User, error) {
 
 	return &user, nil
 }
+
+func (r Repository) FollowOtherUser(followersId int, followingId int) error {
+	query := `INSERT INTO follows (followers_id, following_id) VALUES (@followers_id, @following_id)`
+	args := pgx.NamedArgs{
+		"followers_id": followersId,
+		"following_id": followingId,
+	}
+
+	_, err := r.conn.Exec(r.ctx, query, args)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

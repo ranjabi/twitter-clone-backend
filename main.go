@@ -29,7 +29,6 @@ func main() {
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
 	mux.Handle("/health-check", handler.HealthCheck(conn, ctx))
-	mux.Handle("/users/follow", handler.Follow(conn, ctx))
 	mux.Handle("/users/unfollow", handler.Unfollow(conn, ctx))
 
 	userRepository := user.NewRepository(conn, ctx)
@@ -44,6 +43,8 @@ func main() {
 	// if use mux.Handle then will goes into AppHandler
 	mux.Handle("POST /v2/register", userHandler.HandleUserRegister)
 	mux.Handle("POST /v2/login", userHandler.HandleUserLogin)
+
+	mux.Handle("POST /v2/user/follow", userHandler.HandleFollowOtherUser)
 
 	mux.Handle("POST /v2/tweet", tweetHandler.HandleTweetCreate)
 	mux.Handle("PUT /v2/tweet", tweetHandler.HandleUpdateTweet)
