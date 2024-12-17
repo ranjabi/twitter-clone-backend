@@ -29,7 +29,7 @@ func (r Repository) CreateUser(user model.User) (*model.User, error) {
 
 	err := r.conn.QueryRow(r.ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 	if err != nil {
-		return nil, errors.New("failed to create account")
+		return nil, err
 	}
 
 	return &newUser, nil
@@ -44,7 +44,7 @@ func (r Repository) IsUserExistByEmail(email string) (bool, error) {
 
 	err := r.conn.QueryRow(r.ctx, query, args).Scan(&isUserExist)
 	if err != nil {
-		return false, errors.New("failed to check user account")
+		return false, err
 	}
 
 	return isUserExist, nil

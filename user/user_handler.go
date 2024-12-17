@@ -30,13 +30,13 @@ func (c Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 		Password string `json:"password" validate:"required"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
 	err := validate.Struct(payload)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Error: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
@@ -46,8 +46,12 @@ func (c Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 		Email:    payload.Email,
 		Password: payload.Password,
 	})
-	if err != nil {
-		return &models.AppError{Error: err, Message: err.Error(), Code: http.StatusInternalServerError}
+	if serviceErr, ok := err.(*models.ServiceError); ok {
+		return &models.AppError{
+			Err:   err,
+			Message: serviceErr.Message,
+			Code:    http.StatusInternalServerError,
+		}
 	}
 
 	newUserResponse := struct {
@@ -59,7 +63,7 @@ func (c Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully", Data: newUserResponse})
 	if err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -76,19 +80,19 @@ func (c Handler) HandleUserLogin(w http.ResponseWriter, r *http.Request) *models
 		Password string `json:"password" validate:"required"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
 	err := validate.Struct(payload)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Error: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
 	user, err := c.service.CheckUserCredential(payload.Email, payload.Password)
 	if err != nil {
-		return &models.AppError{Error: err, Message: err.Error(), Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
 	}
 
 	userResponse := struct {
@@ -104,7 +108,7 @@ func (c Handler) HandleUserLogin(w http.ResponseWriter, r *http.Request) *models
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userResponse})
 	if err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
