@@ -29,12 +29,11 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), RED), utils.ColorLog(http.StatusText(e.Code), RED))
 		fmt.Println(utils.ColorLog(e.Error(), RED))
 		fmt.Printf("LOG app_mux.go: e: %#v\n", e)
-		fmt.Printf("LOG app_mux.go: e.Err: %#v\n", e.Err)
 
 		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
 		if err != nil {
-			// todo: how should this behave?
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			fmt.Printf("LOG app_mux.go: e: %#v\n", e)
+			http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
 		}
 
 		w.Header().Set("Content-Type", "application/json")

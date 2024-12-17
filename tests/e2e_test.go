@@ -94,7 +94,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHealthCheck(t *testing.T) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/health-check", os.Getenv("BASE_URL")), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/health-check", os.Getenv("TEST_BASE_URL")), nil)
 	assert.NoError(t, err)
 
 	client := http.Client{}

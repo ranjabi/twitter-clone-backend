@@ -55,6 +55,7 @@ func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 		UserId:  int(userId),
 	})
 	if e, ok := err.(*models.AppError); ok {
+		// todo: masuk ke handler ga?
 		fmt.Printf("%#v\n%#v\n", err, e)
 		if e != nil {
 			return e
