@@ -78,3 +78,18 @@ func (r Repository) FollowOtherUser(followerId int, followingId int) error {
 
 	return nil
 }
+
+func (r Repository) UnfollowOtherUser(followerId int, followingId int) error {
+	query := `DELETE FROM follows WHERE follower_id=@follower_id and following_id=@following_id`
+	args := pgx.NamedArgs{
+		"follower_id":  followerId,
+		"following_id": followingId,
+	}
+
+	_, err := r.conn.Exec(r.ctx, query, args)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

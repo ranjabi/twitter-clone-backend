@@ -83,3 +83,11 @@ func (s Service) FollowOtherUser(followerId int, followingId int) error {
 
 	return nil
 }
+
+func (s Service) UnfollowOtherUser(followerId int, followingId int) error {
+	if err := s.repository.UnfollowOtherUser(followerId, followingId); err != nil {
+		return &models.AppError{Err: err, Message: "Failed to unfollow", Code: http.StatusConflict}
+	}
+
+	return nil
+}

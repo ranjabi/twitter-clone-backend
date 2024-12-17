@@ -127,7 +127,7 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 	validate = validator.New(validator.WithRequiredStructEnabled())
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
-		FollowingId int `json:"following_id" validate:"required"`
+		FollowingId int `json:"followingId" validate:"required"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
@@ -149,6 +149,45 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 	}
 
 	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been followed"})
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}
+
+func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request) *models.AppError {
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
+	userId := userInfo["userId"].(float64)
+
+	validate = validator.New(validator.WithRequiredStructEnabled())
+	decoder := json.NewDecoder(r.Body)
+	payload := struct {
+		FollowingId int `json:"followingId" validate:"required"`
+	}{}
+	if err := decoder.Decode(&payload); err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+	}
+
+	err := validate.Struct(payload)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+		}
+	}
+
+	err = h.service.UnfollowOtherUser(int(userId), payload.FollowingId)
+	if e, ok := err.(*models.AppError); ok {
+		if e.Code == 0 {
+			e.Code = http.StatusInternalServerError
+		}
+		return e
+	}
+
+	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been unfollowed"})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}

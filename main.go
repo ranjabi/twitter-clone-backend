@@ -29,7 +29,6 @@ func main() {
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
 	mux.Handle("/health-check", handler.HealthCheck(conn, ctx))
-	mux.Handle("/users/unfollow", handler.Unfollow(conn, ctx))
 
 	userRepository := user.NewRepository(conn, ctx)
 	userService := user.NewService(userRepository)
@@ -45,6 +44,7 @@ func main() {
 	mux.Handle("POST /v2/login", userHandler.HandleUserLogin)
 
 	mux.Handle("POST /v2/user/follow", userHandler.HandleFollowOtherUser)
+	mux.Handle("POST /v2/user/unfollow", userHandler.HandleUnfollowOtherUser)
 
 	mux.Handle("POST /v2/tweet", tweetHandler.HandleTweetCreate)
 	mux.Handle("PUT /v2/tweet", tweetHandler.HandleUpdateTweet)

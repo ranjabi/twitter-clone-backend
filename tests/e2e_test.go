@@ -242,7 +242,7 @@ func TestUserLoginNotExist(t *testing.T) {
 
 func TestUserFollow(t *testing.T) {
 	reqBody := map[string]any{
-		"following_id": user3Id,
+		"followingId": user3Id,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
@@ -279,7 +279,7 @@ func TestUserFollow(t *testing.T) {
 
 func TestUserFollowAlreadyFollowed(t *testing.T) {
 	reqBody := map[string]any{
-		"following_id": user2Id,
+		"followingId": user2Id,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
@@ -316,17 +316,17 @@ func TestUserFollowAlreadyFollowed(t *testing.T) {
 
 func TestUserUnfollow(t *testing.T) {
 	reqBody := map[string]any{
-		"followeeId": user2Id,
+		"followingId": user2Id,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/unfollow", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/user/unfollow", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Authorization", "Bearer " + userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -363,7 +363,7 @@ func TestTweetCreate(t *testing.T) {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/tweet", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Authorization", "Bearer " + userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -411,7 +411,7 @@ func TestTweetUpdate(t *testing.T) {
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/tweet", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Authorization", "Bearer " + userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -459,7 +459,7 @@ func TestTweetUpdateNotFound(t *testing.T) {
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/tweet", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Authorization", "Bearer " + userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -499,7 +499,7 @@ func TestTweetDelete(t *testing.T) {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweet", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Authorization", "Bearer " + userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -536,7 +536,7 @@ func TestTweetDeleteNotFound(t *testing.T) {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweet", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Authorization", "Bearer " + userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
