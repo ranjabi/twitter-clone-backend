@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -10,8 +11,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"twitter-clone-backend/models"
 	"twitter-clone-backend/middleware"
+	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 )
 
@@ -49,15 +50,7 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			if isUserExist {
-				res, err := json.Marshal(models.ErrorResponseMessage{Message: "Email is already used"})
-				if err != nil {
-					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
-				}
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte(res))
-				return nil
+				return &models.AppError{Error: errors.New(""), Message: "Email is already used", Code: http.StatusConflict}
 			}
 
 			query = `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
