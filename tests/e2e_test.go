@@ -34,6 +34,9 @@ const (
 	userPassword = "password"
 	userToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9.zLMJ-qTJ0weJWElH6FR7ZNqMwpvLbKZWtdNldd16YLo"
 
+	user2Id = 2
+	user3Id = 3
+
 	userNotExistId = 10000
 	userNotExistEmail = "not-exist@email.com"
 	
@@ -233,6 +236,81 @@ func TestUserLoginNotExist(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 	assert.JSONEq(t, expected, string(resBodyStr))
+	res.Body.Close()
+}
+
+
+func TestUserFollow(t *testing.T) {
+	reqBody := map[string]any{
+		"followeeId": user3Id,
+	}
+	reqBodyByte, err := json.Marshal(reqBody)
+	assert.NoError(t, err)
+
+	reqBodyStr := string(reqBodyByte)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/follow", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
+	assert.NoError(t, err)
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+userToken)
+
+	client := http.Client{}
+	res, err := client.Do(req)
+	assert.NoError(t, err)
+
+	resBody, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+
+	var resBodyJson map[string]interface{}
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
+
+	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
+	assert.NoError(t, err)
+
+	expected := `{
+    "message": "User has been followed"
+}`
+
+	assert.JSONEq(t, expected, string(resBodyStr))
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	res.Body.Close()
+}
+
+func TestUserUnfollow(t *testing.T) {
+	reqBody := map[string]any{
+		"followeeId": user2Id,
+	}
+	reqBodyByte, err := json.Marshal(reqBody)
+	assert.NoError(t, err)
+
+	reqBodyStr := string(reqBodyByte)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/unfollow", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
+	assert.NoError(t, err)
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+userToken)
+
+	client := http.Client{}
+	res, err := client.Do(req)
+	assert.NoError(t, err)
+
+	resBody, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+
+	var resBodyJson map[string]interface{}
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
+
+	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
+	assert.NoError(t, err)
+
+	expected := `{
+    "message": "User has been unfollowed"
+}`
+
+	assert.JSONEq(t, expected, string(resBodyStr))
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 	res.Body.Close()
 }
 
