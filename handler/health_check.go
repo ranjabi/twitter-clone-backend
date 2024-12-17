@@ -25,12 +25,12 @@ func HealthCheck(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 		res, err := json.Marshal(map[string]any{
 			"data": map[string]string{
-				"Server": serverStatus,
+				"Server":   serverStatus,
 				"Database": dbStatus,
 			},
 		})
 		if err != nil {
-			return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+			return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

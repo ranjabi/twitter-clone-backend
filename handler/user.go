@@ -16,17 +16,17 @@ import (
 func Follow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 	return func(w http.ResponseWriter, r *http.Request) *models.AppError {
 		decoder := json.NewDecoder(r.Body)
-		
+
 		switch r.Method {
 		case "POST":
 			userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 			userId := userInfo["userId"]
 
 			payload := struct {
-				FolloweeId	int	`json:"followeeId"`
+				FolloweeId int `json:"followeeId"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			query := `INSERT INTO follows (followers_id, following_id) VALUES (@followers_id, @following_id)`
@@ -37,19 +37,19 @@ func Follow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			_, err := db.Exec(ctx, query, args)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to follow", Code: http.StatusInternalServerError} 
+				return &models.AppError{Err: err, Message: "Failed to follow", Code: http.StatusInternalServerError}
 			}
 
 			res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been followed"})
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(res)
 
 		default:
-			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusMethodNotAllowed}
+			return &models.AppError{Err: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusMethodNotAllowed}
 		}
 
 		return nil
@@ -59,17 +59,17 @@ func Follow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 func Unfollow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 	return func(w http.ResponseWriter, r *http.Request) *models.AppError {
 		decoder := json.NewDecoder(r.Body)
-		
+
 		switch r.Method {
 		case "POST":
 			userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 			userId := userInfo["userId"]
 
 			payload := struct {
-				FolloweeId	int	`json:"followeeId"`
+				FolloweeId int `json:"followeeId"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			query := `DELETE FROM follows WHERE followers_id=@followers_id and following_id=@following_id`
@@ -80,19 +80,19 @@ func Unfollow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			_, err := db.Exec(ctx, query, args)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to unfollow", Code: http.StatusInternalServerError} 
+				return &models.AppError{Err: err, Message: "Failed to unfollow", Code: http.StatusInternalServerError}
 			}
 
 			res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been unfollowed"})
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(res)
 
 		default:
-			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusMethodNotAllowed}
+			return &models.AppError{Err: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusMethodNotAllowed}
 		}
 
 		return nil

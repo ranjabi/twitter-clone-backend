@@ -27,7 +27,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				Content string `json:"content"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			query := `INSERT INTO tweets (content, user_id)  VALUES (@content, @user_id) RETURNING id, content, created_at`
@@ -45,12 +45,12 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			err := db.QueryRow(ctx, query, args).Scan(&newTweet.Id, &newTweet.Content, &newTweet.CreatedAt)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to create tweet", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to create tweet", Code: http.StatusInternalServerError}
 			}
 
 			res, err := json.Marshal(models.SuccessResponse{Message: "Tweet created successfully", Data: newTweet})
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -62,7 +62,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				Content string `json:"content"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			var isTweetExist bool
@@ -72,13 +72,13 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 			err := db.QueryRow(ctx, query, args).Scan(&isTweetExist)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to check tweet", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to check tweet", Code: http.StatusInternalServerError}
 			}
 
 			if !isTweetExist {
 				res, err := json.Marshal(models.ErrorResponse{Message: "Tweet not found"})
 				if err != nil {
-					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusNotFound}
+					return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusNotFound}
 				}
 
 				w.Header().Set("Content-Type", "application/json")
@@ -104,12 +104,12 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			err = db.QueryRow(ctx, query, args).Scan(&updatedTweet.Id, &updatedTweet.Content, &updatedTweet.ModifiedAt)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to update tweet", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to update tweet", Code: http.StatusInternalServerError}
 			}
 
 			res, err := json.Marshal(models.SuccessResponse{Message: "Tweet updated successfully", Data: updatedTweet})
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -120,7 +120,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				TweetId int `json:"tweetId"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			var isTweetExist bool
@@ -130,13 +130,13 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 			err := db.QueryRow(ctx, query, args).Scan(&isTweetExist)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to check user", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to check user", Code: http.StatusInternalServerError}
 			}
 
 			if !isTweetExist {
 				res, err := json.Marshal(models.ErrorResponse{Message: "Tweet not found"})
 				if err != nil {
-					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusNotFound}
+					return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusNotFound}
 				}
 
 				w.Header().Set("Content-Type", "application/json")
@@ -152,18 +152,18 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			_, err = db.Exec(ctx, query, args)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to delete tweet", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to delete tweet", Code: http.StatusInternalServerError}
 			}
 
 			res, err := json.Marshal(models.SuccessResponseMessage{Message: "Tweet deleted successfully"})
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(res)
 		default:
-			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusBadRequest}
+			return &models.AppError{Err: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusBadRequest}
 		}
 
 		return nil

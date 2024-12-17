@@ -26,14 +26,13 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				Password string `json:"password"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 14)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to hash password", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to hash password", Code: http.StatusInternalServerError}
 			}
-
 
 			// assume payload is valid, continue to below
 
@@ -44,11 +43,11 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 			err = db.QueryRow(ctx, query, args).Scan(&isUserExist)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to check user account", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to check user account", Code: http.StatusInternalServerError}
 			}
 
 			if isUserExist {
-				return &models.AppError{Error: nil, Message: "Email is already used", Code: http.StatusConflict}
+				return &models.AppError{Err: nil, Message: "Email is already used", Code: http.StatusConflict}
 			}
 
 			query = `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
@@ -66,18 +65,18 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			err = db.QueryRow(ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to create account", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to create account", Code: http.StatusInternalServerError}
 			}
 
 			res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully", Data: newUser}) // write to a string
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(res)
 		default:
-			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusBadRequest} // will error in serveHTTP if caught
+			return &models.AppError{Err: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusBadRequest} // will error in serveHTTP if caught
 		}
 
 		return nil

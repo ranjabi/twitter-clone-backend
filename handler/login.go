@@ -26,7 +26,7 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				Password string `json:"password"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			var isUserExist bool
@@ -36,13 +36,13 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 			err := db.QueryRow(ctx, query, args).Scan(&isUserExist)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to check user account", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to check user account", Code: http.StatusInternalServerError}
 			}
 
 			if !isUserExist {
 				res, err := json.Marshal(models.ErrorResponse{Message: "User not found. Please create an account"})
 				if err != nil {
-					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+					return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 				}
 
 				w.Header().Set("Content-Type", "application/json")
@@ -58,12 +58,12 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			var hashedPassword string
 			err = db.QueryRow(ctx, query, args).Scan(&userId, &username, &hashedPassword)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to get user credential", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to get user credential", Code: http.StatusInternalServerError}
 			}
 
 			err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(payload.Password))
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Email/password is wrong", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Email/password is wrong", Code: http.StatusInternalServerError}
 			}
 
 			claims := jwt.MapClaims{
@@ -73,7 +73,7 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 			signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to sign token", Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: "Failed to sign token", Code: http.StatusInternalServerError}
 			}
 
 			type loginResponse struct {
@@ -90,13 +90,13 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userInfo})
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(res)
 		default:
-			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusBadRequest}
+			return &models.AppError{Err: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusBadRequest}
 		}
 
 		return nil
