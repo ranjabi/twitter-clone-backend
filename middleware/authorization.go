@@ -19,7 +19,7 @@ func JwtAuthorization(next http.Handler) http.Handler {
 
 		authorizationHeader := r.Header.Get("Authorization")
 		if !strings.Contains(authorizationHeader, "Bearer") {
-			http.Error(w, "Unauthorized access", 400)
+			http.Error(w, "Unauthorized access", http.StatusBadRequest)
 			return
 		}
 
@@ -28,13 +28,13 @@ func JwtAuthorization(next http.Handler) http.Handler {
 			return []byte(utils.JWT_SIGNATURE_KEY), nil
 		})
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims) // type assertion
 		if !ok || !token.Valid {
-			http.Error(w, err.Error(), 400)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 

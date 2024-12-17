@@ -28,7 +28,7 @@ func (r Repository) CreateUser(user model.User) (*model.User, error) {
 
 	err := r.conn.QueryRow(r.ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 	if err != nil {
-		// return &models.AppError{Error: err, Message: "Failed to create account", Code: 500}
+		// return &models.AppError{Error: err, Message: "Failed to create account", Code: http.StatusInternalServerError}
 		return nil, err
 	}
 	return &newUser, nil

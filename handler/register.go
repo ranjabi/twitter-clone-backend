@@ -27,12 +27,12 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				Password string `json:"password"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
+				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
 			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 14)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to hash password", Code: 500}
+				return &models.AppError{Error: err, Message: "Failed to hash password", Code: http.StatusInternalServerError}
 			}
 
 			// TODO: payload validation
@@ -68,18 +68,18 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			err = db.QueryRow(ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to create account", Code: 500}
+				return &models.AppError{Error: err, Message: "Failed to create account", Code: http.StatusInternalServerError}
 			}
 
 			res, err := json.Marshal(models.SuccessResponse[newUserResponse]{Message: "Account created successfully", Data: newUser}) // write to a string
 			if err != nil {
-				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
+				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(res)
 		default:
-			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: 400} // will error in serveHTTP if caught
+			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: http.StatusBadRequest} // will error in serveHTTP if caught
 		}
 
 		return nil

@@ -17,7 +17,7 @@ func NewService(repository Repository) Service {
 func (s Service) CreateUser(user model.User) (*model.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
-		// http.Error(w, "Failed to hash password", 500)
+		// http.Error(w, "Failed to hash password", http.StatusInternalServerError)
 		return nil, err
 	}
 
