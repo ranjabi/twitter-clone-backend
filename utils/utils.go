@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+type contextKey string
+
 const (
     ErrMsgFailedToParseRequestBody = "Failed to parse request body"
 	ErrMsgFailedToSerializeResponseBody = "Failed to serialize response body"
@@ -16,6 +18,8 @@ const (
 	BLUE = "\033[34m"
 
 	JWT_SIGNATURE_KEY = "secret"
+
+	UserInfoKey contextKey = "userInfo"
 )
 
 func ColorLog(message string, colorCode string) string {

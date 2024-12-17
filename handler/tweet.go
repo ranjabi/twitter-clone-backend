@@ -20,7 +20,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 		decoder := json.NewDecoder(r.Body)
 		switch r.Method {
 		case "POST":
-			userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+			userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 			userId := userInfo["userId"]
 
 			payload := struct {
@@ -72,7 +72,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 			err := db.QueryRow(ctx, query, args).Scan(&isTweetExist)
 			if err != nil {
-				return &models.AppError{Error: err, Message: "Failed to check user", Code: http.StatusInternalServerError}
+				return &models.AppError{Error: err, Message: "Failed to check tweet", Code: http.StatusInternalServerError}
 			}
 
 			if !isTweetExist {

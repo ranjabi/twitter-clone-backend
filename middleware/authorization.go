@@ -34,11 +34,12 @@ func JwtAuthorization(next http.Handler) http.Handler {
 
 		claims, ok := token.Claims.(jwt.MapClaims) // type assertion
 		if !ok || !token.Valid {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			// todo: where this goes?
+			http.Error(w, "Jwt claims failed", http.StatusBadRequest)
 			return
 		}
 
-		ctx := context.WithValue(context.Background(), "userInfo", claims)
+		ctx := context.WithValue(context.Background(), utils.UserInfoKey, claims)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

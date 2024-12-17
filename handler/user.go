@@ -19,7 +19,7 @@ func Follow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 		
 		switch r.Method {
 		case "POST":
-			userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+			userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 			userId := userInfo["userId"]
 
 			payload := struct {
@@ -62,7 +62,7 @@ func Unfollow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 		
 		switch r.Method {
 		case "POST":
-			userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+			userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 			userId := userInfo["userId"]
 
 			payload := struct {
