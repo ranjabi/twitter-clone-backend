@@ -29,9 +29,6 @@ func main() {
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
 	mux.Handle("/health-check", handler.HealthCheck(conn, ctx))
-	mux.Handle("/register", handler.Register(conn, ctx))
-	mux.Handle("/login", handler.Login(conn, ctx))
-	mux.Handle("/tweet", handler.Tweet(conn, ctx))
 	mux.Handle("/users/follow", handler.Follow(conn, ctx))
 	mux.Handle("/users/unfollow", handler.Unfollow(conn, ctx))
 
