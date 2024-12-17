@@ -47,10 +47,14 @@ func (c Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 		Password: payload.Password,
 	})
 	if serviceErr, ok := err.(*models.ServiceError); ok {
-		return &models.AppError{
-			Err:     err,
-			Message: serviceErr.Message,
-			Code:    http.StatusInternalServerError,
+		if serviceErr != nil {
+			// TODO: BUG, THIS SHOULDN'T NEEDED.
+			// err AUTO CASTED TO (*models.ServiceError) even though it's typed nil
+			return &models.AppError{
+				Err:     err,
+				Message: serviceErr.Message,
+				Code:    http.StatusInternalServerError,
+			}
 		}
 	}
 
@@ -91,8 +95,27 @@ func (c Handler) HandleUserLogin(w http.ResponseWriter, r *http.Request) *models
 	}
 
 	user, err := c.service.CheckUserCredential(payload.Email, payload.Password)
-	if err != nil {
-		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
+	// PREVIOUSLY:
+	// if err != nil {
+	// 	return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
+	// }
+	if serviceErr, ok := err.(*models.ServiceError); ok {
+		if serviceErr.Err != nil {
+			// TODO: BUG, THIS SHOULDN'T NEEDED.
+			// err AUTO CASTED TO (*models.ServiceError) even though it's typed nil
+			return &models.AppError{
+				Err:     err,
+				Message: serviceErr.Message,
+				Code:    http.StatusInternalServerError,
+			}
+		} else {
+			// business logic error, set the code
+			return &models.AppError{
+				Err:     nil,
+				Message: serviceErr.Message,
+				Code:    http.StatusUnauthorized,
+			}
+		}
 	}
 
 	userResponse := struct {

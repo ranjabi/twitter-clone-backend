@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"twitter-clone-backend/model"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -47,18 +46,23 @@ func (s Service) CreateUser(user model.User) (*model.User, *models.ServiceError)
 }
 
 func (s Service) CheckUserCredential(email string, password string) (*model.User, error) {
+	isUserExist, err := s.repository.IsUserExistByEmail(email)
+	if err != nil {
+		return nil, &models.ServiceError{Err: err, Message: "Failed to check user account"}
+	}
+	if !isUserExist {
+		// TODO: SEND ERROR CODE FROM THIS 401
+		return nil, &models.ServiceError{Err: nil, Message: "User not found. Please create an account"}
+	}
+
 	user, err := s.repository.GetUserByEmail(email)
 	if err != nil {
-		return nil, errors.New("failed to get user credential")
-	}
-	if user == nil {
-		// todo: how to set code 401 from here?
-		return nil, errors.New("user not found. Please create an account")
+		return nil, &models.ServiceError{Err: err, Message: "Failed to get user credential"}
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, errors.New("email/password is wrong")
+		return nil, &models.ServiceError{Err: err, Message: "Email/password is wrong"}
 	}
 
 	claims := jwt.MapClaims{
@@ -68,7 +72,7 @@ func (s Service) CheckUserCredential(email string, password string) (*model.User
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
 	if err != nil {
-		return nil, errors.New("failed to sign token")
+		return nil, &models.ServiceError{Err: err, Message: "Failed to sign token"}
 	}
 
 	user.Token = signedToken

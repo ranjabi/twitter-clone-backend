@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"twitter-clone-backend/model"
 
 	"github.com/jackc/pgx/v5"
@@ -59,7 +58,7 @@ func (r Repository) GetUserByEmail(email string) (*model.User, error) {
 
 	err := r.conn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password)
 	if err != nil {
-		return nil, errors.New("failed to get user credential")
+		return nil, err
 	}
 
 	return &user, nil
