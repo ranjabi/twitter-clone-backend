@@ -46,7 +46,7 @@ func main() {
 	// if use mux.Handle then will goes into AppHandler
 	mux.Handle("POST /v2/register", userHandler.HandleUserRegister)
 	mux.Handle("POST /v2/login", userHandler.HandleUserLogin)
-	
+
 	mux.Handle("POST /v2/tweet", tweetHandler.HandleTweetCreate)
 	mux.Handle("PUT /v2/tweet", tweetHandler.HandleUpdateTweet)
 
@@ -54,7 +54,7 @@ func main() {
 	server.Addr = ":8080"
 	server.Handler = mux
 
-	fmt.Println("Server started at http://localhost:8080")
+	fmt.Printf("Server started at http://localhost%s", server.Addr)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal("Error starting server: ", err)

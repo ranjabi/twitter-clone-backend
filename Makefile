@@ -1,4 +1,6 @@
 E2E_TEST_PATH=./tests
+export GOOSE_DRIVER=postgres
+export GOOSE_DBSTRING=postgres://postgres:123456@localhost:5432/postgres
 
 ENV_LOCAL_TEST=\
 	JWT_SECRET=secret
@@ -10,6 +12,9 @@ ENV_LOCAL_TEST=\
 
 test:
 	$(ENV_LOCAL_TEST) go test ${E2E_TEST_PATH} -v
+
+test.no-cache:
+	$(ENV_LOCAL_TEST) go test ${E2E_TEST_PATH} -count=1 -v
 
 db.seed.up:
 	goose -dir ./db/seed -no-versioning up

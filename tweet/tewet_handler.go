@@ -59,7 +59,7 @@ func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 
 	if serviceErr, ok := err.(*models.ServiceError); ok {
 		return &models.AppError{
-			Err:   err,
+			Err:     err,
 			Message: serviceErr.Message,
 			Code:    http.StatusInternalServerError,
 		}
@@ -117,7 +117,7 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 	})
 	if serviceErr, ok := err.(*models.ServiceError); ok {
 		return &models.AppError{
-			Err:   err,
+			Err:     err,
 			Message: serviceErr.Message,
 			Code:    http.StatusInternalServerError,
 		}
@@ -175,12 +175,12 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 	})
 	if serviceErr, ok := err.(*models.ServiceError); ok {
 		return &models.AppError{
-			Err:   err,
+			Err:     err,
 			Message: serviceErr.Message,
 			Code:    http.StatusInternalServerError,
 		}
 	}
-	
+
 	newTweetResponse := struct {
 		Id         int       `json:"id"`
 		Content    string    `json:"content"`

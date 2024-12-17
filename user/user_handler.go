@@ -48,7 +48,7 @@ func (c Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 	})
 	if serviceErr, ok := err.(*models.ServiceError); ok {
 		return &models.AppError{
-			Err:   err,
+			Err:     err,
 			Message: serviceErr.Message,
 			Code:    http.StatusInternalServerError,
 		}

@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	once	sync.Once
-	conn	*pgxpool.Pool
+	once sync.Once
+	conn *pgxpool.Pool
 )
 
 func GetDbConnection(connString string) (*pgxpool.Pool, error) {

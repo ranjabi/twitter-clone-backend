@@ -32,47 +32,46 @@ func (s Service) CreateUser(user model.User) (*model.User, *models.ServiceError)
 		return nil, &models.ServiceError{Err: nil, Message: "Email is already used"}
 	}
 
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
-    if err != nil {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
+	if err != nil {
 		return nil, &models.ServiceError{Err: err, Message: "Failed to hash password"}
-    }
+	}
 
-    user.Password = string(hashedPassword)
-    newUser, err := s.repository.CreateUser(user)
-    if err != nil {
-        return nil, &models.ServiceError{Err: err, Message: "Failed to create account"}
-    }
+	user.Password = string(hashedPassword)
+	newUser, err := s.repository.CreateUser(user)
+	if err != nil {
+		return nil, &models.ServiceError{Err: err, Message: "Failed to create account"}
+	}
 
-    return newUser, nil
+	return newUser, nil
 }
 
 func (s Service) CheckUserCredential(email string, password string) (*model.User, error) {
-    user, err := s.repository.GetUserByEmail(email)
-    if err != nil {
-        return nil, errors.New("failed to get user credential")
-    } 
-    if user == nil {
-        // todo: how to set code 401 from here?
-        return nil, errors.New("user not found. Please create an account")
-    }
+	user, err := s.repository.GetUserByEmail(email)
+	if err != nil {
+		return nil, errors.New("failed to get user credential")
+	}
+	if user == nil {
+		// todo: how to set code 401 from here?
+		return nil, errors.New("user not found. Please create an account")
+	}
 
-    err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-    if err != nil {
-        return nil, errors.New("email/password is wrong")
-    }
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return nil, errors.New("email/password is wrong")
+	}
 
-    claims := jwt.MapClaims{
-        "userId":   user.Id,
-        "username": user.Username,
-    }
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
-    if err != nil {
-        return nil, errors.New("failed to sign token")
-    }
+	claims := jwt.MapClaims{
+		"userId":   user.Id,
+		"username": user.Username,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
+	if err != nil {
+		return nil, errors.New("failed to sign token")
+	}
 
-    user.Token = signedToken
+	user.Token = signedToken
 
-    return user, nil
+	return user, nil
 }
-
