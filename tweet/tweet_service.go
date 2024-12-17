@@ -20,3 +20,12 @@ func (s Service) CreateTweet(tweet model.Tweet) (*model.Tweet, error) {
 
     return newTweet, nil
 }
+
+func (s Service) UpdateTweet(tweet model.Tweet) (*model.Tweet, error) {
+    newTweet, err := s.repository.UpdateTweet(tweet)
+    if err != nil {
+        return nil, err
+    }
+
+    return newTweet, nil
+}

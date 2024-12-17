@@ -46,7 +46,9 @@ func main() {
 	// if use mux.Handle then will goes into AppHandler
 	mux.Handle("POST /v2/register", userHandler.HandleUserRegister)
 	mux.Handle("POST /v2/login", userHandler.HandleUserLogin)
+	
 	mux.Handle("POST /v2/tweet", tweetHandler.HandleTweetCreate)
+	mux.Handle("PUT /v2/tweet", tweetHandler.HandleUpdateTweet)
 
 	server := new(http.Server)
 	server.Addr = ":8080"
