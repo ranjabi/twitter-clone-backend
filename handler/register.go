@@ -29,7 +29,7 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
 			}
 
-			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 10)
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), 14)
 			if err != nil {
 				return &models.AppError{Error: err, Message: "Failed to hash password", Code: 500}
 			}

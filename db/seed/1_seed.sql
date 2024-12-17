@@ -1,9 +1,9 @@
 -- +goose Up
 -- +goose StatementBegin
 INSERT INTO users (username, email, password) 
-VALUES ('username', 'email@email.com', 'password');
+VALUES ('username', 'email@email.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i'); -- password
 INSERT INTO users (username, email, password) 
-VALUES ('username2', 'email2@email.com', 'password2');
+VALUES ('username2', 'email2@email.com', '$2a$14$mabfBxkkjs2s6l60tJFo8ucUYGcBtcrH5dBtdmUIC20nArmQNyoyK'); -- password2
 
 INSERT INTO tweets (content, user_id)  
 VALUES ('Eum aliquam vel sed mollitia id eaque. Et quia aperiam.', (SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1));
