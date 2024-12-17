@@ -9,10 +9,6 @@ type SuccessResponseMessage struct {
 	Message	string	`json:"message"`
 }
 
-type SuccessResponseData struct {
-	Data	any	`json:"data"`
-}
-
-type ErrorResponseMessage struct {
+type ErrorResponse struct {
 	Message	string	`json:"message"`
 }

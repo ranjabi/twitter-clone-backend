@@ -25,26 +25,24 @@ type AppHandler func(http.ResponseWriter, *http.Request) *models.AppError
 // The ServeHTTP method called by the appHandler function and displays the returned error
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if e := fn(w, r); e != nil {
+		// goes to logging
+		fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), RED), utils.ColorLog(http.StatusText(e.Code), RED))
+		fmt.Println(utils.ColorLog("Message:", RED), utils.ColorLog(e.Message, RED))
+
 		if e.Error != nil {
 			errError := "None"
-
-			// goes to logging
-			fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), RED), utils.ColorLog(http.StatusText(e.Code), RED))
-			fmt.Println(utils.ColorLog("Message:", RED), utils.ColorLog(e.Message, RED))
-			if e.Error.Error() != "" {
-				errError = e.Error.Error()
-			}
+			errError = e.Error.Error()
 			fmt.Println(utils.ColorLog("Error:", RED), errError)
-
-			res, err := json.Marshal(models.ErrorResponseMessage{Message: e.Message})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(e.Code)
-			w.Write(res)
 		}
+
+		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(e.Code)
+		w.Write(res)
 	}
 }
 

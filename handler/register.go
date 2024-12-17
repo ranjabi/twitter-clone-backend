@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -50,7 +49,7 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			if isUserExist {
-				return &models.AppError{Error: errors.New(""), Message: "Email is already used", Code: http.StatusConflict}
+				return &models.AppError{Error: nil, Message: "Email is already used", Code: http.StatusConflict}
 			}
 
 			query = `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`

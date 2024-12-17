@@ -23,8 +23,8 @@ func HealthCheck(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			dbStatus = "NOT OK"
 		}
 
-		res, err := json.Marshal(models.SuccessResponseData{
-			Data: map[string]string{
+		res, err := json.Marshal(map[string]any{
+			"data": map[string]string{
 				"Server": serverStatus,
 				"Database": dbStatus,
 			},
