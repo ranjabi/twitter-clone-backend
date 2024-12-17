@@ -11,7 +11,7 @@ INSERT INTO tweets (content, user_id)
 VALUES ('Eum aliquam vel sed mollitia id eaque. Et quia aperiam.', (SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1));
 
 -- email follow email2
-INSERT INTO follows (followers_id, following_id) 
+INSERT INTO follows (follower_id, following_id) 
 VALUES (
     (SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1), 
     (SELECT id FROM users WHERE email = 'email2@email.com' LIMIT 1)
@@ -21,7 +21,7 @@ VALUES (
 -- +goose Down
 -- +goose StatementBegin
 DELETE FROM follows
-WHERE followers_id=(SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1) AND following_id=(SELECT id FROM users WHERE email = 'email2@email.com' LIMIT 1);
+WHERE follower_id=(SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1) AND following_id=(SELECT id FROM users WHERE email = 'email2@email.com' LIMIT 1);
 
 DELETE FROM tweets 
 WHERE user_id=(SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1);

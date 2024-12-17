@@ -64,10 +64,10 @@ func (r Repository) GetUserByEmail(email string) (*model.User, error) {
 	return &user, nil
 }
 
-func (r Repository) FollowOtherUser(followersId int, followingId int) error {
-	query := `INSERT INTO follows (followers_id, following_id) VALUES (@followers_id, @following_id)`
+func (r Repository) FollowOtherUser(followerId int, followingId int) error {
+	query := `INSERT INTO follows (follower_id, following_id) VALUES (@follower_id, @following_id)`
 	args := pgx.NamedArgs{
-		"followers_id": followersId,
+		"follower_id":  followerId,
 		"following_id": followingId,
 	}
 

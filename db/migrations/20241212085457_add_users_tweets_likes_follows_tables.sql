@@ -26,7 +26,7 @@ CREATE TABLE likes (
 
 CREATE TABLE follows (
 	id				int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	followers_id	int NOT NULL REFERENCES users(id),
+	follower_id	int NOT NULL REFERENCES users(id),
 	following_id	int NOT NULL REFERENCES users(id)
 );
 

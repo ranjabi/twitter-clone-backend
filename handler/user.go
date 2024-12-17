@@ -29,9 +29,9 @@ func Unfollow(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 			}
 
-			query := `DELETE FROM follows WHERE followers_id=@followers_id and following_id=@following_id`
+			query := `DELETE FROM follows WHERE follower_id=@follower_id and following_id=@following_id`
 			args := pgx.NamedArgs{
-				"followers_id": userId,
+				"follower_id":  userId,
 				"following_id": payload.FolloweeId,
 			}
 

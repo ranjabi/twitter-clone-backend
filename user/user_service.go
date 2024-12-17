@@ -76,8 +76,8 @@ func (s Service) CheckUserCredential(email string, password string) (*model.User
 	return user, nil
 }
 
-func (s Service) FollowOtherUser(followersId int, followingId int) error {
-	if err := s.repository.FollowOtherUser(followersId, followingId); err != nil {
+func (s Service) FollowOtherUser(followerId int, followingId int) error {
+	if err := s.repository.FollowOtherUser(followerId, followingId); err != nil {
 		return &models.AppError{Err: err, Message: "Failed to follow", Code: http.StatusConflict}
 	}
 
