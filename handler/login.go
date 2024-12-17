@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	
+
 	"golang.org/x/crypto/bcrypt"
-	
+
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	jwt "github.com/golang-jwt/jwt/v5"
-	
-	"twitter-clone-backend/models"
+
 	"twitter-clone-backend/middleware"
+	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 )
 
@@ -22,8 +22,8 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 		case "POST":
 			decoder := json.NewDecoder(r.Body)
 			payload := struct {
-				Email		string	`json:"email"`
-				Password	string	`json:"password"`
+				Email    string `json:"email"`
+				Password string `json:"password"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
@@ -67,7 +67,7 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			claims := jwt.MapClaims{
-				"userId": userId,
+				"userId":   userId,
 				"username": username,
 			}
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -77,15 +77,15 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			type loginResponse struct {
-				UserId   	string	`json:"userId"`
-    			Username	string	`json:"username"`
-				Token		string	`json:"token"`
+				UserId   string `json:"userId"`
+				Username string `json:"username"`
+				Token    string `json:"token"`
 			}
 
 			userInfo := loginResponse{
-				UserId: userId,
+				UserId:   userId,
 				Username: username,
-				Token: signedToken,
+				Token:    signedToken,
 			}
 
 			res, err := json.Marshal(models.SuccessResponse[loginResponse]{Message: "Login success", Data: userInfo})
@@ -94,7 +94,7 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(res))
+			w.Write(res)
 		default:
 			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: 400}
 		}

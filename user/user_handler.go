@@ -45,7 +45,7 @@ func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	newUserResponse := NewUserResponse{
 		Username: newUser.Username,
-		Email: newUser.Email,
+		Email:    newUser.Email,
 	}
 
 	res, err := json.Marshal(models.SuccessResponse[NewUserResponse]{Message: "Account created successfully", Data: newUserResponse})
@@ -55,5 +55,5 @@ func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(res))
+	w.Write(res)
 }

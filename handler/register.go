@@ -22,9 +22,9 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 		case "POST":
 			decoder := json.NewDecoder(r.Body) // request body is a stream
 			payload := struct {
-				Username	string	`json:"username"`
-				Email		string	`json:"email"`
-				Password	string	`json:"password"`
+				Username string `json:"username"`
+				Email    string `json:"email"`
+				Password string `json:"password"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
@@ -56,13 +56,13 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			query = `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
 			args = pgx.NamedArgs{
 				"username": payload.Username,
-				"email": payload.Email,
+				"email":    payload.Email,
 				"password": string(hashedPassword),
 			}
 
 			type newUserResponse struct {
-				Username	string	`json:"username"`
-				Email		string	`json:"email"`
+				Username string `json:"username"`
+				Email    string `json:"email"`
 			}
 			newUser := newUserResponse{}
 
@@ -77,7 +77,7 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(res))
+			w.Write(res)
 		default:
 			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: 400} // will error in serveHTTP if caught
 		}

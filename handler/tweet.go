@@ -24,42 +24,42 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			userId := userInfo["userId"]
 
 			payload := struct {
-				Content	string	`json:"content"`
+				Content string `json:"content"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
 			}
-		
+
 			query := `INSERT INTO tweets (content, user_id)  VALUES (@content, @user_id) RETURNING id, content, created_at`
 			args := pgx.NamedArgs{
 				"content": payload.Content,
 				"user_id": userId,
 			}
-	
+
 			type newTweetResponse struct {
-				Id			string		`json:"tweetId"`
-				Content		string		`json:"content"`
-				CreatedAt	time.Time	`json:"createdAt"`
+				Id        string    `json:"tweetId"`
+				Content   string    `json:"content"`
+				CreatedAt time.Time `json:"createdAt"`
 			}
 			newTweet := newTweetResponse{}
-	
+
 			err := db.QueryRow(ctx, query, args).Scan(&newTweet.Id, &newTweet.Content, &newTweet.CreatedAt)
 			if err != nil {
 				return &models.AppError{Error: err, Message: "Failed to create tweet", Code: 500}
 			}
-	
+
 			res, err := json.Marshal(models.SuccessResponse[newTweetResponse]{Message: "Tweet created successfully", Data: newTweet})
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
 			}
-	
+
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(res))
+			w.Write(res)
 
 		case "PUT":
 			payload := struct {
-				TweetId	int		`json:"tweetId"`
-				Content	string	`json:"content"`
+				TweetId int    `json:"tweetId"`
+				Content string `json:"content"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
@@ -80,44 +80,44 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				if err != nil {
 					return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 404}
 				}
-				
+
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusNotFound)
-				w.Write([]byte(res))
-				
+				w.Write(res)
+
 				return nil
 			}
-		
+
 			query = `UPDATE tweets SET content=@content, modified_at=@modifiedAt WHERE id=@tweetId RETURNING id, content, modified_at`
 			args = pgx.NamedArgs{
-				"tweetId": payload.TweetId,
-				"content": payload.Content,
+				"tweetId":    payload.TweetId,
+				"content":    payload.Content,
 				"modifiedAt": time.Now(),
 			}
-	
+
 			type updatedTweetResponse struct {
-				Id			string		`json:"tweetId"`
-				Content		string		`json:"content"`
-				ModifiedAt	time.Time	`json:"modifiedAt"`
+				Id         string    `json:"tweetId"`
+				Content    string    `json:"content"`
+				ModifiedAt time.Time `json:"modifiedAt"`
 			}
 			updatedTweet := updatedTweetResponse{}
-	
+
 			err = db.QueryRow(ctx, query, args).Scan(&updatedTweet.Id, &updatedTweet.Content, &updatedTweet.ModifiedAt)
 			if err != nil {
 				return &models.AppError{Error: err, Message: "Failed to update tweet", Code: 500}
 			}
-	
+
 			res, err := json.Marshal(models.SuccessResponse[updatedTweetResponse]{Message: "Tweet updated successfully", Data: updatedTweet})
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
 			}
-	
+
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(res))
+			w.Write(res)
 
 		case "DELETE":
 			payload := struct {
-				TweetId	int	`json:"tweetId"`
+				TweetId int `json:"tweetId"`
 			}{}
 			if err := decoder.Decode(&payload); err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: 400}
@@ -141,7 +141,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusNotFound)
-				w.Write([]byte(res))
+				w.Write(res)
 				return nil
 			}
 
@@ -154,14 +154,14 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			if err != nil {
 				return &models.AppError{Error: err, Message: "Failed to delete tweet", Code: 500}
 			}
-	
+
 			res, err := json.Marshal(models.SuccessResponseMessage{Message: "Tweet deleted successfully"})
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: 500}
 			}
-	
+
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(res))
+			w.Write(res)
 		default:
 			return &models.AppError{Error: nil, Message: utils.ErrMsgMethodNotAllowed, Code: 400}
 		}
