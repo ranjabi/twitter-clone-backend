@@ -11,6 +11,7 @@ import (
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/handler"
 	"twitter-clone-backend/middleware"
+	"twitter-clone-backend/user"
 	"twitter-clone-backend/utils"
 )
 
@@ -32,6 +33,12 @@ func main() {
 	mux.Handle("/tweet", handler.Tweet(conn, ctx))
 	mux.Handle("/users/follow", handler.Follow(conn, ctx))
 	mux.Handle("/users/unfollow", handler.Unfollow(conn, ctx))
+
+	userRepository := user.NewRepository(conn, ctx)
+	userService := user.NewService(userRepository)
+	userHandler := user.NewHandler(userService)
+
+	mux.HandleFunc("/v2/register", userHandler.HandleCreateUser)
 
 	server := new(http.Server)
 	server.Addr = ":8080"

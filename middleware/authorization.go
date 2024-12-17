@@ -12,7 +12,7 @@ import (
 func JwtAuthorization(next http.Handler) http.Handler {
 	// diwrap pakai http.HandlerFunc supaya fungsi di bawah bisa jadi http handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/login" || r.URL.Path == "/health-check" || r.URL.Path == "/register" {
+		if r.URL.Path == "/login" || r.URL.Path == "/health-check" || r.URL.Path == "/register" || r.URL.Path == "/v2/register" {
 			next.ServeHTTP(w, r)
 			return
 		}

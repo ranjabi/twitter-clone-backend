@@ -23,14 +23,14 @@ import (
 
 const (
 	newUserId = 3
-	newUserEmail = "email99@email.com"
 	newUserUsername = "username99"
+	newUserEmail = "email99@email.com"
 	newUserPassword = "password99"
 	newUserToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzIiwidXNlcm5hbWUiOiJ1c2VybmFtZTk5In0.EyzXI50ozNYwu7W9YuiLS-s7xojazWLfMXXUKJeIRwQ"
 
 	userId = 1
-	userEmail = "email@email.com"
 	userUsername = "username"
+	userEmail = "email@email.com"
 	userPassword = "password"
 	userToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9.zLMJ-qTJ0weJWElH6FR7ZNqMwpvLbKZWtdNldd16YLo"
 
