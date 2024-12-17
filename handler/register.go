@@ -34,7 +34,6 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Error: err, Message: "Failed to hash password", Code: http.StatusInternalServerError}
 			}
 
-			// TODO: payload validation
 
 			// assume payload is valid, continue to below
 

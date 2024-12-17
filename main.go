@@ -39,7 +39,8 @@ func main() {
 	userHandler := user.NewHandler(userService)
 
 	// if use mux.Handle then will goes into AppHandler
-	mux.Handle("/v2/register", userHandler.HandleCreateUser)
+	mux.Handle("/v2/register", userHandler.HandleUserRegister)
+	mux.Handle("/v2/login", userHandler.HandleUserLogin)
 
 	server := new(http.Server)
 	server.Addr = ":8080"

@@ -1,9 +1,12 @@
 package user
 
 import (
-	"twitter-clone-backend/model"
+    "errors"
+    "twitter-clone-backend/model"
+    "twitter-clone-backend/utils"
 
-	"golang.org/x/crypto/bcrypt"
+    jwt "github.com/golang-jwt/jwt/v5"
+    "golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
@@ -15,17 +18,56 @@ func NewService(repository Repository) Service {
 }
 
 func (s Service) CreateUser(user model.User) (*model.User, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
-	if err != nil {
-		// http.Error(w, "Failed to hash password", http.StatusInternalServerError)
-		return nil, err
-	}
-
-	user.Password = string(hashedPassword)
-	newUser, err := s.repository.CreateUser(user)
+	isUserExist, err := s.repository.IsUserExistByEmail(user.Email)
 	if err != nil {
 		return nil, err
 	}
 
-	return newUser, nil
+	if isUserExist {
+		return nil, errors.New("email is already used")
+	}
+
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
+    if err != nil {
+        return nil, errors.New("failed to hash password")
+    }
+
+    user.Password = string(hashedPassword)
+    newUser, err := s.repository.CreateUser(user)
+    if err != nil {
+        return nil, err
+    }
+
+    return newUser, nil
 }
+
+func (s Service) CheckUserCredential(email string, password string) (*model.User, error) {
+    user, err := s.repository.GetUserByEmail(email)
+    if err != nil {
+        return nil, errors.New("failed to get user credential")
+    } 
+    if user == nil {
+        // todo: how to set code 401 from here?
+        return nil, errors.New("user not found. Please create an account")
+    }
+
+    err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+    if err != nil {
+        return nil, errors.New("email/password is wrong")
+    }
+
+    claims := jwt.MapClaims{
+        "userId":   user.Id,
+        "username": user.Username,
+    }
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
+    if err != nil {
+        return nil, errors.New("failed to sign token")
+    }
+
+    user.Token = signedToken
+
+    return user, nil
+}
+

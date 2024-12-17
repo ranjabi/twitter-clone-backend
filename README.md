@@ -13,6 +13,9 @@ Features:
 - [x] Tweet (create, edit, delete)
 - [x] Follow/unfollow
 
+## Stage 2
+Implement layered architecture & request validation. Developed in '/v2/{...}' endpoint so the previous version of endpoint still can be visited.
+
 ###
 Improvements:
 - [ ] E2e test
