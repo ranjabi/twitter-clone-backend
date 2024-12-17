@@ -27,14 +27,14 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if e := fn(w, r); e != nil {
 		if e.Error != nil {
 			errError := "None"
-			
+
 			// goes to logging
 			fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), RED), utils.ColorLog(http.StatusText(e.Code), RED))
 			fmt.Println(utils.ColorLog("Message:", RED), utils.ColorLog(e.Message, RED))
 			if e.Error.Error() != "" {
 				errError = e.Error.Error()
 			}
-			fmt.Println(utils.ColorLog("Error:", RED), errError) 
+			fmt.Println(utils.ColorLog("Error:", RED), errError)
 
 			res, err := json.Marshal(models.ErrorResponseMessage{Message: e.Message})
 			if err != nil {
@@ -83,7 +83,7 @@ func (mux *AppMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.Body = io.NopCloser(bytes.NewBuffer(requestBodyBytes))
-	var requestBody map[string]interface{}
+	var requestBody map[string]any
 	_ = json.Unmarshal(requestBodyBytes, &requestBody)
 
 	prettyRequestBody, err := json.MarshalIndent(requestBody, "", "  ")
@@ -104,7 +104,7 @@ func (mux *AppMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	current.ServeHTTP(w, r)
 }
 
-func (mux *AppMux) Handle(pattern string, handler interface{}) {
+func (mux *AppMux) Handle(pattern string, handler any) {
 	var wrappedHandler http.Handler
 
 	switch h := handler.(type) {

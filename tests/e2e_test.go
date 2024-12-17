@@ -15,39 +15,39 @@ import (
 	"os"
 	"testing"
 
+	_ "github.com/jackc/pgx/v5/stdlib" // for pgx sql driver
 	"github.com/joho/godotenv"
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/assert"
-	_ "github.com/jackc/pgx/v5/stdlib" // for pgx sql driver
 )
 
 const (
-	newUserId = 3
+	newUserId       = 3
 	newUserUsername = "username99"
-	newUserEmail = "email99@email.com"
+	newUserEmail    = "email99@email.com"
 	newUserPassword = "password99"
-	newUserToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzIiwidXNlcm5hbWUiOiJ1c2VybmFtZTk5In0.EyzXI50ozNYwu7W9YuiLS-s7xojazWLfMXXUKJeIRwQ"
+	newUserToken    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzIiwidXNlcm5hbWUiOiJ1c2VybmFtZTk5In0.EyzXI50ozNYwu7W9YuiLS-s7xojazWLfMXXUKJeIRwQ"
 
-	userId = 1
+	userId       = 1
 	userUsername = "username"
-	userEmail = "email@email.com"
+	userEmail    = "email@email.com"
 	userPassword = "password"
-	userToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9.zLMJ-qTJ0weJWElH6FR7ZNqMwpvLbKZWtdNldd16YLo"
+	userToken    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9.zLMJ-qTJ0weJWElH6FR7ZNqMwpvLbKZWtdNldd16YLo"
 
 	user2Id = 2
 	user3Id = 3
 
-	userNotExistId = 10000
+	userNotExistId    = 10000
 	userNotExistEmail = "not-exist@email.com"
-	
-	tweetId = 1
+
+	tweetId             = 1
 	tweetUpdatedContent = "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In vehicula lacinia lacus. Vestibulum tincidunt dui nunc, at interdum neque posuere id."
 
 	tweetNotExistId = 10000
 
-	newTweetId = 2
+	newTweetId      = 2
 	newTweetContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas neque turpis, posuere non tortor ac, accumsan tempus est."
-	newTweetUserId = 1
+	newTweetUserId  = 1
 )
 
 func TestMain(m *testing.M) {
@@ -62,7 +62,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("Error opening database connection:", err)
 	}
-	
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
@@ -104,13 +104,13 @@ func TestHealthCheck(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	expected := `{
 	"data": {
 		"Database": "OK",
@@ -125,14 +125,14 @@ func TestHealthCheck(t *testing.T) {
 
 func TestUserRegister(t *testing.T) {
 	reqBody := map[string]any{
-		"username":	newUserUsername,
-		"email":	newUserEmail,
-		"password":	newUserPassword,
+		"username": newUserUsername,
+		"email":    newUserEmail,
+		"password": newUserPassword,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
-	reqBodyStr := string(reqBodyByte) 
+	reqBodyStr := string(reqBodyByte)
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/register", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
@@ -143,14 +143,14 @@ func TestUserRegister(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
-    expected := fmt.Sprintf(`{
+
+	expected := fmt.Sprintf(`{
 		"message": "Account created successfully",
 		"data": {
 			"username": "%s",
@@ -166,8 +166,8 @@ func TestUserRegister(t *testing.T) {
 // use user data from seed
 func TestUserLogin(t *testing.T) {
 	reqBody := map[string]any{
-		"email":	userEmail,
-		"password":	userPassword,
+		"email":    userEmail,
+		"password": userPassword,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
@@ -183,13 +183,13 @@ func TestUserLogin(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	expected := fmt.Sprintf(`{
     "message": "Login success",
     "data": {
@@ -206,8 +206,8 @@ func TestUserLogin(t *testing.T) {
 
 func TestUserLoginNotExist(t *testing.T) {
 	reqBody := map[string]any{
-		"email":	userNotExistEmail,
-		"password":	userPassword,
+		"email":    userNotExistEmail,
+		"password": userPassword,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
@@ -223,13 +223,13 @@ func TestUserLoginNotExist(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	expected := `{
     "message": "User not found. Please create an account"
 }`
@@ -238,7 +238,6 @@ func TestUserLoginNotExist(t *testing.T) {
 	assert.JSONEq(t, expected, string(resBodyStr))
 	res.Body.Close()
 }
-
 
 func TestUserFollow(t *testing.T) {
 	reqBody := map[string]any{
@@ -261,7 +260,7 @@ func TestUserFollow(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
+	var resBodyJson map[string]any
 	err = json.Unmarshal(resBody, &resBodyJson)
 	assert.NoError(t, err)
 
@@ -298,7 +297,7 @@ func TestUserUnfollow(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
+	var resBodyJson map[string]any
 	err = json.Unmarshal(resBody, &resBodyJson)
 	assert.NoError(t, err)
 
@@ -317,7 +316,7 @@ func TestUserUnfollow(t *testing.T) {
 // use user from seed
 func TestTweetCreate(t *testing.T) {
 	reqBody := map[string]any{
-		"content":	newTweetContent,
+		"content": newTweetContent,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
@@ -326,7 +325,7 @@ func TestTweetCreate(t *testing.T) {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/tweet", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + userToken)
+	req.Header.Set("Authorization", "Bearer "+userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -335,17 +334,17 @@ func TestTweetCreate(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
-	if data, ok := resBodyJson["data"].(map[string]interface{}); ok {
+	if data, ok := resBodyJson["data"].(map[string]any); ok {
 		delete(data, "createdAt")
 	}
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	// ignore data.createdAt
 	expected := fmt.Sprintf(`{
     "message": "Tweet created successfully",
@@ -363,7 +362,7 @@ func TestTweetCreate(t *testing.T) {
 func TestTweetUpdate(t *testing.T) {
 	reqBody := map[string]any{
 		"tweetId": tweetId,
-		"content":	tweetUpdatedContent,
+		"content": tweetUpdatedContent,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
@@ -372,7 +371,7 @@ func TestTweetUpdate(t *testing.T) {
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/tweet", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + userToken)
+	req.Header.Set("Authorization", "Bearer "+userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -381,17 +380,17 @@ func TestTweetUpdate(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
-	if data, ok := resBodyJson["data"].(map[string]interface{}); ok {
+	if data, ok := resBodyJson["data"].(map[string]any); ok {
 		delete(data, "modifiedAt")
 	}
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	// ignore data.createdAt
 	expected := fmt.Sprintf(`{
     "message": "Tweet updated successfully",
@@ -409,7 +408,7 @@ func TestTweetUpdate(t *testing.T) {
 func TestTweetUpdateNotFound(t *testing.T) {
 	reqBody := map[string]any{
 		"tweetId": tweetNotExistId,
-		"content":	tweetUpdatedContent,
+		"content": tweetUpdatedContent,
 	}
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
@@ -418,7 +417,7 @@ func TestTweetUpdateNotFound(t *testing.T) {
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/tweet", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + userToken)
+	req.Header.Set("Authorization", "Bearer "+userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -427,17 +426,17 @@ func TestTweetUpdateNotFound(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
-	if data, ok := resBodyJson["data"].(map[string]interface{}); ok {
+	if data, ok := resBodyJson["data"].(map[string]any); ok {
 		delete(data, "modifiedAt")
 	}
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	expected := `{
     "message": "Tweet not found"
 }`
@@ -458,7 +457,7 @@ func TestTweetDelete(t *testing.T) {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweet", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + userToken)
+	req.Header.Set("Authorization", "Bearer "+userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -467,13 +466,13 @@ func TestTweetDelete(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	expected := `{
     "message": "Tweet deleted successfully"
 }`
@@ -494,7 +493,7 @@ func TestTweetDeleteNotFound(t *testing.T) {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweet", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer " + userToken)
+	req.Header.Set("Authorization", "Bearer "+userToken)
 
 	client := http.Client{}
 	res, err := client.Do(req)
@@ -503,13 +502,13 @@ func TestTweetDeleteNotFound(t *testing.T) {
 	resBody, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	var resBodyJson map[string]interface{}
-    err = json.Unmarshal(resBody, &resBodyJson)
-    assert.NoError(t, err)
+	var resBodyJson map[string]any
+	err = json.Unmarshal(resBody, &resBodyJson)
+	assert.NoError(t, err)
 
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
-	
+
 	expected := `{
     "message": "Tweet not found"
 }`

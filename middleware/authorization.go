@@ -24,7 +24,7 @@ func JwtAuthorization(next http.Handler) http.Handler {
 		}
 
 		tokenString := strings.Replace(authorizationHeader, "Bearer ", "", 1)
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 			return []byte(utils.JWT_SIGNATURE_KEY), nil
 		})
 		if err != nil {
