@@ -43,6 +43,7 @@ func main() {
 	tweetService := tweet.NewService(tweetRepository)
 	tweetHandler := tweet.NewHandler(tweetService)
 
+	// VERSION 2
 	// if use mux.Handle then will goes into AppHandler
 	mux.Handle("POST /v2/register", userHandler.HandleUserRegister)
 	mux.Handle("POST /v2/login", userHandler.HandleUserLogin)
@@ -54,7 +55,7 @@ func main() {
 	server.Addr = ":8080"
 	server.Handler = mux
 
-	fmt.Printf("Server started at http://localhost%s", server.Addr)
+	fmt.Printf("Server started at http://localhost%s\n", server.Addr)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal("Error starting server: ", err)

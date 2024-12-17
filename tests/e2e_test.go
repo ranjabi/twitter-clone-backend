@@ -32,7 +32,7 @@ const (
 	userUsername = "username"
 	userEmail    = "email@email.com"
 	userPassword = "password"
-	userToken    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9.zLMJ-qTJ0weJWElH6FR7ZNqMwpvLbKZWtdNldd16YLo"
+	userToken    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoidXNlcm5hbWUifQ.LEyLKL6UmHeh5P-G1ytN2-8UMGxUNUz4jJxma1e8EIs"
 
 	user2Id = 2
 	user3Id = 3
@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	fmt.Println("LOADED BASE URL:", os.Getenv("BASE_URL"))
+	fmt.Println("LOADED BASE URL:", os.Getenv("TEST_BASE_URL"))
 
 	db, err := sql.Open("pgx", utils.GetDbConnectionUrlFromEnv())
 	if err != nil {
@@ -133,7 +133,7 @@ func TestUserRegister(t *testing.T) {
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/register", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/register", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	client := http.Client{}
@@ -173,7 +173,7 @@ func TestUserLogin(t *testing.T) {
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte) // Convert bytes to string
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/login", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/login", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	client := http.Client{}
@@ -193,11 +193,12 @@ func TestUserLogin(t *testing.T) {
 	expected := fmt.Sprintf(`{
     "message": "Login success",
     "data": {
-        "userId": "%d",
+        "id": %d,
         "username": "%s",
+		"email": "%s",
         "token": "%s"
     }
-}`, userId, userUsername, userToken)
+}`, userId, userUsername, userEmail, userToken)
 
 	assert.JSONEq(t, expected, string(resBodyStr))
 	assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -213,7 +214,7 @@ func TestUserLoginNotExist(t *testing.T) {
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte) // Convert bytes to string
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/login", os.Getenv("BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/login", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	client := http.Client{}
