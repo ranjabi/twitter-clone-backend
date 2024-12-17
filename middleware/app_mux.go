@@ -30,8 +30,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(utils.ColorLog("Message:", RED), utils.ColorLog(e.Message, RED))
 
 		if e.Error != nil {
-			errError := "None"
-			errError = e.Error.Error()
+			errError := e.Error.Error()
 			fmt.Println(utils.ColorLog("Error:", RED), errError)
 		}
 

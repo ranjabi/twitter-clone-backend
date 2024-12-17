@@ -21,7 +21,7 @@ func NewHandler(service Service) Handler {
 	return Handler{service: service}
 }
 
-func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
+func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	validate = validator.New(validator.WithRequiredStructEnabled())
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
@@ -30,19 +30,14 @@ func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password" validate:"required"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		http.Error(w, utils.ErrMsgFailedToParseRequestBody, http.StatusInternalServerError)
-		return
+		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
 	err := validate.Struct(payload)
 	if err != nil {
-		fmt.Println("Validation error start:")
 		for _, err := range err.(validator.ValidationErrors) {
-			fmt.Printf("Validation for '%s' failed on the '%s' tag\n", err.Field(), err.Tag())
+			return &models.AppError{Error: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
-		fmt.Println("Validation error end:")
-
-		return
 	}
 
 	newUser, err := c.service.CreateUser(model.User{
@@ -51,8 +46,7 @@ func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 		Password: payload.Password,
 	})
 	if err != nil {
-		http.Error(w, "Failed to create account", http.StatusInternalServerError)
-		return
+		return &models.AppError{Error: err, Message: "Failed to create account", Code: http.StatusInternalServerError}
 	}
 
 	newUserResponse := struct {
@@ -62,13 +56,14 @@ func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 		Username: newUser.Username,
 		Email:    newUser.Email,
 	}
-
 	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully", Data: newUserResponse})
 	if err != nil {
 		http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
-		return
+		return nil
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
+
+	return nil
 }
