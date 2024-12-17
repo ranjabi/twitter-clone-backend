@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 	"twitter-clone-backend/model"
 	"twitter-clone-backend/models"
@@ -28,7 +27,7 @@ func NewHandler(service Service) Handler {
 
 func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *models.AppError {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	userId := userInfo["userId"].(string)
+	userId := userInfo["userId"].(float64)
 
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
@@ -45,7 +44,6 @@ func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 		}
 	}
 
-	userIdInt, err := strconv.Atoi(userId)
 	if err != nil {
 		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
 	}
@@ -54,14 +52,12 @@ func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 	// errors.New() insead of its error
 	newTweet, err := h.service.CreateTweet(model.Tweet{
 		Content: payload.Content,
-		UserId:  userIdInt,
+		UserId:  int(userId),
 	})
-
-	if serviceErr, ok := err.(*models.ServiceError); ok {
-		return &models.AppError{
-			Err:     err,
-			Message: serviceErr.Message,
-			Code:    http.StatusInternalServerError,
+	if e, ok := err.(*models.AppError); ok {
+		fmt.Printf("%#v\n%#v\n", err, e)
+		if e != nil {
+			return e
 		}
 	}
 
@@ -115,11 +111,10 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 		Id:      payload.TweetId,
 		Content: payload.Content,
 	})
-	if serviceErr, ok := err.(*models.ServiceError); ok {
-		return &models.AppError{
-			Err:     err,
-			Message: serviceErr.Message,
-			Code:    http.StatusInternalServerError,
+	if e, ok := err.(*models.AppError); ok {
+		fmt.Printf("%#v\n%#v\n", err, e)
+		if e != nil {
+			return e
 		}
 	}
 
@@ -150,51 +145,28 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
-		TweetId int    `json:"tweetId"`
-		Content string `json:"content"`
+		Id int `json:"id"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
-	err := validate.Struct(payload)
-	if err != nil {
+	if err := validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			// todo: make variable for fmt.Sprintf("Validation
 			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
-	if err != nil {
-		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
-	}
-
-	newTweet, err := h.service.UpdateTweet(model.Tweet{
-		Id:      payload.TweetId,
-		Content: payload.Content,
+	err := h.service.DeleteTweet(model.Tweet{
+		Id: payload.Id,
 	})
-	if serviceErr, ok := err.(*models.ServiceError); ok {
-		return &models.AppError{
-			Err:     err,
-			Message: serviceErr.Message,
-			Code:    http.StatusInternalServerError,
+	if e, ok := err.(*models.AppError); ok {
+		if err != nil {
+			return e
 		}
 	}
 
-	newTweetResponse := struct {
-		Id         int       `json:"id"`
-		Content    string    `json:"content"`
-		CreatedAt  time.Time `json:"createdAt"`
-		ModifiedAt time.Time `json:"modifiedAt"`
-		UserId     int       `json:"userId"`
-	}{
-		Id:         newTweet.Id,
-		Content:    newTweet.Content,
-		CreatedAt:  newTweet.CreatedAt,
-		ModifiedAt: newTweet.ModifiedAt,
-		UserId:     newTweet.UserId,
-	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet updated successfully", Data: newTweetResponse})
+	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}

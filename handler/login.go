@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -53,7 +54,7 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 
 			query = `SELECT id, username, password FROM users WHERE email=@email`
 
-			var userId string
+			var userId int
 			var username string
 			var hashedPassword string
 			err = db.QueryRow(ctx, query, args).Scan(&userId, &username, &hashedPassword)
@@ -83,7 +84,7 @@ func Login(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 			}
 
 			userInfo := loginResponse{
-				UserId:   userId,
+				UserId:   strconv.Itoa(userId),
 				Username: username,
 				Token:    signedToken,
 			}

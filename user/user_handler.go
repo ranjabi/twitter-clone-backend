@@ -33,8 +33,7 @@ func (c Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
-	err := validate.Struct(payload)
-	if err != nil {
+	if err := validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
@@ -46,16 +45,12 @@ func (c Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 		Email:    payload.Email,
 		Password: payload.Password,
 	})
-	if serviceErr, ok := err.(*models.ServiceError); ok {
-		if serviceErr != nil {
-			// TODO: BUG, THIS SHOULDN'T NEEDED.
-			// err AUTO CASTED TO (*models.ServiceError) even though it's typed nil
-			return &models.AppError{
-				Err:     err,
-				Message: serviceErr.Message,
-				Code:    http.StatusInternalServerError,
-			}
+	if e, ok := err.(*models.AppError); ok {
+		if e.Code == 0 {
+			e.Code = http.StatusInternalServerError
 		}
+
+		return e
 	}
 
 	newUserResponse := struct {
@@ -95,27 +90,11 @@ func (c Handler) HandleUserLogin(w http.ResponseWriter, r *http.Request) *models
 	}
 
 	user, err := c.service.CheckUserCredential(payload.Email, payload.Password)
-	// PREVIOUSLY:
-	// if err != nil {
-	// 	return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
-	// }
-	if serviceErr, ok := err.(*models.ServiceError); ok {
-		if serviceErr.Err != nil {
-			// TODO: BUG, THIS SHOULDN'T NEEDED.
-			// err AUTO CASTED TO (*models.ServiceError) even though it's typed nil
-			return &models.AppError{
-				Err:     err,
-				Message: serviceErr.Message,
-				Code:    http.StatusInternalServerError,
-			}
-		} else {
-			// business logic error, set the code
-			return &models.AppError{
-				Err:     nil,
-				Message: serviceErr.Message,
-				Code:    http.StatusUnauthorized,
-			}
+	if e, ok := err.(*models.AppError); ok {
+		if e.Code == 0 {
+			e.Code = http.StatusInternalServerError
 		}
+		return e
 	}
 
 	userResponse := struct {

@@ -65,3 +65,15 @@ func (r Repository) UpdateTweet(tweet model.Tweet) (*model.Tweet, error) {
 
 	return &updatedTweet, nil
 }
+
+func (r Repository) DeleteTweet(id int) error {
+	query := `DELETE FROM tweets WHERE id=@id`
+	args := pgx.NamedArgs{
+		"id": id,
+	}
+	if _, err := r.conn.Exec(r.ctx, query, args); err != nil {
+		return err
+	}
+
+	return nil
+}
