@@ -34,6 +34,21 @@ func (r Repository) CreateTweet(tweet model.Tweet) (*model.Tweet, error) {
 	return &newTweet, nil
 }
 
+func (r Repository) IsTweetExistById(id int) (bool, error) {
+	var isTweetExist bool
+	query := `SELECT EXISTS (SELECT 1 FROM tweets WHERE id=@id)`
+	args := pgx.NamedArgs{
+		"id": id,
+	}
+
+	err := r.conn.QueryRow(r.ctx, query, args).Scan(&isTweetExist)
+	if err != nil {
+		return false, err
+	}
+
+	return isTweetExist, nil
+}
+
 func (r Repository) UpdateTweet(tweet model.Tweet) (*model.Tweet, error) {
 	var updatedTweet model.Tweet
 	query := `UPDATE tweets SET content=@content, modified_at=@modifiedAt WHERE id=@tweetId RETURNING id, content, modified_at, user_id`

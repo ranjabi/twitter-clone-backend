@@ -26,8 +26,8 @@ func NewHandler(service Service) Handler {
 	return Handler{service: service, validate: validate}
 }
 
-func (c Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *models.AppError {
-	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *models.AppError {
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	userId := userInfo["userId"].(string)
 
 	decoder := json.NewDecoder(r.Body)
@@ -35,29 +35,34 @@ func (c Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 		Content string `json:"content"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
 	err := validate.Struct(payload)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Error: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
 	userIdInt, err := strconv.Atoi(userId)
 	if err != nil {
-		return &models.AppError{Error: err, Message: err.Error(), Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
 	}
 
 	// not propagate because if db error we can't track it since repo send
 	// errors.New() insead of its error
-	newTweet, err := c.service.CreateTweet(model.Tweet{
+	newTweet, err := h.service.CreateTweet(model.Tweet{
 		Content: payload.Content,
 		UserId:  userIdInt,
 	})
-	if err != nil {
-		return &models.AppError{Error: err, Message: "failed to create tweet", Code: http.StatusInternalServerError}
+
+	if serviceErr, ok := err.(*models.ServiceError); ok {
+		return &models.AppError{
+			Err:   err,
+			Message: serviceErr.Message,
+			Code:    http.StatusInternalServerError,
+		}
 	}
 
 	newTweetResponse := struct {
@@ -73,7 +78,7 @@ func (c Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet created successfully", Data: newTweetResponse})
 	if err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -82,36 +87,40 @@ func (c Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 	return nil
 }
 
-func (c Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
 		TweetId int    `json:"tweetId"`
 		Content string `json:"content"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
 	err := validate.Struct(payload)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			// todo: make variable for fmt.Sprintf("Validation
-			return &models.AppError{Error: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
 	if err != nil {
-		return &models.AppError{Error: err, Message: err.Error(), Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
 	}
 
 	// not propagate because if db error we can't track it since repo send
 	// errors.New() insead of its error
-	newTweet, err := c.service.UpdateTweet(model.Tweet{
+	newTweet, err := h.service.UpdateTweet(model.Tweet{
 		Id:      payload.TweetId,
 		Content: payload.Content,
 	})
-	if err != nil {
-		return &models.AppError{Error: err, Message: "failed to update tweet", Code: http.StatusInternalServerError}
+	if serviceErr, ok := err.(*models.ServiceError); ok {
+		return &models.AppError{
+			Err:   err,
+			Message: serviceErr.Message,
+			Code:    http.StatusInternalServerError,
+		}
 	}
 
 	newTweetResponse := struct {
@@ -129,7 +138,65 @@ func (c Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet updated successfully", Data: newTweetResponse})
 	if err != nil {
-		return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}
+
+func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+	decoder := json.NewDecoder(r.Body)
+	payload := struct {
+		TweetId int    `json:"tweetId"`
+		Content string `json:"content"`
+	}{}
+	if err := decoder.Decode(&payload); err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+	}
+
+	err := validate.Struct(payload)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			// todo: make variable for fmt.Sprintf("Validation
+			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+		}
+	}
+
+	if err != nil {
+		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
+	}
+
+	newTweet, err := h.service.UpdateTweet(model.Tweet{
+		Id:      payload.TweetId,
+		Content: payload.Content,
+	})
+	if serviceErr, ok := err.(*models.ServiceError); ok {
+		return &models.AppError{
+			Err:   err,
+			Message: serviceErr.Message,
+			Code:    http.StatusInternalServerError,
+		}
+	}
+	
+	newTweetResponse := struct {
+		Id         int       `json:"id"`
+		Content    string    `json:"content"`
+		CreatedAt  time.Time `json:"createdAt"`
+		ModifiedAt time.Time `json:"modifiedAt"`
+		UserId     int       `json:"userId"`
+	}{
+		Id:         newTweet.Id,
+		Content:    newTweet.Content,
+		CreatedAt:  newTweet.CreatedAt,
+		ModifiedAt: newTweet.ModifiedAt,
+		UserId:     newTweet.UserId,
+	}
+	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet updated successfully", Data: newTweetResponse})
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
