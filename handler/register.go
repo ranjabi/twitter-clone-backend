@@ -70,7 +70,7 @@ func Register(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Error: err, Message: "Failed to create account", Code: http.StatusInternalServerError}
 			}
 
-			res, err := json.Marshal(models.SuccessResponse[newUserResponse]{Message: "Account created successfully", Data: newUser}) // write to a string
+			res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully", Data: newUser}) // write to a string
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}

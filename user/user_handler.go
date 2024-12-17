@@ -55,17 +55,15 @@ func (c Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type NewUserResponse struct {
+	newUserResponse := struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
-	}
-
-	newUserResponse := NewUserResponse{
+	}{
 		Username: newUser.Username,
 		Email:    newUser.Email,
 	}
 
-	res, err := json.Marshal(models.SuccessResponse[NewUserResponse]{Message: "Account created successfully", Data: newUserResponse})
+	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully", Data: newUserResponse})
 	if err != nil {
 		http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
 		return

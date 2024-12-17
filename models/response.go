@@ -1,8 +1,8 @@
 package models
 
-type SuccessResponse[T any] struct {
+type SuccessResponse struct {
 	Message	string	`json:"message"`
-	Data	T		`json:"data"`
+	Data	any		`json:"data"`
 }
 
 type SuccessResponseMessage struct {

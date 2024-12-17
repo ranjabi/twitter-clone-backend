@@ -48,7 +48,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Error: err, Message: "Failed to create tweet", Code: http.StatusInternalServerError}
 			}
 
-			res, err := json.Marshal(models.SuccessResponse[newTweetResponse]{Message: "Tweet created successfully", Data: newTweet})
+			res, err := json.Marshal(models.SuccessResponse{Message: "Tweet created successfully", Data: newTweet})
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
@@ -107,7 +107,7 @@ func Tweet(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
 				return &models.AppError{Error: err, Message: "Failed to update tweet", Code: http.StatusInternalServerError}
 			}
 
-			res, err := json.Marshal(models.SuccessResponse[updatedTweetResponse]{Message: "Tweet updated successfully", Data: updatedTweet})
+			res, err := json.Marshal(models.SuccessResponse{Message: "Tweet updated successfully", Data: updatedTweet})
 			if err != nil {
 				return &models.AppError{Error: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 			}
