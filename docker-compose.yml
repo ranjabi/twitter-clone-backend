@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  twitter-clone-backend:
+    image: ranjabi/twitter-clone-backend:latest
+    build: 
+      context: .
+      dockerfile: Dockerfile.multistage
+    depends_on: 
+      - postgres
+    networks:
+      - mynet
+    ports:
+      - 8080:8080
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+    env_file: .env
+  postgres:
+    image: postgres:17.2-alpine
+    environment:
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - myvolume:/var/lib/postgresql/data 
+    networks:
+      - mynet
+
+volumes:
+  myvolume:
+
+networks:
+  mynet:
+    driver: bridge
