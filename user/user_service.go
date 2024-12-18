@@ -2,7 +2,6 @@ package user
 
 import (
 	"net/http"
-	"twitter-clone-backend/model"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
@@ -18,7 +17,7 @@ func NewService(repository Repository) Service {
 	return Service{repository: repository}
 }
 
-func (s Service) CreateUser(user model.User) (*model.User, error) {
+func (s Service) CreateUser(user models.User) (*models.User, error) {
 	isUserExist, err := s.repository.IsUserExistByEmail(user.Email)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
@@ -41,7 +40,7 @@ func (s Service) CreateUser(user model.User) (*model.User, error) {
 	return newUser, nil
 }
 
-func (s Service) CheckUserCredential(email string, password string) (*model.User, error) {
+func (s Service) CheckUserCredential(email string, password string) (*models.User, error) {
 	isUserExist, err := s.repository.IsUserExistByEmail(email)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}

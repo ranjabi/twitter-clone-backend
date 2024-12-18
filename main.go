@@ -9,7 +9,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"twitter-clone-backend/db"
-	"twitter-clone-backend/handler"
+	"twitter-clone-backend/healthCheck"
 	"twitter-clone-backend/middleware"
 	"twitter-clone-backend/tweet"
 	"twitter-clone-backend/user"
@@ -28,7 +28,7 @@ func main() {
 	mux := new(middleware.AppMux)
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
-	mux.Handle("/health-check", handler.HealthCheck(conn, ctx))
+	mux.Handle("/health-check", healthCheck.HealthCheck(conn, ctx))
 
 	userRepository := user.NewRepository(conn, ctx)
 	userService := user.NewService(userRepository)

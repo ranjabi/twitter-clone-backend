@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"twitter-clone-backend/model"
+	"twitter-clone-backend/models"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,8 +17,8 @@ func NewRepository(conn *pgxpool.Pool, ctx context.Context) Repository {
 	return Repository{conn: conn, ctx: ctx}
 }
 
-func (r Repository) CreateUser(user model.User) (*model.User, error) {
-	var newUser model.User
+func (r Repository) CreateUser(user models.User) (*models.User, error) {
+	var newUser models.User
 	query := `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
 	args := pgx.NamedArgs{
 		"username": user.Username,
@@ -49,8 +49,8 @@ func (r Repository) IsUserExistByEmail(email string) (bool, error) {
 	return isUserExist, nil
 }
 
-func (r Repository) GetUserByEmail(email string) (*model.User, error) {
-	var user model.User
+func (r Repository) GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
 	query := `SELECT id, username, email, password FROM users WHERE email=@email`
 	args := pgx.NamedArgs{
 		"email": email,

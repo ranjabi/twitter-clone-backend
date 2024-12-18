@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"twitter-clone-backend/model"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
@@ -50,7 +49,7 @@ func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 
 	// not propagate because if db error we can't track it since repo send
 	// errors.New() insead of its error
-	newTweet, err := h.service.CreateTweet(model.Tweet{
+	newTweet, err := h.service.CreateTweet(models.Tweet{
 		Content: payload.Content,
 		UserId:  int(userId),
 	})
@@ -108,7 +107,7 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 
 	// not propagate because if db error we can't track it since repo send
 	// errors.New() insead of its error
-	newTweet, err := h.service.UpdateTweet(model.Tweet{
+	newTweet, err := h.service.UpdateTweet(models.Tweet{
 		Id:      payload.TweetId,
 		Content: payload.Content,
 	})
@@ -158,7 +157,7 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 		}
 	}
 
-	err := h.service.DeleteTweet(model.Tweet{
+	err := h.service.DeleteTweet(models.Tweet{
 		Id: payload.Id,
 	})
 	if e, ok := err.(*models.AppError); ok {

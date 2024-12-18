@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"twitter-clone-backend/model"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
@@ -41,7 +40,7 @@ func (h Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 	}
 
 	// karena manggil layer di dalama, maka pakai message dan error dari layer dalam
-	newUser, err := h.service.CreateUser(model.User{
+	newUser, err := h.service.CreateUser(models.User{
 		Username: payload.Username,
 		Email:    payload.Email,
 		Password: payload.Password,
