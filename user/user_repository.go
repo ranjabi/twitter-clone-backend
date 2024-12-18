@@ -49,6 +49,21 @@ func (r Repository) IsUserExistByEmail(email string) (bool, error) {
 	return isUserExist, nil
 }
 
+func (r Repository) GetUserById(id int) (*models.User, error) {
+	var user models.User
+	query := `SELECT id, username, email, password, follower_count, following_count FROM users WHERE id=@id`
+	args := pgx.NamedArgs{
+		"id": id,
+	}
+
+	err := r.conn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.FollowerCount, &user.FollowingCount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r Repository) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, email, password FROM users WHERE email=@email`

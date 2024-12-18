@@ -6,6 +6,7 @@ import (
 	"twitter-clone-backend/utils"
 
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,6 +39,18 @@ func (s Service) CreateUser(user models.User) (*models.User, error) {
 	}
 
 	return newUser, nil
+}
+
+func (s Service) GetUserById(id int) (*models.User, error) {
+	user, err := s.repository.GetUserById(id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+		}
+		return nil, &models.AppError{Err: err, Message: "Failed to get user"}
+	}
+
+	return user, nil
 }
 
 func (s Service) CheckUserCredential(email string, password string) (*models.User, error) {

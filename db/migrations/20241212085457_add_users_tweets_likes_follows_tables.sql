@@ -6,8 +6,8 @@ CREATE TABLE users (
 	email 			varchar(255) NOT NULL,
 	password 		varchar(128) NOT NULL,
 	created_at 		timestamp NOT NULL,
-	following_count int DEFAULT 0,
-	followers_count	int DEFAULT 0
+	follower_count	int DEFAULT 0,
+	following_count int DEFAULT 0
 );
 
 CREATE TABLE tweets (

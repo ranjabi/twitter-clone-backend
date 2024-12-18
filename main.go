@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load(".env")
+	err := godotenv.Load(".env.development")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -49,6 +49,7 @@ func main() {
 
 	mux.Handle("POST 	/v2/user/follow", userHandler.HandleFollowOtherUser)
 	mux.Handle("POST 	/v2/user/unfollow", userHandler.HandleUnfollowOtherUser)
+	mux.Handle("GET		/v2/users/{id}", userHandler.HandleGetUserProfile)
 
 	mux.Handle("POST 	/v2/tweet", tweetHandler.HandleCreateTweet)
 	mux.Handle("PUT 	/v2/tweet", tweetHandler.HandleUpdateTweet)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
@@ -102,6 +103,41 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 		Token:    user.Token,
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userResponse})
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}
+
+func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
+
+	user, err := h.service.GetUserById(id)
+	if e, ok := err.(*models.AppError); ok {
+		return e
+	}
+
+	userProfileResponse := struct {
+		Id       int    `json:"id"`
+		Username string `json:"username"`
+		FollowerCount int `json:"followerCount"`
+		FollowingCount int `json:"followingCount"`
+	}{
+		Id: user.Id, 
+		Username: user.Username,
+		FollowerCount: user.FollowerCount, 
+		FollowingCount: user.FollowingCount,
+	}
+
+	res, err := json.Marshal(models.SuccessResponse{Data: userProfileResponse})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}

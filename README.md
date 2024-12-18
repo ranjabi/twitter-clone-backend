@@ -14,15 +14,18 @@ Features:
 - [x] Follow/unfollow
 
 ## Stage 2
-Implement layered architecture & request validation. Developed in '/v2/{...}' endpoint so the previous version of endpoint still can be visited.
+Implement layered architecture & request validation. Developed in '/v2/{...}' endpoint.
 
 ###
 Improvements:
-- [ ] E2e test
-- [ ] Refactor to layered architecture
+- [x] E2E Testing
+- [x] Refactored to layered architecture
 
 Features:
-- [ ] Like
+- [x] Like
+
+## Stage 3
+- [ ] Implement redis for cache user profile (including user last 10 tweets)
 
 ## ERD
 Migration version: 20241214113457
