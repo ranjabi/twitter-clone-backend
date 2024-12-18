@@ -53,6 +53,8 @@ func main() {
 	mux.Handle("POST 	/v2/tweet", tweetHandler.HandleCreateTweet)
 	mux.Handle("PUT 	/v2/tweet", tweetHandler.HandleUpdateTweet)
 	mux.Handle("DELETE 	/v2/tweet", tweetHandler.HandleDeleteTweet)
+	mux.Handle("POST 	/v2/tweet/{id}/like", tweetHandler.HandleLikeTweet)
+	mux.Handle("POST 	/v2/tweet/{id}/unlike", tweetHandler.HandleUnlikeTweet)
 
 	server := new(http.Server)
 	server.Addr = ":8080"

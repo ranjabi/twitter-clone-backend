@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -35,7 +36,6 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
-	
 	if err := validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
@@ -153,6 +153,72 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}
+
+func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+	id := r.PathValue("id")
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
+
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
+	userId := userInfo["userId"].(float64)
+
+	likeCount, err := h.service.LikeTweet(int(userId), idInt)
+	if e, ok := err.(*models.AppError); ok {
+		return e
+	}
+
+	likeTweetResponse := struct {
+		Id        int `json:"id"`
+		LikeCount int `json:"likeCount"`
+	}{
+		Id:        idInt,
+		LikeCount: likeCount,
+	}
+	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet liked", Data: likeTweetResponse})
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}
+
+func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+	id := r.PathValue("id")
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
+
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
+	userId := userInfo["userId"].(float64)
+
+	likeCount, err := h.service.UnlikeTweet(int(userId), idInt)
+	if e, ok := err.(*models.AppError); ok {
+		return e
+	}
+
+	likeTweetResponse := struct {
+		Id        int `json:"id"`
+		LikeCount int `json:"likeCount"`
+	}{
+		Id:        idInt,
+		LikeCount: likeCount,
+	}
+	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet unliked", Data: likeTweetResponse})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
