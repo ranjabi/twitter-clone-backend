@@ -30,12 +30,12 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		Password string `json:"password" validate:"required"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusBadRequest}
 	}
 
 	if err := validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusBadRequest}
 		}
 	}
 
