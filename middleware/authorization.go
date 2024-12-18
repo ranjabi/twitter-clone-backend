@@ -12,14 +12,22 @@ import (
 func JwtAuthorization(next http.Handler) http.Handler {
 	// diwrap pakai http.HandlerFunc supaya fungsi di bawah bisa jadi http handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/health-check" || r.URL.Path == "/login" || r.URL.Path == "/register" {
-			next.ServeHTTP(w, r)
-			return
+		allowedPaths := []string{
+			"/v2/health-check",
+			"/v2/login",
+			"/v2/register",
+		}
+
+		for _, path := range allowedPaths {
+			if r.URL.Path == path {
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
 
 		authorizationHeader := r.Header.Get("Authorization")
 		if !strings.Contains(authorizationHeader, "Bearer") {
-			http.Error(w, "Unauthorized access", http.StatusBadRequest)
+			http.Error(w, "Unauthorized access", http.StatusUnauthorized)
 			return
 		}
 

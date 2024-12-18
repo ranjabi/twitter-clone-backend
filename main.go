@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/joho/godotenv"
 
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/healthCheck"
@@ -17,6 +17,11 @@ import (
 )
 
 func main() {
+	err := godotenv.Load(".env.development")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	ctx := context.Background()
 
 	conn, err := db.GetDbConnection(utils.GetDbConnectionUrlFromEnv())
@@ -39,15 +44,15 @@ func main() {
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// if use mux.Handle then will goes into AppHandler
-	mux.Handle("POST /register", userHandler.HandleUserRegister)
-	mux.Handle("POST /login", userHandler.HandleUserLogin)
+	mux.Handle("POST 	/v2/register", userHandler.HandleUserRegister)
+	mux.Handle("POST 	/v2/login", userHandler.HandleUserLogin)
 
-	mux.Handle("POST /user/follow", userHandler.HandleFollowOtherUser)
-	mux.Handle("POST /user/unfollow", userHandler.HandleUnfollowOtherUser)
+	mux.Handle("POST 	/v2/user/follow", userHandler.HandleFollowOtherUser)
+	mux.Handle("POST 	/v2/user/unfollow", userHandler.HandleUnfollowOtherUser)
 
-	mux.Handle("POST /tweet", tweetHandler.HandleTweetCreate)
-	mux.Handle("PUT /tweet", tweetHandler.HandleUpdateTweet)
-	mux.Handle("DELETE /tweet", tweetHandler.HandleDeleteTweet)
+	mux.Handle("POST 	/v2/tweet", tweetHandler.HandleTweetCreate)
+	mux.Handle("PUT 	/v2/tweet", tweetHandler.HandleUpdateTweet)
+	mux.Handle("DELETE 	/v2/tweet", tweetHandler.HandleDeleteTweet)
 
 	server := new(http.Server)
 	server.Addr = ":8080"

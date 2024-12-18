@@ -28,23 +28,18 @@ func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	userId := userInfo["userId"].(float64)
 
-	decoder := json.NewDecoder(r.Body)
 	payload := struct {
-		Content string `json:"content"`
+		Content string `json:"content" validate:"required"`
 	}{}
-	if err := decoder.Decode(&payload); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
 	}
 
-	err := validate.Struct(payload)
-	if err != nil {
+	
+	if err := validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
-	}
-
-	if err != nil {
-		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
 	}
 
 	// not propagate because if db error we can't track it since repo send
@@ -54,11 +49,7 @@ func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *mode
 		UserId:  int(userId),
 	})
 	if e, ok := err.(*models.AppError); ok {
-		// todo: masuk ke handler ga?
-		fmt.Printf("%#v\n%#v\n", err, e)
-		if e != nil {
-			return e
-		}
+		return e
 	}
 
 	newTweetResponse := struct {
@@ -112,10 +103,7 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 		Content: payload.Content,
 	})
 	if e, ok := err.(*models.AppError); ok {
-		fmt.Printf("%#v\n%#v\n", err, e)
-		if e != nil {
-			return e
-		}
+		return e
 	}
 
 	newTweetResponse := struct {
@@ -161,9 +149,7 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 		Id: payload.Id,
 	})
 	if e, ok := err.(*models.AppError); ok {
-		if err != nil {
-			return e
-		}
+		return e
 	}
 
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})

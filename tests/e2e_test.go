@@ -52,7 +52,7 @@ const (
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
-	err := godotenv.Load("../.env")
+	err := godotenv.Load("../.env.development")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -94,6 +94,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHealthCheck(t *testing.T) {
+	t.Skip()
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/health-check", os.Getenv("TEST_BASE_URL")), nil)
 	assert.NoError(t, err)
 

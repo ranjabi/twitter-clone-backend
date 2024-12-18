@@ -46,10 +46,6 @@ func (h Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 		Password: payload.Password,
 	})
 	if e, ok := err.(*models.AppError); ok {
-		if e.Code == 0 {
-			e.Code = http.StatusInternalServerError
-		}
-
 		return e
 	}
 
@@ -91,9 +87,6 @@ func (h Handler) HandleUserLogin(w http.ResponseWriter, r *http.Request) *models
 
 	user, err := h.service.CheckUserCredential(payload.Email, payload.Password)
 	if e, ok := err.(*models.AppError); ok {
-		if e.Code == 0 {
-			e.Code = http.StatusInternalServerError
-		}
 		return e
 	}
 
@@ -141,9 +134,6 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 
 	err = h.service.FollowOtherUser(int(userId), payload.FollowingId)
 	if e, ok := err.(*models.AppError); ok {
-		if e.Code == 0 {
-			e.Code = http.StatusInternalServerError
-		}
 		return e
 	}
 
@@ -180,9 +170,6 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 
 	err = h.service.UnfollowOtherUser(int(userId), payload.FollowingId)
 	if e, ok := err.(*models.AppError); ok {
-		if e.Code == 0 {
-			e.Code = http.StatusInternalServerError
-		}
 		return e
 	}
 
