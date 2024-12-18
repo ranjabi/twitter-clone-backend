@@ -1,14 +1,20 @@
 package models
 
-type SuccessResponse[T any] struct {
-	Message	string	`json:"message"`
-	Data	T		`json:"data"`
+type SuccessResponse struct {
+	Message string `json:"message"`
+	Data    any    `json:"data"`
 }
 
 type SuccessResponseMessage struct {
-	Message	string	`json:"message"`
+	Message string `json:"message"`
 }
 
-type ErrorResponseMessage struct {
-	Message	string	`json:"message"`
+// todo: add Data: nil with NewErrorResponse
+type ErrorResponse struct {
+	Message string `json:"message"`
 }
+
+// todo: why not method of ErrorResponse?
+// func NewErrorResponse(message string) *ErrorResponse {
+// 	return &ErrorResponse{Message: message, Data: nil}
+// }

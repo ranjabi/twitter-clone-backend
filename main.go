@@ -5,39 +5,65 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"twitter-clone-backend/middleware"
-	"twitter-clone-backend/handler"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
+
+	"twitter-clone-backend/db"
+	"twitter-clone-backend/healthCheck"
+	"twitter-clone-backend/middleware"
+	"twitter-clone-backend/tweet"
+	"twitter-clone-backend/user"
+	"twitter-clone-backend/utils"
 )
 
 func main() {
+	err := godotenv.Load(".env.development")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	ctx := context.Background()
 
-	databaseUrl := "postgres://postgres:123456@localhost:5432/postgres"
-	db, err := pgxpool.New(ctx, databaseUrl)
+	conn, err := db.GetDbConnection(utils.GetDbConnectionUrlFromEnv())
 	if err != nil {
-		log.Fatal("Error opening database connection: ", err)
+		log.Fatal("Error getting database connection:", err)
 	}
-	defer db.Close()
+	defer db.CloseConnection()
 
 	mux := new(middleware.AppMux)
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
-	mux.Handle("/health-check", handler.HealthCheck(db, ctx))
-	mux.Handle("/register", handler.Register(db, ctx))
-	mux.Handle("/login", handler.Login(db, ctx))
-	mux.Handle("/tweet", handler.Tweet(db, ctx))
-	mux.Handle("/users/follow", handler.Follow(db, ctx))
-	mux.Handle("/users/unfollow", handler.Unfollow(db, ctx))
+	mux.Handle("/health-check", healthCheck.HealthCheck(conn, ctx))
+
+	userRepository := user.NewRepository(conn, ctx)
+	userService := user.NewService(userRepository)
+	userHandler := user.NewHandler(userService)
+
+	tweetRepository := tweet.NewRepository(conn, ctx)
+	tweetService := tweet.NewService(tweetRepository)
+	tweetHandler := tweet.NewHandler(tweetService)
+
+	// if use mux.Handle then will goes into AppHandler
+	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
+	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
+
+	mux.Handle("POST 	/v2/user/follow", userHandler.HandleFollowOtherUser)
+	mux.Handle("POST 	/v2/user/unfollow", userHandler.HandleUnfollowOtherUser)
+	mux.Handle("GET		/v2/users/{id}", userHandler.HandleGetUserProfile)
+
+	mux.Handle("POST 	/v2/tweet", tweetHandler.HandleCreateTweet)
+	mux.Handle("PUT 	/v2/tweet", tweetHandler.HandleUpdateTweet)
+	mux.Handle("DELETE 	/v2/tweet", tweetHandler.HandleDeleteTweet)
+	mux.Handle("POST 	/v2/tweet/{id}/like", tweetHandler.HandleLikeTweet)
+	mux.Handle("POST 	/v2/tweet/{id}/unlike", tweetHandler.HandleUnlikeTweet)
 
 	server := new(http.Server)
 	server.Addr = ":8080"
 	server.Handler = mux
 
-	fmt.Println("Server started at http://localhost:8080")
+	fmt.Printf("Server started at http://localhost%s\n", server.Addr)
 	err = server.ListenAndServe()
-    if err != nil {
-        log.Fatal("Error starting server: ", err)
-    }
+	if err != nil {
+		log.Fatal("Error starting server: ", err)
+	}
 }

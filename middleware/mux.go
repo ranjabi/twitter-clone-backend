@@ -1,41 +1,54 @@
 package middleware
 
 import (
-	"fmt"
-	"net/http"
-	"twitter-clone-backend/models"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
+	"net/http"
+	"strconv"
+	"twitter-clone-backend/models"
 
 	"twitter-clone-backend/utils"
 )
 
 const (
-	RED = "\033[31m"
-	GREEN = "\033[32m"
+	RED    = "\033[31m"
+	GREEN  = "\033[32m"
 	YELLOW = "\033[33m"
-	BLUE = "\033[34m"
+	BLUE   = "\033[34m"
 )
 
 type AppHandler func(http.ResponseWriter, *http.Request) *models.AppError
 
-// The ServeHTTP method called by the appHandler function and displays the returned error
+// todo: confirm this by looking at error trace when err is nul at ServiceError <--- The ServeHTTP method called by the appHandler function and displays the returned error
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if e := fn(w, r); e != nil {
-		if e.Error != nil {
-			fmt.Println(utils.ColorLog("error:", RED), e.Error.Error()) // goes to logging
+		if e.Code == 0 {
+			e.Code = http.StatusInternalServerError
 		}
-		// TODO: wrap this with error response
-		http.Error(w, e.Message, e.Code) // returned as response
-		return
+		
+		// goes to logging
+		fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), RED), utils.ColorLog(http.StatusText(e.Code), RED))
+		fmt.Println(utils.ColorLog(e.Error(), RED))
+		fmt.Printf("LOG app_mux.go: e: %#v\n", e)
+
+		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
+		if err != nil {
+			fmt.Printf("LOG app_mux.go: e: %#v\n", e)
+			http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(e.Code)
+		w.Write(res)
 	}
 }
 
 type AppMux struct {
 	http.ServeMux
-	middlewares		[]func(next http.Handler)	http.Handler
+	middlewares []func(next http.Handler) http.Handler
 }
 
 func (mux *AppMux) RegisterMiddleware(next func(next http.Handler) http.Handler) { // next func(next http.Handler) http.Handler ???
@@ -44,17 +57,20 @@ func (mux *AppMux) RegisterMiddleware(next func(next http.Handler) http.Handler)
 
 /*
 Not in order with struct
-struct {
-	Username	string	`json:"username"`
-	Email		string	`json:"email"`
-	Password	string	`json:"password"`
-}
+
+	struct {
+		Username	string	`json:"username"`
+		Email		string	`json:"email"`
+		Password	string	`json:"password"`
+	}
+
 Request body:
-{
-  "email": "Heaven_Hegmann50@hotmail.com",
-  "password": "example",
-  "username": "Garrick"
-}
+
+	{
+	  "email": "Heaven_Hegmann50@hotmail.com",
+	  "password": "example",
+	  "username": "Garrick"
+	}
 */
 func (mux *AppMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(utils.ColorLog(r.Method, GREEN), utils.ColorLog(r.URL.String(), GREEN))
@@ -65,7 +81,7 @@ func (mux *AppMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.Body = io.NopCloser(bytes.NewBuffer(requestBodyBytes))
-	var requestBody map[string]interface{}
+	var requestBody map[string]any
 	_ = json.Unmarshal(requestBodyBytes, &requestBody)
 
 	prettyRequestBody, err := json.MarshalIndent(requestBody, "", "  ")
@@ -86,7 +102,7 @@ func (mux *AppMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	current.ServeHTTP(w, r)
 }
 
-func (mux *AppMux) Handle(pattern string, handler interface{}) {
+func (mux *AppMux) Handle(pattern string, handler any) {
 	var wrappedHandler http.Handler
 
 	switch h := handler.(type) {

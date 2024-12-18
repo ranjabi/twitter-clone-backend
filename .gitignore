@@ -1,1 +1,6 @@
 tmp/
+z-etc/
+
+.env
+.env.development
+Makefile
