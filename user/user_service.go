@@ -18,6 +18,41 @@ func NewService(repository Repository) Service {
 	return Service{repository: repository}
 }
 
+func (s Service) GetUserById(id int) (*models.User, error) {
+	user, err := s.repository.GetUserById(id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+		}
+		return nil, &models.AppError{Err: err, Message: "Failed to get user"}
+	}
+
+	return user, nil
+}
+
+func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
+	lastTenTweets, err := s.repository.GetLastTenTweets(userId)
+	if err != nil {
+		return nil, &models.AppError{Err: err, Message: "Failed to get 10 recent tweets"}
+	}
+
+	return lastTenTweets, nil
+}
+
+func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
+	user, err := s.GetUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	lastTenTweets, err := s.GetLastTenTweets(id)
+	if err != nil {
+		return nil, err
+	}
+	user.RecentTweets = lastTenTweets
+
+	return user, nil
+}
+
 func (s Service) CreateUser(user models.User) (*models.User, error) {
 	isUserExist, err := s.repository.IsUserExistByEmail(user.Email)
 	if err != nil {
@@ -39,18 +74,6 @@ func (s Service) CreateUser(user models.User) (*models.User, error) {
 	}
 
 	return newUser, nil
-}
-
-func (s Service) GetUserById(id int) (*models.User, error) {
-	user, err := s.repository.GetUserById(id)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
-		}
-		return nil, &models.AppError{Err: err, Message: "Failed to get user"}
-	}
-
-	return user, nil
 }
 
 func (s Service) CheckUserCredential(email string, password string) (*models.User, error) {

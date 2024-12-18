@@ -76,7 +76,7 @@ func (s *Service) LikeTweet(userId int, tweetId int) (int, error) {
 		return likeCount, nil
 	}
 
-	likeCount, err := s.repository.LikeTweet(userId, tweetId); 
+	likeCount, err := s.repository.LikeTweet(userId, tweetId)
 	if err != nil {
 		return 0, &models.AppError{Err: err, Message: "Failed to like tweet"}
 	}
@@ -105,7 +105,7 @@ func (s *Service) UnlikeTweet(userId int, tweetId int) (int, error) {
 		return likeCount, nil
 	}
 
-	likeCount, err := s.repository.UnlikeTweet(userId, tweetId); 
+	likeCount, err := s.repository.UnlikeTweet(userId, tweetId)
 	if err != nil {
 		return 0, &models.AppError{Err: err, Message: "Failed to unlike tweet"}
 	}

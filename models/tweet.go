@@ -1,11 +1,14 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Tweet struct {
-	Id         int       `json:"id"`
-	Content    string    `json:"content"`
-	CreatedAt  time.Time `json:"createdAt"`
-	ModifiedAt time.Time `json:"modifiedAt"`
-	UserId     int       `json:"userId"`
+	Id         int        `json:"id"`
+	Content    string     `json:"content"`
+	CreatedAt  time.Time  `json:"createdAt" db:"created_at"`
+	ModifiedAt *time.Time `json:"modifiedAt" db:"modified_at"`
+	UserId     int        `json:"userId" db:"user_id"`
+	LikeCount  int        `json:"likeCount" db:"like_count"`
 }

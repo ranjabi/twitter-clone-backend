@@ -34,6 +34,25 @@ func (r Repository) CreateUser(user models.User) (*models.User, error) {
 	return &newUser, nil
 }
 
+func (r Repository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
+	query := `
+		SELECT * 
+			FROM tweets
+			ORDER BY created_at DESC
+			LIMIT 10
+	`
+	rows, err := r.conn.Query(r.ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Tweet])
+	if err != nil {
+		return nil, err
+	}
+	return lastTenTweets, nil
+}
+
 func (r Repository) IsUserExistByEmail(email string) (bool, error) {
 	var isUserExist bool
 	query := `SELECT EXISTS (SELECT 1 FROM users WHERE email=@email)`

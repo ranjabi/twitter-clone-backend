@@ -120,21 +120,25 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
 	}
 
-	user, err := h.service.GetUserById(id)
+	user, err := h.service.GetUserByIdWithRecentTweets(id)
 	if e, ok := err.(*models.AppError); ok {
 		return e
 	}
 
 	userProfileResponse := struct {
-		Id       int    `json:"id"`
-		Username string `json:"username"`
-		FollowerCount int `json:"followerCount"`
-		FollowingCount int `json:"followingCount"`
+		Id                 int            `json:"id"`
+		Username           string         `json:"username"`
+		FollowerCount      int            `json:"followerCount"`
+		FollowingCount     int            `json:"followingCount"`
+		RecentTweetsLength int            `json:"recentTweetsLength"`
+		RecentTweets       []models.Tweet `json:"recentTweets"`
 	}{
-		Id: user.Id, 
-		Username: user.Username,
-		FollowerCount: user.FollowerCount, 
-		FollowingCount: user.FollowingCount,
+		Id:                 user.Id,
+		Username:           user.Username,
+		FollowerCount:      user.FollowerCount,
+		FollowingCount:     user.FollowingCount,
+		RecentTweetsLength: len(user.RecentTweets),
+		RecentTweets:       user.RecentTweets,
 	}
 
 	res, err := json.Marshal(models.SuccessResponse{Data: userProfileResponse})
