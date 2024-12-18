@@ -73,6 +73,6 @@ jobs:
           echo "Stopping containers..."
           docker compose down
           echo "Starting containers..."
-          docker-compose pull && docker compose up --build -d
+          docker compose pull && docker compose up --build -d
           echo "Containers status:"
           docker ps
