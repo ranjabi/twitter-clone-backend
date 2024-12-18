@@ -23,7 +23,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
     expose:
-      - 5432
+      - 5432:5432
     volumes:
       - myvolume:/var/lib/postgresql/data 
     networks:
