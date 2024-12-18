@@ -21,7 +21,7 @@ func NewHandler(service Service) Handler {
 	return Handler{service: service}
 }
 
-func (h Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	validate = validator.New(validator.WithRequiredStructEnabled())
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
@@ -67,7 +67,7 @@ func (h Handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) *mod
 	return nil
 }
 
-func (h Handler) HandleUserLogin(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	validate = validator.New(validator.WithRequiredStructEnabled())
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {

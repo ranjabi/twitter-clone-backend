@@ -44,13 +44,13 @@ func main() {
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// if use mux.Handle then will goes into AppHandler
-	mux.Handle("POST 	/v2/register", userHandler.HandleUserRegister)
-	mux.Handle("POST 	/v2/login", userHandler.HandleUserLogin)
+	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
+	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
 
 	mux.Handle("POST 	/v2/user/follow", userHandler.HandleFollowOtherUser)
 	mux.Handle("POST 	/v2/user/unfollow", userHandler.HandleUnfollowOtherUser)
 
-	mux.Handle("POST 	/v2/tweet", tweetHandler.HandleTweetCreate)
+	mux.Handle("POST 	/v2/tweet", tweetHandler.HandleCreateTweet)
 	mux.Handle("PUT 	/v2/tweet", tweetHandler.HandleUpdateTweet)
 	mux.Handle("DELETE 	/v2/tweet", tweetHandler.HandleDeleteTweet)
 

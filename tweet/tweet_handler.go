@@ -24,7 +24,7 @@ func NewHandler(service Service) Handler {
 	return Handler{service: service, validate: validate}
 }
 
-func (h Handler) HandleTweetCreate(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	userId := userInfo["userId"].(float64)
 
