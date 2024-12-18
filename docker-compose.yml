@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   twitter-clone-backend:
-    image: ranjabi/twitter-clone-backend:latest
+    image: ranjabi/twitter-clone-backend:${DOCKER_TAG}
     depends_on: 
       - postgres
     networks:
