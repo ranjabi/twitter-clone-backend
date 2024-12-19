@@ -2,14 +2,17 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"twitter-clone-backend/models"
 )
 
 type contextKey string
 
 const (
-	ErrMsgFailedToParsePathValue      = "Failed to parse path value"
+	ErrMsgFailedToParsePathValue        = "Failed to parse path value"
 	ErrMsgFailedToParseRequestBody      = "Failed to parse request body"
 	ErrMsgFailedToSerializeResponseBody = "Failed to serialize response body"
 	ErrMsgMethodNotAllowed              = "Method not allowed"
@@ -41,7 +44,9 @@ func GetDbConnectionUrlFromEnv() string {
 		os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_DB"),
 	)
-	fmt.Println("LOG connString:", connString)
+	log.SetPrefix("db: ")
+	log.Println("Connecting to:", connString)
+	defer log.SetPrefix("db: ")
 
 	return connString
 }
@@ -58,7 +63,32 @@ func HandleErr(err error) *models.AppError {
 	if e, ok := err.(*models.AppError); ok {
 		return e
 	} else {
-		fmt.Println("LOG: not AppError instance")
+		HandleErrLog("not AppError instance")
 		return &models.AppError{Err: err, Message: err.Error()}
 	}
+}
+
+func CacheLog(content any) {
+	// Get the caller information (skip 1 frame to get the caller of CacheLog)
+	_, fullFilePath, line, ok := runtime.Caller(1)
+	if !ok {
+		fullFilePath = "unknown_file"
+		line = 0
+	}
+	file := filepath.Base(fullFilePath)
+
+	appLog := log.New(os.Stdout, "cache: ", 0)
+	appLog.Printf("%s:%d: %v\n", file, line, content)
+}
+
+func HandleErrLog(content any) {
+	_, fullFilePath, line, ok := runtime.Caller(1)
+	if !ok {
+		fullFilePath = "unknown_file"
+		line = 0
+	}
+	file := filepath.Base(fullFilePath)
+
+	appLog := log.New(os.Stdout, "HandleErr: ", 0)
+	appLog.Printf("%s:%d: %v\n", file, line, content)
 }

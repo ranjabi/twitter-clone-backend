@@ -23,7 +23,7 @@ jobs:
         }
         echo "$SECRETS_CONTEXT" | to_envs > .env
         echo "Secrets added to .env file."
-        echo ".env in Prepare 1:"
+        echo ".env:"
         cat .env
 
     - name: Get the last 8 digits of the commit hash

@@ -18,15 +18,17 @@ import (
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
+
 	env := os.Getenv("ENV_NAME")
 	err := godotenv.Load(env)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	if env != "" {
-		fmt.Println("LOADED ENV:", env)
+		log.Println("LOADED ENV:", env)
 	} else {
-		fmt.Println("LOADED ENV: .env")
+		log.Println("LOADED ENV: .env")
 	}
 
 	ctx := context.Background()

@@ -37,7 +37,7 @@ func GetPostgresConnection(connString string) (*pgxpool.Pool, error) {
 			log.Fatal("Postgres failed to connect:", err)
 		}
 
-		fmt.Println("Postgres database connection successfully obtained")
+		log.Println("Postgres database connection successfully obtained")
 	})
 
 	return pgConn, err
@@ -46,7 +46,7 @@ func GetPostgresConnection(connString string) (*pgxpool.Pool, error) {
 func ClosePostgresConnection() {
 	if pgConn != nil {
 		pgConn.Close()
-		fmt.Println("Postgres database connection closed")
+		log.Println("Postgres database connection closed")
 	}
 }
 
@@ -64,13 +64,13 @@ func GetRedisConnection() *redis.Client {
 		log.Fatal("Redis failed to connect:", err)
 	}
 
-	fmt.Println("Redis database connection successfully obtained")
+	log.Println("Redis database connection successfully obtained")
 
 	return rdConn
 }
 
 func applyMigrationsAndSeed(ctx context.Context) {
-	fmt.Println("Applying migrations and seed...")
+	log.Println("Applying migrations and seed...")
 
 	db, err := sql.Open("pgx", utils.GetDbConnectionUrlFromEnv())
 	if err != nil {
@@ -85,20 +85,28 @@ func applyMigrationsAndSeed(ctx context.Context) {
 	migrationsPath := filepath.Join(cwd, "db", "migrations")
 	seedPath := filepath.Join(cwd, "db", "seed")
 
-	fmt.Println("Starting migration up...")
+	log.Println("Starting migration reset...")
+	if err := goose.RunWithOptionsContext(ctx, "reset", db, migrationsPath, []string{}); err != nil {
+		log.Fatal("Migration reset failed:", err)
+	}
+
+	log.Println("Starting migration up...")
 	if err := goose.RunWithOptionsContext(ctx, "up", db, migrationsPath, []string{}); err != nil {
 		log.Fatal("Migration up failed:", err)
 	}
 
-	fmt.Println("Starting seed up...")
+	log.Println("Starting seed up...")
 	if err := goose.RunWithOptionsContext(ctx, "up", db, seedPath, []string{}, goose.WithNoVersioning()); err != nil {
 		log.Fatal("Seed up failed:", err)
 	}
 
-	fmt.Println("Migrations has been applied!")
+	log.Println("Migrations has been applied!")
 }
 
 func Setup(ctx context.Context) (*pgxpool.Pool, *redis.Client) {
+	log.SetPrefix("db: ")
+	defer log.SetPrefix("")
+
 	pgConn, err := GetPostgresConnection(utils.GetDbConnectionUrlFromEnv())
 	if err != nil {
 		log.Fatal("Error getting database connection:", err)
@@ -106,7 +114,10 @@ func Setup(ctx context.Context) (*pgxpool.Pool, *redis.Client) {
 
 	rdConn := GetRedisConnection()
 
-	applyMigrationsAndSeed(ctx)
+	// .env belongs for prod
+	if env := os.Getenv("ENV_NAME"); env == ".env" {
+		applyMigrationsAndSeed(ctx)
+	}
 
 	return pgConn, rdConn
 }

@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -52,16 +51,15 @@ func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
 		return nil, err
 	}
 	if cache != "" {
-		fmt.Println("LOG: cache hit by GetUserByIdWithRecentTweets")
-		// kalau cachenya ada
+		utils.CacheLog("HIT GetUserByIdWithRecentTweets")
 		var userCache []models.User
 		err = json.Unmarshal([]byte(cache), &userCache)
 		if err != nil {
-			return nil, err	
+			return nil, err
 		}
 		return &userCache[0], nil
 	}
-	fmt.Println("LOG: cache miss by GetUserByIdWithRecentTweets")
+	utils.CacheLog("MISS GetUserByIdWithRecentTweets")
 
 	user, err := s.GetUserById(id)
 	if err != nil {
