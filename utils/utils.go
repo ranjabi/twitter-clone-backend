@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"twitter-clone-backend/models"
 )
 
 type contextKey string
@@ -51,4 +52,13 @@ func PrintV(name string, input any) {
 
 func PrintVStruct(name string, input any) {
 	fmt.Printf("LOG %s:\n%#v\n", name, input)
+}
+
+func HandleErr(err error) *models.AppError {
+	if e, ok := err.(*models.AppError); ok {
+		return e
+	} else {
+		fmt.Println("LOG: not AppError instance")
+		return &models.AppError{Err: err, Message: err.Error()}
+	}
 }

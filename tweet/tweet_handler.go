@@ -48,8 +48,8 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		Content: payload.Content,
 		UserId:  int(userId),
 	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	newTweetResponse := struct {
@@ -102,8 +102,8 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 		Id:      payload.TweetId,
 		Content: payload.Content,
 	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	newTweetResponse := struct {
@@ -148,8 +148,8 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 	err := h.service.DeleteTweet(models.Tweet{
 		Id: payload.Id,
 	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})
@@ -174,8 +174,8 @@ func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *models
 	userId := userInfo["userId"].(float64)
 
 	likeCount, err := h.service.LikeTweet(int(userId), idInt)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	likeTweetResponse := struct {
@@ -207,8 +207,8 @@ func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *mode
 	userId := userInfo["userId"].(float64)
 
 	likeCount, err := h.service.UnlikeTweet(int(userId), idInt)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	likeTweetResponse := struct {

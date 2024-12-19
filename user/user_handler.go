@@ -46,8 +46,8 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		Email:    payload.Email,
 		Password: payload.Password,
 	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	newUserResponse := struct {
@@ -87,8 +87,8 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 	}
 
 	user, err := h.service.CheckUserCredential(payload.Email, payload.Password)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	userResponse := struct {
@@ -122,13 +122,7 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 
 	user, err := h.service.GetUserByIdWithRecentTweets(id)
 	if err != nil {
-		if e, ok := err.(*models.AppError); ok {
-			fmt.Println("LOG: masuk")
-			return e
-		} else {
-			// todo: this is the proper error handling, make everything use this
-			return &models.AppError{Err: err, Message: err.Error()}
-		}
+		return utils.HandleErr(err)
 	}
 
 	userProfileResponse := struct {
@@ -179,8 +173,8 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 	}
 
 	err = h.service.FollowOtherUser(int(userId), payload.FollowingId)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been followed"})
@@ -215,8 +209,8 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 	}
 
 	err = h.service.UnfollowOtherUser(int(userId), payload.FollowingId)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been unfollowed"})
