@@ -23,7 +23,7 @@ import (
 	"twitter-clone-backend/utils"
 )
 
-const ENV = ".env.development"
+const ENV = ".env.dev"
 
 func applyMigrationsAndSeed(ctx context.Context) {
 	fmt.Println("Applying migrations and seed...")
@@ -67,7 +67,7 @@ func setupDb(ctx context.Context) (*pgxpool.Pool, *redis.Client) {
 
 	rdConn := db.GetRedisConnection()
 
-	if ENV != ".env.development" {
+	if ENV != ".env.dev" {
 		applyMigrationsAndSeed(ctx)
 	}
 

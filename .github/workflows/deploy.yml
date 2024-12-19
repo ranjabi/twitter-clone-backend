@@ -14,8 +14,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Replace .env.development with .env in main.go
-      run: sed -i '0,/\.env\.development/{s/\.env\.development/\.env/}' ./main.go
+    - name: Replace .env.dev with .env in main.go
+      run: sed -i '0,/\.env\.dev/{s/\.env\.dev/\.env/}' ./main.go
 
     - name: Prepare 1
       env:

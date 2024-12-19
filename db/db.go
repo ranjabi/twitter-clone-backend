@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,14 +21,14 @@ var (
 func GetRedisConnection() *redis.Client {
 	rdOnce.Do(func() {
 		rdConn = redis.NewClient(&redis.Options{
-			Addr:     "localhost:6379",
+			Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
 			Password: "", // No password set
 			DB:       0,  // Use default DB
 		})
 		fmt.Println("Redis database connection created")
 	})
 
-	fmt.Println("Redis database connection successfully obtained")
+	fmt.Println("Redis database connection successfully obtained") // todo: this will never fail
 
 	return rdConn
 }
