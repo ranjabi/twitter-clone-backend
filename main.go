@@ -52,15 +52,15 @@ func main() {
 	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
 	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
 
-	mux.Handle("POST 	/v2/user/follow", userHandler.HandleFollowOtherUser)
-	mux.Handle("POST 	/v2/user/unfollow", userHandler.HandleUnfollowOtherUser)
+	mux.Handle("POST 	/v2/users/follow", userHandler.HandleFollowOtherUser)
+	mux.Handle("POST 	/v2/users/unfollow", userHandler.HandleUnfollowOtherUser)
 	mux.Handle("GET		/v2/users/{id}", userHandler.HandleGetUserProfile)
 
-	mux.Handle("POST 	/v2/tweet", tweetHandler.HandleCreateTweet)
-	mux.Handle("PUT 	/v2/tweet", tweetHandler.HandleUpdateTweet)
-	mux.Handle("DELETE 	/v2/tweet", tweetHandler.HandleDeleteTweet)
-	mux.Handle("POST 	/v2/tweet/{id}/like", tweetHandler.HandleLikeTweet)
-	mux.Handle("POST 	/v2/tweet/{id}/unlike", tweetHandler.HandleUnlikeTweet)
+	mux.Handle("POST 	/v2/tweets", tweetHandler.HandleCreateTweet)
+	mux.Handle("PUT 	/v2/tweets", tweetHandler.HandleUpdateTweet)
+	mux.Handle("DELETE 	/v2/tweets", tweetHandler.HandleDeleteTweet)
+	mux.Handle("POST 	/v2/tweets/{id}/like", tweetHandler.HandleLikeTweet)
+	mux.Handle("POST 	/v2/tweets/{id}/unlike", tweetHandler.HandleUnlikeTweet)
 
 	server := new(http.Server)
 	server.Addr = ":8080"
