@@ -86,9 +86,11 @@ func applyMigrationsAndSeed(ctx context.Context) {
 	migrationsPath := filepath.Join(cwd, "db", "migrations")
 	seedPath := filepath.Join(cwd, "db", "seed")
 
-	log.Println("Starting migration reset...")
-	if err := goose.RunWithOptionsContext(ctx, "reset", db, migrationsPath, []string{}); err != nil {
-		log.Fatal("Migration reset failed:", err)
+	if env := os.Getenv("ENV_NAME"); !strings.Contains(env, "prod") {
+		log.Println("Starting migration reset...")
+		if err := goose.RunWithOptionsContext(ctx, "reset", db, migrationsPath, []string{}); err != nil {
+			log.Fatal("Migration reset failed:", err)
+		}
 	}
 
 	log.Println("Starting migration up...")
