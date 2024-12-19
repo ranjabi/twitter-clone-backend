@@ -41,11 +41,12 @@ func main() {
 	mux.Handle("/health-check", healthCheck.HealthCheck(pgConn, rdConn, ctx))
 
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, userRepository)
-	userHandler := user.NewHandler(userService)
-
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository)
+
+	userService := user.NewService(ctx, userRepository)
+	tweetService := tweet.NewService(tweetRepository, userRepository)
+
+	userHandler := user.NewHandler(userService)
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// if use mux.Handle then will goes into AppHandler

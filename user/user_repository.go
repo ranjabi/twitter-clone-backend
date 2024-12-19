@@ -10,17 +10,17 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Repository struct {
+type UserRepository struct {
 	ctx    context.Context
 	pgConn *pgxpool.Pool
 	rdConn *redis.Client
 }
 
-func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) Repository {
-	return Repository{ctx: ctx, pgConn: pgConn, rdConn: rdConn}
+func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) UserRepository {
+	return UserRepository{ctx: ctx, pgConn: pgConn, rdConn: rdConn}
 }
 
-func (r Repository) GetUserCache(id int) (string, error) {
+func (r *UserRepository) GetUserCache(id int) (string, error) {
 	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("user.id:%d", id), "$").Result()
 	if err != nil {
 		return "", err
@@ -28,7 +28,7 @@ func (r Repository) GetUserCache(id int) (string, error) {
 	return res, nil
 }
 
-func (r Repository) GetUserRecentTweetsCache(id int) (string, error) {
+func (r *UserRepository) GetUserRecentTweetsCache(id int) (string, error) {
 	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("user.id:%d", id), "$.recentTweets").Result()
 	if err != nil {
 		return "", err
@@ -36,7 +36,15 @@ func (r Repository) GetUserRecentTweetsCache(id int) (string, error) {
 	return res, nil
 }
 
-func (r Repository) SetUserCache(user *models.User) (string, error) {
+func (r *UserRepository) DeleteUserRecentTweetsCache(id int) error {
+	_, err := r.rdConn.JSONDel(r.ctx, fmt.Sprintf("user.id:%d", id), "$.recentTweets").Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UserRepository) SetUserCache(user *models.User) (string, error) {
 	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("user.id:%d", user.Id), "$", user).Result()
 	if err != nil {
 		return "", err
@@ -44,7 +52,7 @@ func (r Repository) SetUserCache(user *models.User) (string, error) {
 
 	return res, nil
 }
-func (r Repository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
+func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
 	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("user.id:%d", user.Id), "$.recentTweets", tweets).Result()
 	if err != nil {
 		return "", err
@@ -52,7 +60,7 @@ func (r Repository) SetUserRecentTweetsCache(user *models.User, tweets []models.
 	return res, nil
 }
 
-func (r Repository) CreateUser(user models.User) (*models.User, error) {
+func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
 	var newUser models.User
 	query := `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
 	args := pgx.NamedArgs{
@@ -69,7 +77,7 @@ func (r Repository) CreateUser(user models.User) (*models.User, error) {
 	return &newUser, nil
 }
 
-func (r Repository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
+func (r *UserRepository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	query := `
 		SELECT * 
 			FROM tweets
@@ -88,7 +96,7 @@ func (r Repository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	return lastTenTweets, nil
 }
 
-func (r Repository) IsUserExistByEmail(email string) (bool, error) {
+func (r *UserRepository) IsUserExistByEmail(email string) (bool, error) {
 	var isUserExist bool
 	query := `SELECT EXISTS (SELECT 1 FROM users WHERE email=@email)`
 	args := pgx.NamedArgs{
@@ -103,7 +111,7 @@ func (r Repository) IsUserExistByEmail(email string) (bool, error) {
 	return isUserExist, nil
 }
 
-func (r Repository) GetUserById(id int) (*models.User, error) {
+func (r *UserRepository) GetUserById(id int) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, email, password, follower_count, following_count FROM users WHERE id=@id`
 	args := pgx.NamedArgs{
@@ -118,7 +126,7 @@ func (r Repository) GetUserById(id int) (*models.User, error) {
 	return &user, nil
 }
 
-func (r Repository) GetUserByEmail(email string) (*models.User, error) {
+func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, email, password FROM users WHERE email=@email`
 	args := pgx.NamedArgs{
@@ -133,7 +141,7 @@ func (r Repository) GetUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r Repository) FollowOtherUser(followerId int, followingId int) error {
+func (r *UserRepository) FollowOtherUser(followerId int, followingId int) error {
 	query := `INSERT INTO follows (follower_id, following_id) VALUES (@follower_id, @following_id)`
 	args := pgx.NamedArgs{
 		"follower_id":  followerId,
@@ -148,7 +156,7 @@ func (r Repository) FollowOtherUser(followerId int, followingId int) error {
 	return nil
 }
 
-func (r Repository) UnfollowOtherUser(followerId int, followingId int) error {
+func (r *UserRepository) UnfollowOtherUser(followerId int, followingId int) error {
 	query := `DELETE FROM follows WHERE follower_id=@follower_id and following_id=@following_id`
 	args := pgx.NamedArgs{
 		"follower_id":  followerId,

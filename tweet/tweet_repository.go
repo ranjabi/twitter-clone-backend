@@ -10,16 +10,16 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Repository struct {
-	ctx  context.Context
+type TweetRepository struct {
+	ctx    context.Context
 	pgConn *pgxpool.Pool
 }
 
-func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) Repository {
-	return Repository{ctx: ctx, pgConn: pgConn}
+func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) TweetRepository {
+	return TweetRepository{ctx: ctx, pgConn: pgConn}
 }
 
-func (r *Repository) CreateTweet(tweet models.Tweet) (*models.Tweet, error) {
+func (r *TweetRepository) CreateTweet(tweet models.Tweet) (*models.Tweet, error) {
 	var newTweet models.Tweet
 	query := `INSERT INTO tweets (content, user_id)  VALUES (@content, @user_id) RETURNING id, content, created_at, user_id`
 	args := pgx.NamedArgs{
@@ -35,7 +35,7 @@ func (r *Repository) CreateTweet(tweet models.Tweet) (*models.Tweet, error) {
 	return &newTweet, nil
 }
 
-func (r *Repository) IsTweetExistById(id int) (bool, error) {
+func (r *TweetRepository) IsTweetExistById(id int) (bool, error) {
 	var isTweetExist bool
 	query := `SELECT EXISTS (SELECT 1 FROM tweets WHERE id=@id)`
 	args := pgx.NamedArgs{
@@ -50,7 +50,7 @@ func (r *Repository) IsTweetExistById(id int) (bool, error) {
 	return isTweetExist, nil
 }
 
-func (r *Repository) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
+func (r *TweetRepository) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 	var updatedTweet models.Tweet
 	query := `UPDATE tweets SET content=@content, modified_at=@modifiedAt WHERE id=@tweetId RETURNING id, content, modified_at, user_id`
 	args := pgx.NamedArgs{
@@ -67,7 +67,7 @@ func (r *Repository) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 	return &updatedTweet, nil
 }
 
-func (r *Repository) DeleteTweet(id int) error {
+func (r *TweetRepository) DeleteTweet(id int) error {
 	query := `DELETE FROM tweets WHERE id=@id`
 	args := pgx.NamedArgs{
 		"id": id,
@@ -79,11 +79,11 @@ func (r *Repository) DeleteTweet(id int) error {
 	return nil
 }
 
-func (r *Repository) IsTweetLiked(userId int, tweetId int) (bool, error) {
+func (r *TweetRepository) IsTweetLiked(userId int, tweetId int) (bool, error) {
 	var isTweetLiked bool
 	query := `SELECT EXISTS (SELECT 1 FROM likes WHERE user_id=@user_id AND tweet_id=@tweet_id)`
 	args := pgx.NamedArgs{
-		"user_id": userId,
+		"user_id":  userId,
 		"tweet_id": tweetId,
 	}
 
@@ -95,7 +95,7 @@ func (r *Repository) IsTweetLiked(userId int, tweetId int) (bool, error) {
 	return isTweetLiked, nil
 }
 
-func (r *Repository) GetTweetLikeCountById(id int) (int, error) {
+func (r *TweetRepository) GetTweetLikeCountById(id int) (int, error) {
 	var likeCount int
 	query := `SELECT like_count from tweets WHERE id = @id`
 	args := pgx.NamedArgs{
@@ -111,7 +111,7 @@ func (r *Repository) GetTweetLikeCountById(id int) (int, error) {
 }
 
 // todo: should separate to LikeRepository?
-func (r *Repository) LikeTweet(userId int, tweetId int) (int, error) {
+func (r *TweetRepository) LikeTweet(userId int, tweetId int) (int, error) {
 	var likeCount int
 	tx, err := r.pgConn.Begin(r.ctx)
 	if err != nil {
@@ -121,7 +121,7 @@ func (r *Repository) LikeTweet(userId int, tweetId int) (int, error) {
 
 	query := "INSERT INTO likes (user_id, tweet_id) VALUES (@user_id, @tweet_id)"
 	args := pgx.NamedArgs{
-		"user_id": userId,
+		"user_id":  userId,
 		"tweet_id": tweetId,
 	}
 	_, err = tx.Exec(r.ctx, query, args)
@@ -146,7 +146,7 @@ func (r *Repository) LikeTweet(userId int, tweetId int) (int, error) {
 	return likeCount, nil
 }
 
-func (r *Repository) UnlikeTweet(userId int, tweetId int) (int, error) {
+func (r *TweetRepository) UnlikeTweet(userId int, tweetId int) (int, error) {
 	var likeCount int
 	tx, err := r.pgConn.Begin(r.ctx)
 	if err != nil {
@@ -156,7 +156,7 @@ func (r *Repository) UnlikeTweet(userId int, tweetId int) (int, error) {
 
 	query := "DELETE FROM likes WHERE user_id = @user_id and tweet_id = @tweet_id"
 	args := pgx.NamedArgs{
-		"user_id": userId,
+		"user_id":  userId,
 		"tweet_id": tweetId,
 	}
 	_, err = tx.Exec(r.ctx, query, args)

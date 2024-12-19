@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"twitter-clone-backend/utils"
 
@@ -114,8 +115,7 @@ func Setup(ctx context.Context) (*pgxpool.Pool, *redis.Client) {
 
 	rdConn := GetRedisConnection()
 
-	// .env belongs for prod
-	if env := os.Getenv("ENV_NAME"); env == ".env" {
+	if env := os.Getenv("ENV_NAME"); strings.Contains(env, "prod") {
 		applyMigrationsAndSeed(ctx)
 	}
 
