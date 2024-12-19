@@ -43,6 +43,12 @@ func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 		return nil, &models.AppError{Err: err, Message: "Failed to update tweet"}
 	}
 
+	err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.UserId)
+	if err != nil {
+		// todo: what is the output if it goes into this?
+		return nil, err
+	}
+
 	return newTweet, nil
 }
 

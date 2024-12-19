@@ -113,7 +113,7 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 	return nil
 }
 
-func (h Handler) HandleGetUser(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
