@@ -43,3 +43,11 @@ func GetDbConnectionUrlFromEnv() string {
 
 	return connString
 }
+
+func PrintV(name string, input any) {
+	fmt.Printf("LOG %s:\n%v\n", name, input)
+}
+
+func PrintVStruct(name string, input any) {
+	fmt.Printf("LOG %s:\n%#v\n", name, input)
+}

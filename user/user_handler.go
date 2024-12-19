@@ -121,8 +121,14 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 	}
 
 	user, err := h.service.GetUserByIdWithRecentTweets(id)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		if e, ok := err.(*models.AppError); ok {
+			fmt.Println("LOG: masuk")
+			return e
+		} else {
+			// todo: this is the proper error handling, make everything use this
+			return &models.AppError{Err: err, Message: err.Error()}
+		}
 	}
 
 	userProfileResponse := struct {
@@ -137,7 +143,7 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 		Username:           user.Username,
 		FollowerCount:      user.FollowerCount,
 		FollowingCount:     user.FollowingCount,
-		RecentTweetsLength: len(user.RecentTweets),
+		RecentTweetsLength: 10, // todo: gimana kalo lennya 0?
 		RecentTweets:       user.RecentTweets,
 	}
 

@@ -6,13 +6,14 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 
 	"twitter-clone-backend/middleware"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 )
 
-func HealthCheck(db *pgxpool.Pool, ctx context.Context) middleware.AppHandler {
+func HealthCheck(db *pgxpool.Pool, rdConn *redis.Client, ctx context.Context) middleware.AppHandler {
 	return func(w http.ResponseWriter, r *http.Request) *models.AppError {
 		serverStatus := "OK"
 		dbStatus := "OK"

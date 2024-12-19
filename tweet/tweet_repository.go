@@ -7,15 +7,16 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type Repository struct {
-	conn *pgxpool.Pool
 	ctx  context.Context
+	pgConn *pgxpool.Pool
 }
 
-func NewRepository(conn *pgxpool.Pool, ctx context.Context) Repository {
-	return Repository{conn: conn, ctx: ctx}
+func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) Repository {
+	return Repository{ctx: ctx, pgConn: pgConn}
 }
 
 func (r *Repository) CreateTweet(tweet models.Tweet) (*models.Tweet, error) {
@@ -26,7 +27,7 @@ func (r *Repository) CreateTweet(tweet models.Tweet) (*models.Tweet, error) {
 		"user_id": tweet.UserId,
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&newTweet.Id, &newTweet.Content, &newTweet.CreatedAt, &newTweet.UserId)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newTweet.Id, &newTweet.Content, &newTweet.CreatedAt, &newTweet.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +42,7 @@ func (r *Repository) IsTweetExistById(id int) (bool, error) {
 		"id": id,
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&isTweetExist)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&isTweetExist)
 	if err != nil {
 		return false, err
 	}
@@ -58,7 +59,7 @@ func (r *Repository) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 		"modifiedAt": time.Now(),
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&updatedTweet.Id, &updatedTweet.Content, &updatedTweet.ModifiedAt, &updatedTweet.UserId)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&updatedTweet.Id, &updatedTweet.Content, &updatedTweet.ModifiedAt, &updatedTweet.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,7 @@ func (r *Repository) DeleteTweet(id int) error {
 	args := pgx.NamedArgs{
 		"id": id,
 	}
-	if _, err := r.conn.Exec(r.ctx, query, args); err != nil {
+	if _, err := r.pgConn.Exec(r.ctx, query, args); err != nil {
 		return err
 	}
 
@@ -86,7 +87,7 @@ func (r *Repository) IsTweetLiked(userId int, tweetId int) (bool, error) {
 		"tweet_id": tweetId,
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&isTweetLiked)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&isTweetLiked)
 	if err != nil {
 		return false, err
 	}
@@ -101,7 +102,7 @@ func (r *Repository) GetTweetLikeCountById(id int) (int, error) {
 		"id": id,
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&likeCount)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&likeCount)
 	if err != nil {
 		return 0, err
 	}
@@ -112,7 +113,7 @@ func (r *Repository) GetTweetLikeCountById(id int) (int, error) {
 // todo: should separate to LikeRepository?
 func (r *Repository) LikeTweet(userId int, tweetId int) (int, error) {
 	var likeCount int
-	tx, err := r.conn.Begin(r.ctx)
+	tx, err := r.pgConn.Begin(r.ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -132,7 +133,7 @@ func (r *Repository) LikeTweet(userId int, tweetId int) (int, error) {
 	args = pgx.NamedArgs{
 		"id": tweetId,
 	}
-	err = r.conn.QueryRow(r.ctx, query, args).Scan(&likeCount)
+	err = r.pgConn.QueryRow(r.ctx, query, args).Scan(&likeCount)
 	if err != nil {
 		return 0, err
 	}
@@ -147,7 +148,7 @@ func (r *Repository) LikeTweet(userId int, tweetId int) (int, error) {
 
 func (r *Repository) UnlikeTweet(userId int, tweetId int) (int, error) {
 	var likeCount int
-	tx, err := r.conn.Begin(r.ctx)
+	tx, err := r.pgConn.Begin(r.ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -167,7 +168,7 @@ func (r *Repository) UnlikeTweet(userId int, tweetId int) (int, error) {
 	args = pgx.NamedArgs{
 		"id": tweetId,
 	}
-	err = r.conn.QueryRow(r.ctx, query, args).Scan(&likeCount)
+	err = r.pgConn.QueryRow(r.ctx, query, args).Scan(&likeCount)
 	if err != nil {
 		return 0, err
 	}

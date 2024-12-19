@@ -7,33 +7,51 @@ import (
 	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
-	once sync.Once
-	conn *pgxpool.Pool
+	pgOnce sync.Once
+	pgConn *pgxpool.Pool
+	rdOnce sync.Once
+	rdConn *redis.Client
 )
 
-func GetDbConnection(connString string) (*pgxpool.Pool, error) {
+func GetRedisConnection() *redis.Client {
+	rdOnce.Do(func() {
+		rdConn = redis.NewClient(&redis.Options{
+			Addr:     "localhost:6379",
+			Password: "", // No password set
+			DB:       0,  // Use default DB
+		})
+		fmt.Println("Redis database connection created")
+	})
+
+	fmt.Println("Redis database connection successfully obtained")
+
+	return rdConn
+}
+
+func GetPostgresConnection(connString string) (*pgxpool.Pool, error) {
 	var err error
 
-	once.Do(func() {
-		conn, err = pgxpool.New(context.Background(), connString)
+	pgOnce.Do(func() {
+		pgConn, err = pgxpool.New(context.Background(), connString)
 		if err != nil {
-			log.Fatal("Error to create database connection:", err)
+			log.Fatal("Error to create postgres database connection:", err)
 		}
-		fmt.Println("Database connection created")
+		fmt.Println("Postgres database connection created")
 	})
 
 	// todo: make it LOG: msg
-	fmt.Println("Successfully obtained database connection")
+	fmt.Println("Postgres database connection successfully obtained")
 
-	return conn, err
+	return pgConn, err
 }
 
-func CloseConnection() {
-	if conn != nil {
-		conn.Close()
-		fmt.Println("Database connection closed")
+func ClosePostgresConnection() {
+	if pgConn != nil {
+		pgConn.Close()
+		fmt.Println("Postgres database connection closed")
 	}
 }

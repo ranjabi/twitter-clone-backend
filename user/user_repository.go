@@ -2,19 +2,37 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"twitter-clone-backend/models"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type Repository struct {
-	conn *pgxpool.Pool
-	ctx  context.Context
+	ctx    context.Context
+	pgConn *pgxpool.Pool
+	rdConn *redis.Client
 }
 
-func NewRepository(conn *pgxpool.Pool, ctx context.Context) Repository {
-	return Repository{conn: conn, ctx: ctx}
+func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) Repository {
+	return Repository{ctx: ctx, pgConn: pgConn, rdConn: rdConn}
+}
+
+func (r Repository) GetUserProfileCache(id int) (string, error) {
+	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("userProfile-id:%d", id), "$").Result()
+	if err != nil {
+		return "", err
+	}
+	return res, nil
+}
+func (r Repository) SetUserProfileCache(user *models.User) (string, error) {
+	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("userProfile-id:%d", user.Id), "$", user).Result()
+	if err != nil {
+		return "", err
+	}
+	return res, nil
 }
 
 func (r Repository) CreateUser(user models.User) (*models.User, error) {
@@ -26,7 +44,7 @@ func (r Repository) CreateUser(user models.User) (*models.User, error) {
 		"password": string(user.Password),
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&newUser.Username, &newUser.Email)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newUser.Username, &newUser.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +59,7 @@ func (r Repository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 			ORDER BY created_at DESC
 			LIMIT 10
 	`
-	rows, err := r.conn.Query(r.ctx, query)
+	rows, err := r.pgConn.Query(r.ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +78,7 @@ func (r Repository) IsUserExistByEmail(email string) (bool, error) {
 		"email": email,
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&isUserExist)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&isUserExist)
 	if err != nil {
 		return false, err
 	}
@@ -75,7 +93,7 @@ func (r Repository) GetUserById(id int) (*models.User, error) {
 		"id": id,
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.FollowerCount, &user.FollowingCount)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.FollowerCount, &user.FollowingCount)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +108,7 @@ func (r Repository) GetUserByEmail(email string) (*models.User, error) {
 		"email": email,
 	}
 
-	err := r.conn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +123,7 @@ func (r Repository) FollowOtherUser(followerId int, followingId int) error {
 		"following_id": followingId,
 	}
 
-	_, err := r.conn.Exec(r.ctx, query, args)
+	_, err := r.pgConn.Exec(r.ctx, query, args)
 	if err != nil {
 		return err
 	}
@@ -120,7 +138,7 @@ func (r Repository) UnfollowOtherUser(followerId int, followingId int) error {
 		"following_id": followingId,
 	}
 
-	_, err := r.conn.Exec(r.ctx, query, args)
+	_, err := r.pgConn.Exec(r.ctx, query, args)
 	if err != nil {
 		return err
 	}

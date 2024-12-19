@@ -1,6 +1,9 @@
 package user
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -11,11 +14,12 @@ import (
 )
 
 type Service struct {
+	ctx        context.Context
 	repository Repository
 }
 
-func NewService(repository Repository) Service {
-	return Service{repository: repository}
+func NewService(ctx context.Context, repository Repository) Service {
+	return Service{ctx: ctx, repository: repository}
 }
 
 func (s Service) GetUserById(id int) (*models.User, error) {
@@ -40,6 +44,25 @@ func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 }
 
 func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
+	// check if cache exist, if not then continue. if exist then return from cache
+	// key gaada -> cache = ""
+	// key ada -> cache = cache
+	cache, err := s.repository.GetUserProfileCache(id)
+	if err != nil {
+		return nil, err
+	}
+	if cache != "" {
+		fmt.Println("LOG: cache hit by GetUserByIdWithRecentTweets")
+		// kalau cachenya ada
+		var userCache []models.User
+		err = json.Unmarshal([]byte(cache), &userCache)
+		if err != nil {
+			return nil, err	
+		}
+		return &userCache[0], nil
+	}
+	fmt.Println("LOG: cache miss by GetUserByIdWithRecentTweets")
+
 	user, err := s.GetUserById(id)
 	if err != nil {
 		return nil, err
@@ -49,6 +72,11 @@ func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
 		return nil, err
 	}
 	user.RecentTweets = lastTenTweets
+
+	_, err = s.repository.SetUserProfileCache(user)
+	if err != nil {
+		return nil, err
+	}
 
 	return user, nil
 }

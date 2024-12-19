@@ -9,9 +9,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"github.com/pressly/goose/v3"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/redis/go-redis/v9"
 
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/healthCheck"
@@ -57,6 +59,21 @@ func applyMigrationsAndSeed(ctx context.Context) {
 	fmt.Println("Migrations has been applied!")
 }
 
+func setupDb(ctx context.Context) (*pgxpool.Pool, *redis.Client) {
+	pgConn, err := db.GetPostgresConnection(utils.GetDbConnectionUrlFromEnv())
+	if err != nil {
+		log.Fatal("Error getting database connection:", err)
+	}
+
+	rdConn := db.GetRedisConnection()
+
+	if ENV != ".env.development" {
+		applyMigrationsAndSeed(ctx)
+	}
+
+	return pgConn, rdConn
+}
+
 func main() {
 	err := godotenv.Load(ENV)
 	if err != nil {
@@ -65,26 +82,19 @@ func main() {
 
 	ctx := context.Background()
 
-	conn, err := db.GetDbConnection(utils.GetDbConnectionUrlFromEnv())
-	if err != nil {
-		log.Fatal("Error getting database connection:", err)
-	}
-	defer db.CloseConnection()
-
-	if ENV != ".env.development" {
-		applyMigrationsAndSeed(ctx)
-	}
+	pgConn, rdConn := setupDb(ctx)
+	defer db.ClosePostgresConnection()
 
 	mux := new(middleware.AppMux)
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
-	mux.Handle("/health-check", healthCheck.HealthCheck(conn, ctx))
+	mux.Handle("/health-check", healthCheck.HealthCheck(pgConn, rdConn, ctx))
 
-	userRepository := user.NewRepository(conn, ctx)
-	userService := user.NewService(userRepository)
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	userService := user.NewService(ctx, userRepository)
 	userHandler := user.NewHandler(userService)
 
-	tweetRepository := tweet.NewRepository(conn, ctx)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository)
 	tweetHandler := tweet.NewHandler(tweetService)
 
