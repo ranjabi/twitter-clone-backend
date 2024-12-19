@@ -40,6 +40,7 @@ func GetDbConnectionUrlFromEnv() string {
 		os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_DB"),
 	)
+	fmt.Println("LOG connString:", connString)
 
 	return connString
 }
