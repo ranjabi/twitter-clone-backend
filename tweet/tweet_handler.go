@@ -42,8 +42,6 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		}
 	}
 
-	// not propagate because if db error we can't track it since repo send
-	// errors.New() insead of its error
 	newTweet, err := h.service.CreateTweet(models.Tweet{
 		Content: payload.Content,
 		UserId:  int(userId),

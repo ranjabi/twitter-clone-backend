@@ -20,15 +20,32 @@ func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Clie
 	return Repository{ctx: ctx, pgConn: pgConn, rdConn: rdConn}
 }
 
-func (r Repository) GetUserProfileCache(id int) (string, error) {
-	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("userProfile-id:%d", id), "$").Result()
+func (r Repository) GetUserCache(id int) (string, error) {
+	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("user.id:%d", id), "$").Result()
 	if err != nil {
 		return "", err
 	}
 	return res, nil
 }
-func (r Repository) SetUserProfileCache(user *models.User) (string, error) {
-	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("userProfile-id:%d", user.Id), "$", user).Result()
+
+func (r Repository) GetUserRecentTweetsCache(id int) (string, error) {
+	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("user.id:%d", id), "$.recentTweets").Result()
+	if err != nil {
+		return "", err
+	}
+	return res, nil
+}
+
+func (r Repository) SetUserCache(user *models.User) (string, error) {
+	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("user.id:%d", user.Id), "$", user).Result()
+	if err != nil {
+		return "", err
+	}
+
+	return res, nil
+}
+func (r Repository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
+	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("user.id:%d", user.Id), "$.recentTweets", tweets).Result()
 	if err != nil {
 		return "", err
 	}

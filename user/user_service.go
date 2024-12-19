@@ -43,25 +43,52 @@ func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 }
 
 func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
-	// check if cache exist, if not then continue. if exist then return from cache
-	// key gaada -> cache = ""
-	// key ada -> cache = cache
-	cache, err := s.repository.GetUserProfileCache(id)
+	var user *models.User
+	/*
+		id, username, email, ... -> identified by $.
+		recentTweets -> identified by $.recentTweets
+	*/
+	userCacheStr, err := s.repository.GetUserCache(1)
 	if err != nil {
 		return nil, err
 	}
-	if cache != "" {
-		utils.CacheLog("HIT GetUserByIdWithRecentTweets")
-		var userCache []models.User
-		err = json.Unmarshal([]byte(cache), &userCache)
+	if userCacheStr != "" {
+		// $ ada
+		userRecentTweetsCache, err := s.repository.GetUserRecentTweetsCache(id)
 		if err != nil {
 			return nil, err
 		}
-		return &userCache[0], nil
-	}
-	utils.CacheLog("MISS GetUserByIdWithRecentTweets")
+		var userCache []models.User
+		err = json.Unmarshal([]byte(userCacheStr), &userCache)
+		if err != nil {
+			return nil, err
+		}
+		user = &userCache[0]
 
-	user, err := s.GetUserById(id)
+		if userRecentTweetsCache != "[]" {
+			// $.recentTweets ada
+			utils.CacheLog("HIT UserCache UserRecentTweetsCache")
+			return user, nil
+		}
+
+		// $.recentTweets gaada
+		lastTenTweets, err := s.GetLastTenTweets(id)
+		if err != nil {
+			return nil, err
+		}
+		user.RecentTweets = lastTenTweets
+
+		utils.CacheLog("HIT UserRecentTweetsCache")
+		_, err = s.repository.SetUserRecentTweetsCache(user, lastTenTweets)
+		if err != nil {
+			return nil, err
+		}
+
+		return user, nil
+	}
+
+	// $ gaada $.recentTweets gaada
+	user, err = s.GetUserById(id)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +98,8 @@ func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
 	}
 	user.RecentTweets = lastTenTweets
 
-	_, err = s.repository.SetUserProfileCache(user)
+	utils.CacheLog("MISS UserCache UserRecentTweetsCache")
+	_, err = s.repository.SetUserCache(user)
 	if err != nil {
 		return nil, err
 	}

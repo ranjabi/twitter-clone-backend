@@ -60,10 +60,11 @@ func PrintVStruct(name string, input any) {
 }
 
 func HandleErr(err error) *models.AppError {
+	// kelemahan: cuman bisa nampilin track sampai handler
 	if e, ok := err.(*models.AppError); ok {
 		return e
 	} else {
-		HandleErrLog("not AppError instance")
+		HandleErrLog(err.Error())
 		return &models.AppError{Err: err, Message: err.Error()}
 	}
 }

@@ -113,7 +113,7 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 	return nil
 }
 
-func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleGetUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -125,7 +125,7 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 		return utils.HandleErr(err)
 	}
 
-	userProfileResponse := struct {
+	userResponse := struct {
 		Id                 int            `json:"id"`
 		Username           string         `json:"username"`
 		FollowerCount      int            `json:"followerCount"`
@@ -141,7 +141,7 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 		RecentTweets:       user.RecentTweets,
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Data: userProfileResponse})
+	res, err := json.Marshal(models.SuccessResponse{Data: userResponse})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
