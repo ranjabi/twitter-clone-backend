@@ -1,8 +1,7 @@
-version: "3.8"
-
 services:
   go-server:
     image: ranjabi/twitter-clone-backend:${DOCKER_TAG}
+    pull_policy: always
     depends_on: 
       - postgres
     networks:
