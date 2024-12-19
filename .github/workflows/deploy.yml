@@ -14,10 +14,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Replace .env.dev with .env in main.go
-      run: sed -i '0,/\.env\.dev/{s/\.env\.dev/\.env/}' ./main.go
-
-    - name: Prepare 1
+    - name: Add secrets to .env
       env:
         SECRETS_CONTEXT: ${{ toJson(secrets) }}
       run: |
@@ -54,13 +51,13 @@ jobs:
         tags: ranjabi/twitter-clone-backend:latest,ranjabi/twitter-clone-backend:${{ env.DOCKER_TAG }}
         platform: linux/amd64
 
-    - name: Prepare 2
+    - name: Copy .env and docker-compose.yml to VM
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.VM_HOST }}
         username: ${{ secrets.VM_USERNAME }}
         password: ${{ secrets.VM_PASSWORD }}
-        source: ".env,docker-compose.yml"
+        source: ".env,docker-compose.yml,Makefile"
         target: /home
 
     - name: Deploy on VM
@@ -70,12 +67,14 @@ jobs:
         username: ${{ secrets.VM_USERNAME }}
         password: ${{ secrets.VM_PASSWORD }}
         script: |
-          echo ".env in Prepare 2:"
           cd ../home
-          cat docker-compose.yml
+          echo ".env:"
           cat .env
+          echo "docker-compose.yml:"
+          cat docker-compose.yml
+          
           echo "Stopping containers..."
-          docker compose down
+          docker compose down --volumes
           echo "Starting containers..."
           docker compose pull && docker compose up --build -d
           echo "Containers status:"

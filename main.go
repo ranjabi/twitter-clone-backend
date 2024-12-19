@@ -20,13 +20,16 @@ import (
 func main() {
 	env := os.Getenv("ENV_NAME")
 	err := godotenv.Load(env)
-	fmt.Println("LOADED ENV:", env)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	if env != "" {
+		fmt.Println("LOADED ENV:", env)
+	} else {
+		fmt.Println("LOADED ENV: .env")
+	}
 
 	ctx := context.Background()
-
 	pgConn, rdConn := db.Setup(ctx)
 	defer db.ClosePostgresConnection()
 
