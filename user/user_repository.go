@@ -3,12 +3,23 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
 	"twitter-clone-backend/models"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
+
+const (
+	userProfilePath             = "$"
+	userProfileRecentTWeetsPath = "$.recentTweets"
+	userProfileExpirationTime   = 10 * time.Minute
+)
+
+func getUserProfileCacheKey(id int) string {
+	return fmt.Sprintf("user.id:%d", id)
+}
 
 type UserRepository struct {
 	ctx    context.Context
@@ -21,7 +32,7 @@ func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Clie
 }
 
 func (r *UserRepository) GetUserCache(id int) (string, error) {
-	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("user.id:%d", id), "$").Result()
+	res, err := r.rdConn.JSONGet(r.ctx, getUserProfileCacheKey(id), userProfilePath).Result()
 	if err != nil {
 		return "", err
 	}
@@ -29,7 +40,7 @@ func (r *UserRepository) GetUserCache(id int) (string, error) {
 }
 
 func (r *UserRepository) GetUserRecentTweetsCache(id int) (string, error) {
-	res, err := r.rdConn.JSONGet(r.ctx, fmt.Sprintf("user.id:%d", id), "$.recentTweets").Result()
+	res, err := r.rdConn.JSONGet(r.ctx, getUserProfileCacheKey(id), userProfileRecentTWeetsPath).Result()
 	if err != nil {
 		return "", err
 	}
@@ -37,7 +48,7 @@ func (r *UserRepository) GetUserRecentTweetsCache(id int) (string, error) {
 }
 
 func (r *UserRepository) DeleteUserRecentTweetsCache(id int) error {
-	_, err := r.rdConn.JSONDel(r.ctx, fmt.Sprintf("user.id:%d", id), "$.recentTweets").Result()
+	_, err := r.rdConn.JSONDel(r.ctx, getUserProfileCacheKey(id), userProfileRecentTWeetsPath).Result()
 	if err != nil {
 		return err
 	}
@@ -45,7 +56,12 @@ func (r *UserRepository) DeleteUserRecentTweetsCache(id int) error {
 }
 
 func (r *UserRepository) SetUserCache(user *models.User) (string, error) {
-	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("user.id:%d", user.Id), "$", user).Result()
+	res, err := r.rdConn.JSONSet(r.ctx, getUserProfileCacheKey(user.Id), userProfilePath, user).Result()
+	if err != nil {
+		return "", err
+	}
+
+	_, err = r.rdConn.Expire(r.ctx, getUserProfileCacheKey(user.Id), userProfileExpirationTime).Result()
 	if err != nil {
 		return "", err
 	}
@@ -53,10 +69,16 @@ func (r *UserRepository) SetUserCache(user *models.User) (string, error) {
 	return res, nil
 }
 func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
-	res, err := r.rdConn.JSONSet(r.ctx, fmt.Sprintf("user.id:%d", user.Id), "$.recentTweets", tweets).Result()
+	res, err := r.rdConn.JSONSet(r.ctx, getUserProfileCacheKey(user.Id), userProfileRecentTWeetsPath, tweets).Result()
 	if err != nil {
 		return "", err
 	}
+
+	_, err = r.rdConn.Expire(r.ctx, getUserProfileCacheKey(user.Id), userProfileExpirationTime).Result()
+	if err != nil {
+		return "", err
+	}
+
 	return res, nil
 }
 
@@ -93,6 +115,7 @@ func (r *UserRepository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return lastTenTweets, nil
 }
 
