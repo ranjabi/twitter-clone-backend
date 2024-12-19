@@ -22,6 +22,7 @@ jobs:
           jq -r "to_entries[] | \"\(.key)=\(.value)\""
         }
         echo "$SECRETS_CONTEXT" | to_envs > .env.prod
+        echo ENV_NAME=.env.prod >> .env.prod
         echo "Secrets added to .env.prod file."
         echo ".env.prod:"
         cat .env.prod
@@ -76,6 +77,6 @@ jobs:
           echo "Stopping containers..."
           docker compose down --volumes
           echo "Starting containers..."
-          docker compose pull && docker compose up --build -d
+          docker compose pull && docker compose --env-file .env.prod up --build -d
           echo "Containers status:"
           docker ps
