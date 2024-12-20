@@ -38,8 +38,6 @@ func main() {
 	mux := new(middleware.AppMux)
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
-	mux.Handle("/health-check", healthCheck.HealthCheck(pgConn, rdConn, ctx))
-
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 
@@ -49,7 +47,8 @@ func main() {
 	userHandler := user.NewHandler(userService)
 	tweetHandler := tweet.NewHandler(tweetService)
 
-	// if use mux.Handle then will goes into AppHandler
+	// if use mux.Handle then error will goes into AppHandler
+	mux.Handle("GET		/v2/health-check", healthCheck.HealthCheck(pgConn, rdConn, ctx))
 	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
 	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
 

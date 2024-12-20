@@ -13,7 +13,7 @@ func JwtAuthorization(next http.Handler) http.Handler {
 	// diwrap pakai http.HandlerFunc supaya fungsi di bawah bisa jadi http handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		allowedPaths := []string{
-			"/health-check",
+			"/v2/health-check",
 			"/v2/login",
 			"/v2/register",
 		}
