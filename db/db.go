@@ -55,8 +55,8 @@ func GetRedisConnection() *redis.Client {
 	rdOnce.Do(func() {
 		rdConn = redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
-			Password: "", // No password set
-			DB:       0,  // Use default DB
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       0, // Use default DB
 		})
 	})
 
