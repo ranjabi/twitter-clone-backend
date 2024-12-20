@@ -55,6 +55,7 @@ func main() {
 	mux.Handle("POST 	/v2/users/follow", userHandler.HandleFollowOtherUser)
 	mux.Handle("POST 	/v2/users/unfollow", userHandler.HandleUnfollowOtherUser)
 	mux.Handle("GET		/v2/users/{id}", userHandler.HandleGetUserProfile)
+	mux.Handle("GET		/v2/users/{id}/feed", userHandler.HandleGetFeed)
 
 	mux.Handle("POST 	/v2/tweets", tweetHandler.HandleCreateTweet)
 	mux.Handle("PUT 	/v2/tweets", tweetHandler.HandleUpdateTweet)

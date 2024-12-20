@@ -107,6 +107,23 @@ func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
 	return user, nil
 }
 
+func (s Service) GetFeed(id int, email string, page int) ([]models.Tweet, error) {
+	isUserExist, err := s.userRepository.IsUserExistByEmail(email)
+	if err != nil {
+		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
+	}
+	if !isUserExist {
+		return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+	}
+
+	feed, err := s.userRepository.GetFeed(id, page)
+	if err != nil {
+		return nil, err
+	}
+
+	return feed, nil
+}
+
 func (s Service) CreateUser(user models.User) (*models.User, error) {
 	isUserExist, err := s.userRepository.IsUserExistByEmail(user.Email)
 	if err != nil {
@@ -135,9 +152,8 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
-
 	if !isUserExist {
-		return nil, &models.AppError{Err: err, Message: "User not found. Please create an account", Code: http.StatusNotFound}
+		return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
 	}
 
 	user, err := s.userRepository.GetUserByEmail(email)
@@ -153,6 +169,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 	claims := jwt.MapClaims{
 		"userId":   user.Id,
 		"username": user.Username,
+		"email":    user.Email,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))

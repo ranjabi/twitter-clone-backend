@@ -223,3 +223,36 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 
 	return nil
 }
+
+func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *models.AppError {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
+
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
+	email := userInfo["email"].(string)
+
+	query := r.URL.Query()
+	pageStr := query.Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
+
+	feed, err := h.service.GetFeed(id, email, page)
+	if err != nil {
+		return utils.HandleErr(err)
+	}
+
+	res, err := json.Marshal(models.SuccessResponse{Data: feed})
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}

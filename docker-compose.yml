@@ -22,18 +22,20 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - myvolume:/var/lib/postgresql/data 
+      - pgdata:/var/lib/postgresql/data 
     networks:
       - mynet
   redis:
-    image: redis/redis-stack
+    image: /data redis/redis-stack:redis/redis-stack-server:7.2.0-v13
     ports:
-    - "6379:6379"
+    volumes:
+      - redisdata:/data
     networks:
       - mynet
 
 volumes:
-  myvolume:
+  pdgdata:
+  redisdata:
 
 networks:
   mynet:

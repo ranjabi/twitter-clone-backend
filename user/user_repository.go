@@ -82,6 +82,37 @@ func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []mo
 	return res, nil
 }
 
+func (r *UserRepository) GetFeed(id int, page int) ([]models.Tweet, error) {
+	limit := 10
+	offset := (page - 1) * limit
+
+	query := `
+		SELECT t.*
+		FROM tweets t
+		INNER JOIN follows f ON t.user_id = f.following_id
+		WHERE f.follower_id = 1
+		ORDER BY t.created_at DESC
+		LIMIT @limit
+		OFFSET @offset
+	`
+	args := pgx.NamedArgs{
+		"id":     id,
+		"limit":  limit,
+		"offset": offset,
+	}
+	rows, err := r.pgConn.Query(r.ctx, query, args)
+	if err != nil {
+		return nil, err
+	}
+
+	feed, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Tweet])
+	if err != nil {
+		return nil, err
+	}
+
+	return feed, nil
+}
+
 func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
 	var newUser models.User
 	query := `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
