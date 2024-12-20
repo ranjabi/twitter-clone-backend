@@ -32,7 +32,7 @@ const (
 	userUsername = "username"
 	userEmail    = "email@email.com"
 	userPassword = "password"
-	userToken    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoidXNlcm5hbWUifQ.LEyLKL6UmHeh5P-G1ytN2-8UMGxUNUz4jJxma1e8EIs"
+	userToken    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGVtYWlsLmNvbSIsInVzZXJJZCI6MSwidXNlcm5hbWUiOiJ1c2VybmFtZSJ9.m-53CNo6HJvF5quF5ducF4nMMPyEWb8dyUALGvqrpIM"
 
 	user2Id = 2
 	user3Id = 3
@@ -45,7 +45,7 @@ const (
 
 	tweetNotExistId = 10000
 
-	newTweetId      = 21
+	newTweetId      = 61
 	newTweetContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas neque turpis, posuere non tortor ac, accumsan tempus est."
 	newTweetUserId  = 1
 )

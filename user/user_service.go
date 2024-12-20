@@ -153,7 +153,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
 	if !isUserExist {
-		return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+		return nil, &models.AppError{Err: err, Message: "User not found. Please create an account", Code: http.StatusNotFound}
 	}
 
 	user, err := s.userRepository.GetUserByEmail(email)
