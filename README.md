@@ -1,38 +1,59 @@
-# twitter-clone-backend
+# Twitter Clone Backend
 
-## How to run
-```
-air
-```
+<p align="center">
+<img src="images/thumbnail.png" alt="Twitter Clone" style="width: 40%; height: 40%; align: center"/>
+</p>
+
+## Table of Contents
+* [About The Project](#about-the-project)
+    + [Build With](#build-with)
+* [Development Process](#development-process)
+    + [Stage 1](#stage-1)
+    + [Stage 2](#stage-2)
+    + [Stage 3](#stage-3)
+* [ERD](#erd)
+* [Caching Mechanism](#caching-mechanism)
+    + [Cache Expiration](#cache-expiration)
+* [Lesson Learned](#lesson-learned)
+
+## About The Project
+A clone of twitter web application with features like tweets, user profile, and news feed. I tried to use go library as little as possible, maximizing the existing features of GO. Some of the things that I implemented can be seen at [Leeson Learned](#lesson-learned)
+
+### Build With
+- Go
+- PostgreSQL
+- Redis
+- CI/CD: Docker, Github Actions
 
 ## Development Process
 ### Stage 1
 Features:
-- [x] Sign up
+- [x] Register
 - [x] Login
 - [x] Tweet (create, edit, delete)
 - [x] Follow/unfollow
-
-## Stage 2
-Implement layered architecture & request validation. Developed in '/v2/{...}' endpoint.
-
-###
-Improvements:
 - [x] E2E Testing
-- [x] Refactored to layered architecture
+
+### Stage 2
+From this stage, the development was done in `/v2/...` endpoint prefix.
+
+Improvements:
+- [x] Refactored to layered architecture (handler, service, and repository)
+- [x] Request validation
 
 Features:
-- [x] Like
+- [x] Like/unlike
 
-## Stage 3
-- [ ] Implement redis for cache user profile (including user last 10 tweets)
+### Stage 3
+- [x] Implemented redis for user profile caching
+ <!-- (including user last 10 tweets) -->
+- [x] News feed
 
 ## ERD
-Migration version: 20241218063017
 ![Entity Relationship Diagram](/images/erd.png)
 
 ## Caching Mechanism
-User profile containing below information is getting cached.
+User profile display the information about a user, such as username, follower/following count, and recent tweets. The structure of response looks like below. containing below information is getting cached.
 ```
 userResponse := struct {
     Id                 int            `json:"id"`
@@ -43,30 +64,35 @@ userResponse := struct {
     RecentTweets       []models.Tweet `json:"recentTweets"`
 }
 ```
-todo: does check $ exist (json) return same response as check if key exist (check key immediately)?
+
+The decision tree of caching can be seen below. Cache saved as `key=user.id:{id}, value = userResponse`.
 ```
 is $ (root key) exist?
     yes
     is $.recentTweets exist?
         yes
-        return cache
+        -> return cache
 
         no
-        get recentTweets from db
-        store recentTweets to cache
-        return (db + cache)
+        cache miss for $.recentTweets
+        get recentTweets from db and store it to cache
+        -> return data from db (recentTweets) + cache (userProfile)
     no
     get userProfile with recentTweets from db
     store it to cache
-    return db
+    -> return fully from db
 ```
 
-### Expiration
-Everytime user profile added to cache, the expiration will set to 10 minutes.
-User profile can only meet its expiration date until the end if only these operations are performed:
-- json.set partial update on recentTweets
-- json.del partial update on recentTweets
+### Cache Expiration
+Everytime user profile is added to cache, the expiration time will set to 10 minutes.
+User profile can only meet its expiration date until the end (and be deleted after that) if only these operations are performed:
 
-Both operation performed when user create a new tweet. The other operation will clear the expiration (key will no longer expire)
+- `JSON.SET` running partial update on `$.recentTweets`
+- `JSON.DEL` running partial update on `$.recentTweets`
 
-The expiration will be extended when **user profile get accessed**.
+Both operation performed when a user create a new tweet. The expiration time will be reset again to 10 minutes when **user profile get accessed**.
+
+## Lesson Learned
+- Define my own HTTP appHandler for custom error handling. This made me able to structure the error response to be send to the client.
+- Implemented logging by reading the incoming HTTP request. The result is error method, request url, and request body can be seen in the logs.
+
