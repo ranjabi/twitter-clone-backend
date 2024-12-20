@@ -37,7 +37,7 @@ services:
       - mynet
 
 volumes:
-  pdgdata:
+  pgdata:
   redisdata:
 
 networks:
