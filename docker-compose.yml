@@ -26,7 +26,7 @@ services:
     networks:
       - mynet
   redis:
-    image: /data redis/redis-stack:redis/redis-stack-server:7.2.0-v13
+    image: redis/redis-stack-server:7.2.0-v13
     environment:
       - REDIS_ARGS=--requirepass ${REDIS_PASSWORD}
     ports:
