@@ -55,7 +55,7 @@ func main() {
 
 	mux.Handle("POST 	/v2/users/follow", userHandler.HandleFollowOtherUser)
 	mux.Handle("POST 	/v2/users/unfollow", userHandler.HandleUnfollowOtherUser)
-	mux.Handle("GET		/v2/users/{id}", userHandler.HandleGetUserProfile)
+	mux.Handle("GET		/v2/users/{id}", userHandler.HandleGetProfile)
 	mux.Handle("GET		/v2/users/{id}/feed", userHandler.HandleGetFeed)
 
 	mux.Handle("POST 	/v2/tweets", tweetHandler.HandleCreateTweet)
@@ -67,10 +67,10 @@ func main() {
 	server := new(http.Server)
 	server.Addr = ":8080"
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedHeaders: []string{"*"},
+		AllowedOrigins:   []string{"*"},
+		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
-		Debug: true,
+		Debug:            true,
 	})
 	server.Handler = c.Handler(mux)
 

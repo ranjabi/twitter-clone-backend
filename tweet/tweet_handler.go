@@ -50,12 +50,7 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		return utils.HandleErr(err)
 	}
 
-	newTweetResponse := struct {
-		Id        int       `json:"id"`
-		Content   string    `json:"content"`
-		CreatedAt time.Time `json:"createdAt"`
-		UserId    int       `json:"userId"`
-	}{
+	newTweetResponse := models.Tweet{
 		Id:        newTweet.Id,
 		Content:   newTweet.Content,
 		CreatedAt: newTweet.CreatedAt,

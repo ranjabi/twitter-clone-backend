@@ -87,10 +87,12 @@ func (r *UserRepository) GetFeed(id int, page int) ([]models.Tweet, error) {
 	offset := (page - 1) * limit
 
 	query := `
-		SELECT t.*
+		SELECT t.*, 
+			CASE WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked
 		FROM tweets t
 		INNER JOIN follows f ON t.user_id = f.following_id
-		WHERE f.follower_id = 1
+		LEFT JOIN likes tl ON t.id = tl.tweet_id AND tl.user_id = @id
+		WHERE f.follower_id = @id
 		ORDER BY t.created_at DESC
 		LIMIT @limit
 		OFFSET @offset

@@ -11,4 +11,5 @@ type Tweet struct {
 	ModifiedAt *time.Time `json:"modifiedAt" db:"modified_at"`
 	UserId     int        `json:"userId" db:"user_id"`
 	LikeCount  int        `json:"likeCount" db:"like_count"`
+	IsLiked    bool       `json:"isLiked" db:"is_liked"`
 }

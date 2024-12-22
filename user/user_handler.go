@@ -113,7 +113,7 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 	return nil
 }
 
-func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -137,7 +137,7 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 		Username:           user.Username,
 		FollowerCount:      user.FollowerCount,
 		FollowingCount:     user.FollowingCount,
-		RecentTweetsLength: 10, // todo: gimana kalo lennya 0?
+		RecentTweetsLength: len(user.RecentTweets),
 		RecentTweets:       user.RecentTweets,
 	}
 
