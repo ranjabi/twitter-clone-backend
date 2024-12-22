@@ -52,8 +52,8 @@ func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 	return newTweet, nil
 }
 
-func (s *Service) DeleteTweet(tweet models.Tweet) error {
-	isTweetExist, err := s.tweetRepository.IsTweetExistById(tweet.Id)
+func (s *Service) DeleteTweet(id int) error {
+	isTweetExist, err := s.tweetRepository.IsTweetExistById(id)
 	if err != nil {
 		return &models.AppError{Err: err, Message: "Failed to check tweet"}
 	}
@@ -61,7 +61,7 @@ func (s *Service) DeleteTweet(tweet models.Tweet) error {
 		return &models.AppError{Err: err, Message: "Tweet not found", Code: http.StatusNotFound}
 	}
 
-	if err := s.tweetRepository.DeleteTweet(tweet.Id); err != nil {
+	if err := s.tweetRepository.DeleteTweet(id); err != nil {
 		return &models.AppError{Err: err, Message: "Failed to delete tweet"}
 	}
 

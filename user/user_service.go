@@ -39,6 +39,24 @@ func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 		return nil, &models.AppError{Err: err, Message: "Failed to get 10 recent tweets"}
 	}
 
+	var tweetsId []int
+	for _, tweet := range lastTenTweets {
+		tweetsId = append(tweetsId, tweet.Id)
+	}
+
+	lastTenTweetsInteractions, err := s.userRepository.GetLastTenTweetsInteractions(userId, tweetsId)
+	if err != nil {
+		return nil, &models.AppError{Err: err, Message: "Failed to get 10 recent tweets interactions"}
+	}
+
+	for i := range lastTenTweets {
+		for j := range lastTenTweetsInteractions {
+			if lastTenTweets[i].Id == lastTenTweetsInteractions[j].TweetId {
+				lastTenTweets[i].IsLiked = lastTenTweetsInteractions[j].IsLiked
+			}
+		}
+	}
+
 	return lastTenTweets, nil
 }
 

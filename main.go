@@ -60,7 +60,7 @@ func main() {
 
 	mux.Handle("POST 	/v2/tweets", tweetHandler.HandleCreateTweet)
 	mux.Handle("PUT 	/v2/tweets", tweetHandler.HandleUpdateTweet)
-	mux.Handle("DELETE 	/v2/tweets", tweetHandler.HandleDeleteTweet)
+	mux.Handle("DELETE 	/v2/tweets/{id}", tweetHandler.HandleDeleteTweet)
 	mux.Handle("POST 	/v2/tweets/{id}/like", tweetHandler.HandleLikeTweet)
 	mux.Handle("POST 	/v2/tweets/{id}/unlike", tweetHandler.HandleUnlikeTweet)
 
@@ -69,6 +69,7 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedHeaders:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowCredentials: true,
 		Debug:            true,
 	})

@@ -90,9 +90,9 @@ func (r *UserRepository) GetFeed(id int, page int) ([]models.Tweet, error) {
 		SELECT t.*, 
 			CASE WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked
 		FROM tweets t
-		INNER JOIN follows f ON t.user_id = f.following_id
+		LEFT JOIN follows f ON t.user_id = f.following_id
 		LEFT JOIN likes tl ON t.id = tl.tweet_id AND tl.user_id = @id
-		WHERE f.follower_id = @id
+		WHERE f.follower_id = @id OR t.user_id = @id
 		ORDER BY t.created_at DESC
 		LIMIT @limit
 		OFFSET @offset
@@ -134,17 +134,47 @@ func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
 
 func (r *UserRepository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	query := `
-		SELECT * 
+		SELECT *, FALSE as is_liked
 			FROM tweets
+			WHERE user_id = @userId
 			ORDER BY created_at DESC
 			LIMIT 10
 	`
-	rows, err := r.pgConn.Query(r.ctx, query)
+	args := pgx.NamedArgs{
+		"userId": userId,
+	}
+	rows, err := r.pgConn.Query(r.ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
 
 	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Tweet])
+	if err != nil {
+		return nil, err
+	}
+
+	return lastTenTweets, nil
+}
+
+func (r *UserRepository) GetLastTenTweetsInteractions(userId int, tweetsId []int) ([]models.TweetInteraction, error) {
+	query := `
+		SELECT tweet_id as tweet_id, 
+			CASE WHEN user_id = @userId THEN TRUE ELSE FALSE END as is_liked
+        FROM likes
+        WHERE tweet_id = ANY(@tweetsId)
+        AND user_id = @userId
+		LIMIT 10
+	`
+	args := pgx.NamedArgs{
+		"userId":   userId,
+		"tweetsId": tweetsId,
+	}
+	rows, err := r.pgConn.Query(r.ctx, query, args)
+	if err != nil {
+		return nil, err
+	}
+
+	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.TweetInteraction])
 	if err != nil {
 		return nil, err
 	}

@@ -124,23 +124,13 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 }
 
 func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
-	decoder := json.NewDecoder(r.Body)
-	payload := struct {
-		Id int `json:"id"`
-	}{}
-	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+	id := r.PathValue("id")
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
 	}
 
-	if err := validate.Struct(payload); err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
-		}
-	}
-
-	err := h.service.DeleteTweet(models.Tweet{
-		Id: payload.Id,
-	})
+	err = h.service.DeleteTweet(idInt)
 	if err != nil {
 		return utils.HandleErr(err)
 	}
