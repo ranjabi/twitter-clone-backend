@@ -212,6 +212,21 @@ func (r *UserRepository) GetUserById(id int) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) GetUserByUsername(username string) (*models.User, error) {
+	var user models.User
+	query := `SELECT id, username, email, password, follower_count, following_count FROM users WHERE username=@username`
+	args := pgx.NamedArgs{
+		"username": username,
+	}
+
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.FollowerCount, &user.FollowingCount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, email, password FROM users WHERE email=@email`

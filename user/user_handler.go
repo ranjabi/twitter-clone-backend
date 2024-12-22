@@ -114,13 +114,9 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 }
 
 func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
-	}
+	username := r.PathValue("username")
 
-	user, err := h.service.GetUserByIdWithRecentTweets(id)
+	user, err := h.service.GetUserByUsernameWithRecentTweets(username)
 	if err != nil {
 		return utils.HandleErr(err)
 	}

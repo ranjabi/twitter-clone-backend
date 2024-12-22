@@ -60,8 +60,11 @@ func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	return lastTenTweets, nil
 }
 
-func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
-	var user *models.User
+func (s Service) GetUserByUsernameWithRecentTweets(username string) (*models.User, error) {
+	user, err := s.userRepository.GetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
 	/*
 		id, username, email, ... -> identified by $.
 		recentTweets -> identified by $.recentTweets
@@ -72,7 +75,7 @@ func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
 	}
 	if userCacheStr != "" {
 		// $ ada
-		userRecentTweetsCache, err := s.userRepository.GetUserRecentTweetsCache(id)
+		userRecentTweetsCache, err := s.userRepository.GetUserRecentTweetsCache(user.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +93,7 @@ func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
 		}
 
 		// $.recentTweets gaada
-		lastTenTweets, err := s.GetLastTenTweets(id)
+		lastTenTweets, err := s.GetLastTenTweets(user.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -106,11 +109,7 @@ func (s Service) GetUserByIdWithRecentTweets(id int) (*models.User, error) {
 	}
 
 	// $ gaada $.recentTweets gaada
-	user, err = s.GetUserById(id)
-	if err != nil {
-		return nil, err
-	}
-	lastTenTweets, err := s.GetLastTenTweets(id)
+	lastTenTweets, err := s.GetLastTenTweets(user.Id)
 	if err != nil {
 		return nil, err
 	}
