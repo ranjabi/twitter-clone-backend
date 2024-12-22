@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/healthCheck"
@@ -65,7 +66,13 @@ func main() {
 
 	server := new(http.Server)
 	server.Addr = ":8080"
-	server.Handler = mux
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedHeaders: []string{"*"},
+		AllowCredentials: true,
+		Debug: true,
+	})
+	server.Handler = c.Handler(mux)
 
 	fmt.Printf("Server started at http://localhost%s\n", server.Addr)
 	err = server.ListenAndServe()
