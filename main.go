@@ -53,8 +53,8 @@ func main() {
 	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
 	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
 
-	mux.Handle("POST 	/v2/users/follow", userHandler.HandleFollowOtherUser)
-	mux.Handle("POST 	/v2/users/unfollow", userHandler.HandleUnfollowOtherUser)
+	mux.Handle("POST 	/v2/users/{id}/follow", userHandler.HandleFollowOtherUser)
+	mux.Handle("POST 	/v2/users/{id}/unfollow", userHandler.HandleUnfollowOtherUser)
 	mux.Handle("GET		/v2/users/{username}", userHandler.HandleGetProfile)
 	mux.Handle("GET		/v2/users/{id}/feed", userHandler.HandleGetFeed)
 

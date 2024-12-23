@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -60,11 +61,18 @@ func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	return lastTenTweets, nil
 }
 
-func (s Service) GetUserByUsernameWithRecentTweets(username string) (*models.User, error) {
+func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId int) (*models.User, error) {
 	user, err := s.userRepository.GetUserByUsername(username)
 	if err != nil {
 		return nil, err
 	}
+
+	isFollowed, err := s.userRepository.IsFollowed(followerId, user.Id)
+	if err != nil {
+		return nil, err
+	}
+	user.IsFollowed = isFollowed
+	fmt.Println("user:", user)
 	/*
 		id, username, email, ... -> identified by $.
 		recentTweets -> identified by $.recentTweets

@@ -244,6 +244,22 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) IsFollowed(followerId int, followingId int) (bool, error) {
+	var isFollowed bool
+	query := `SELECT EXISTS (SELECT 1 FROM follows WHERE follower_id=@followerId AND following_id=@followingId)`
+	args := pgx.NamedArgs{
+		"followerId":  followerId,
+		"followingId": followingId,
+	}
+
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&isFollowed)
+	if err != nil {
+		return false, err
+	}
+
+	return isFollowed, nil
+}
+
 func (r *UserRepository) FollowOtherUser(followerId int, followingId int) error {
 	query := `INSERT INTO follows (follower_id, following_id) VALUES (@follower_id, @following_id)`
 	args := pgx.NamedArgs{
