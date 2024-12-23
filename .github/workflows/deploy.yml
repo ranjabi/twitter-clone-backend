@@ -14,26 +14,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Replace .env.development with .env in main.go
-      run: sed -i 's/\.env\.development/\.env/g' ./main.go
-
-    - name: Prepare 1
+    - name: Add secrets to .env.prod
       env:
         SECRETS_CONTEXT: ${{ toJson(secrets) }}
       run: |
         to_envs() {
           jq -r "to_entries[] | \"\(.key)=\(.value)\""
         }
-        echo "$SECRETS_CONTEXT" | to_envs > .env
-        echo "Secrets added to .env file."
-        echo ".env in Prepare 1:"
-        cat .env
+        echo "$SECRETS_CONTEXT" | to_envs > .env.prod
+        echo ENV_NAME=.env.prod >> .env.prod
+        echo "Secrets added to .env.prod file."
+        echo ".env.prod:"
+        cat .env.prod
 
     - name: Get the last 8 digits of the commit hash
       run: |
         DOCKER_TAG=$(git rev-parse --short=8 HEAD)
         echo "DOCKER_TAG=$DOCKER_TAG" >> $GITHUB_ENV
-        echo "DOCKER_TAG=$DOCKER_TAG" >> .env
+        echo "DOCKER_TAG=$DOCKER_TAG" >> .env.prod
         echo "Using Docker tag: $DOCKER_TAG"
 
     - name: Login to Docker Hub
@@ -54,13 +52,13 @@ jobs:
         tags: ranjabi/twitter-clone-backend:latest,ranjabi/twitter-clone-backend:${{ env.DOCKER_TAG }}
         platform: linux/amd64
 
-    - name: Prepare 2
+    - name: Copy .env.prod and docker-compose.yml to VM
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.VM_HOST }}
         username: ${{ secrets.VM_USERNAME }}
         password: ${{ secrets.VM_PASSWORD }}
-        source: ".env,docker-compose.yml"
+        source: ".env.prod,docker-compose.yml,Makefile"
         target: /home
 
     - name: Deploy on VM
@@ -70,13 +68,15 @@ jobs:
         username: ${{ secrets.VM_USERNAME }}
         password: ${{ secrets.VM_PASSWORD }}
         script: |
-          echo ".env in Prepare 2:"
           cd ../home
+          echo ".env.prod:"
+          cat .env.prod
+          echo "docker-compose.yml:"
           cat docker-compose.yml
-          cat .env
+          
           echo "Stopping containers..."
-          docker compose down
+          docker compose down --volumes
           echo "Starting containers..."
-          docker compose pull && docker compose up --build -d
+          docker compose --env-file .env.prod up --build -d
           echo "Containers status:"
           docker ps

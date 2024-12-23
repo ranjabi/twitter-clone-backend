@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
+	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -27,7 +29,14 @@ func JwtAuthorization(next http.Handler) http.Handler {
 
 		authorizationHeader := r.Header.Get("Authorization")
 		if !strings.Contains(authorizationHeader, "Bearer") {
-			http.Error(w, "Unauthorized access", http.StatusUnauthorized)
+			res, err := json.Marshal(models.ErrorResponse{Message: "Unauthorized access"})
+			if err != nil {
+				http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(res)
 			return
 		}
 

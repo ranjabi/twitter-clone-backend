@@ -1,6 +1,5 @@
 tmp/
 z-etc/
 
-.env
-.env.development
+.env*
 Makefile

@@ -42,22 +42,15 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		}
 	}
 
-	// not propagate because if db error we can't track it since repo send
-	// errors.New() insead of its error
 	newTweet, err := h.service.CreateTweet(models.Tweet{
 		Content: payload.Content,
 		UserId:  int(userId),
 	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
-	newTweetResponse := struct {
-		Id        int       `json:"id"`
-		Content   string    `json:"content"`
-		CreatedAt time.Time `json:"createdAt"`
-		UserId    int       `json:"userId"`
-	}{
+	newTweetResponse := models.Tweet{
 		Id:        newTweet.Id,
 		Content:   newTweet.Content,
 		CreatedAt: newTweet.CreatedAt,
@@ -102,16 +95,16 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 		Id:      payload.TweetId,
 		Content: payload.Content,
 	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	newTweetResponse := struct {
-		Id         int       `json:"id"`
-		Content    string    `json:"content"`
-		CreatedAt  time.Time `json:"createdAt"`
-		ModifiedAt time.Time `json:"modifiedAt"`
-		UserId     int       `json:"userId"`
+		Id         int        `json:"id"`
+		Content    string     `json:"content"`
+		CreatedAt  time.Time  `json:"createdAt"`
+		ModifiedAt *time.Time `json:"modifiedAt"`
+		UserId     int        `json:"userId"`
 	}{
 		Id:         newTweet.Id,
 		Content:    newTweet.Content,
@@ -131,25 +124,15 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 }
 
 func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
-	decoder := json.NewDecoder(r.Body)
-	payload := struct {
-		Id int `json:"id"`
-	}{}
-	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
+	id := r.PathValue("id")
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
 	}
 
-	if err := validate.Struct(payload); err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
-		}
-	}
-
-	err := h.service.DeleteTweet(models.Tweet{
-		Id: payload.Id,
-	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	err = h.service.DeleteTweet(idInt)
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})
@@ -174,8 +157,8 @@ func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *models
 	userId := userInfo["userId"].(float64)
 
 	likeCount, err := h.service.LikeTweet(int(userId), idInt)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	likeTweetResponse := struct {
@@ -207,8 +190,8 @@ func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *mode
 	userId := userInfo["userId"].(float64)
 
 	likeCount, err := h.service.UnlikeTweet(int(userId), idInt)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	likeTweetResponse := struct {

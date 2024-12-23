@@ -1,6 +1,9 @@
 package user
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -11,15 +14,143 @@ import (
 )
 
 type Service struct {
-	repository Repository
+	ctx            context.Context
+	userRepository UserRepository
 }
 
-func NewService(repository Repository) Service {
-	return Service{repository: repository}
+func NewService(ctx context.Context, userRepository UserRepository) Service {
+	return Service{ctx: ctx, userRepository: userRepository}
+}
+
+func (s Service) GetUserById(id int) (*models.User, error) {
+	user, err := s.userRepository.GetUserById(id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+		}
+		return nil, &models.AppError{Err: err, Message: "Failed to get user"}
+	}
+
+	return user, nil
+}
+
+func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
+	lastTenTweets, err := s.userRepository.GetLastTenTweets(userId)
+	if err != nil {
+		return nil, &models.AppError{Err: err, Message: "Failed to get 10 recent tweets"}
+	}
+
+	var tweetsId []int
+	for _, tweet := range lastTenTweets {
+		tweetsId = append(tweetsId, tweet.Id)
+	}
+
+	lastTenTweetsInteractions, err := s.userRepository.GetLastTenTweetsInteractions(userId, tweetsId)
+	if err != nil {
+		return nil, &models.AppError{Err: err, Message: "Failed to get 10 recent tweets interactions"}
+	}
+
+	for i := range lastTenTweets {
+		for j := range lastTenTweetsInteractions {
+			if lastTenTweets[i].Id == lastTenTweetsInteractions[j].TweetId {
+				lastTenTweets[i].IsLiked = lastTenTweetsInteractions[j].IsLiked
+			}
+		}
+	}
+
+	return lastTenTweets, nil
+}
+
+func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId int) (*models.User, error) {
+	user, err := s.userRepository.GetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+
+	isFollowed, err := s.userRepository.IsFollowed(followerId, user.Id)
+	if err != nil {
+		return nil, err
+	}
+	user.IsFollowed = isFollowed
+	fmt.Println("user:", user)
+	/*
+		id, username, email, ... -> identified by $.
+		recentTweets -> identified by $.recentTweets
+	*/
+	userCacheStr, err := s.userRepository.GetUserCache(1)
+	if err != nil {
+		return nil, err
+	}
+	if userCacheStr != "" {
+		// $ ada
+		userRecentTweetsCache, err := s.userRepository.GetUserRecentTweetsCache(user.Id)
+		if err != nil {
+			return nil, err
+		}
+		var userCache []models.User
+		err = json.Unmarshal([]byte(userCacheStr), &userCache)
+		if err != nil {
+			return nil, err
+		}
+		user = &userCache[0]
+
+		if userRecentTweetsCache != "[]" {
+			// $.recentTweets ada
+			utils.CacheLog("HIT UserCache UserRecentTweetsCache")
+			return user, nil
+		}
+
+		// $.recentTweets gaada
+		lastTenTweets, err := s.GetLastTenTweets(user.Id)
+		if err != nil {
+			return nil, err
+		}
+		user.RecentTweets = lastTenTweets
+
+		utils.CacheLog("HIT UserRecentTweetsCache")
+		_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
+		if err != nil {
+			return nil, err
+		}
+
+		return user, nil
+	}
+
+	// $ gaada $.recentTweets gaada
+	lastTenTweets, err := s.GetLastTenTweets(user.Id)
+	if err != nil {
+		return nil, err
+	}
+	user.RecentTweets = lastTenTweets
+
+	utils.CacheLog("MISS UserCache UserRecentTweetsCache")
+	_, err = s.userRepository.SetUserCache(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s Service) GetFeed(id int, email string, page int) ([]models.Tweet, error) {
+	isUserExist, err := s.userRepository.IsUserExistByEmail(email)
+	if err != nil {
+		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
+	}
+	if !isUserExist {
+		return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+	}
+
+	feed, err := s.userRepository.GetFeed(id, page)
+	if err != nil {
+		return nil, err
+	}
+
+	return feed, nil
 }
 
 func (s Service) CreateUser(user models.User) (*models.User, error) {
-	isUserExist, err := s.repository.IsUserExistByEmail(user.Email)
+	isUserExist, err := s.userRepository.IsUserExistByEmail(user.Email)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
@@ -33,7 +164,7 @@ func (s Service) CreateUser(user models.User) (*models.User, error) {
 	}
 
 	user.Password = string(hashedPassword)
-	newUser, err := s.repository.CreateUser(user)
+	newUser, err := s.userRepository.CreateUser(user)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to create account"}
 	}
@@ -41,29 +172,16 @@ func (s Service) CreateUser(user models.User) (*models.User, error) {
 	return newUser, nil
 }
 
-func (s Service) GetUserById(id int) (*models.User, error) {
-	user, err := s.repository.GetUserById(id)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
-		}
-		return nil, &models.AppError{Err: err, Message: "Failed to get user"}
-	}
-
-	return user, nil
-}
-
 func (s Service) CheckUserCredential(email string, password string) (*models.User, error) {
-	isUserExist, err := s.repository.IsUserExistByEmail(email)
+	isUserExist, err := s.userRepository.IsUserExistByEmail(email)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
-
 	if !isUserExist {
 		return nil, &models.AppError{Err: err, Message: "User not found. Please create an account", Code: http.StatusNotFound}
 	}
 
-	user, err := s.repository.GetUserByEmail(email)
+	user, err := s.userRepository.GetUserByEmail(email)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to get user credential"}
 	}
@@ -76,6 +194,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 	claims := jwt.MapClaims{
 		"userId":   user.Id,
 		"username": user.Username,
+		"email":    user.Email,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
@@ -89,7 +208,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 }
 
 func (s Service) FollowOtherUser(followerId int, followingId int) error {
-	if err := s.repository.FollowOtherUser(followerId, followingId); err != nil {
+	if err := s.userRepository.FollowOtherUser(followerId, followingId); err != nil {
 		return &models.AppError{Err: err, Message: "Failed to follow", Code: http.StatusConflict}
 	}
 
@@ -97,7 +216,7 @@ func (s Service) FollowOtherUser(followerId int, followingId int) error {
 }
 
 func (s Service) UnfollowOtherUser(followerId int, followingId int) error {
-	if err := s.repository.UnfollowOtherUser(followerId, followingId); err != nil {
+	if err := s.userRepository.UnfollowOtherUser(followerId, followingId); err != nil {
 		return &models.AppError{Err: err, Message: "Failed to unfollow", Code: http.StatusConflict}
 	}
 

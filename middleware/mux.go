@@ -28,15 +28,13 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if e.Code == 0 {
 			e.Code = http.StatusInternalServerError
 		}
-		
+
 		// goes to logging
 		fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), RED), utils.ColorLog(http.StatusText(e.Code), RED))
 		fmt.Println(utils.ColorLog(e.Error(), RED))
-		fmt.Printf("LOG app_mux.go: e: %#v\n", e)
 
 		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
 		if err != nil {
-			fmt.Printf("LOG app_mux.go: e: %#v\n", e)
 			http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
 		}
 

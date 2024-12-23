@@ -46,8 +46,8 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		Email:    payload.Email,
 		Password: payload.Password,
 	})
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	newUserResponse := struct {
@@ -87,8 +87,8 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 	}
 
 	user, err := h.service.CheckUserCredential(payload.Email, payload.Password)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	userResponse := struct {
@@ -113,31 +113,26 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 	return nil
 }
 
-func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
+func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
+	username := r.PathValue("username")
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
+	followerId := userInfo["userId"].(float64)
+	user, err := h.service.GetUserByUsernameWithRecentTweets(username, int(followerId))
 	if err != nil {
-		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+		return utils.HandleErr(err)
 	}
 
-	user, err := h.service.GetUserById(id)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	userResponse := models.User{
+		Id:                 user.Id,
+		Username:           user.Username,
+		FollowerCount:      user.FollowerCount,
+		FollowingCount:     user.FollowingCount,
+		IsFollowed:         user.IsFollowed,
+		RecentTweetsLength: len(user.RecentTweets),
+		RecentTweets:       user.RecentTweets,
 	}
 
-	userProfileResponse := struct {
-		Id       int    `json:"id"`
-		Username string `json:"username"`
-		FollowerCount int `json:"followerCount"`
-		FollowingCount int `json:"followingCount"`
-	}{
-		Id: user.Id, 
-		Username: user.Username,
-		FollowerCount: user.FollowerCount, 
-		FollowingCount: user.FollowingCount,
-	}
-
-	res, err := json.Marshal(models.SuccessResponse{Data: userProfileResponse})
+	res, err := json.Marshal(models.SuccessResponse{Data: userResponse})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
@@ -150,27 +145,17 @@ func (h Handler) HandleGetUserProfile(w http.ResponseWriter, r *http.Request) *m
 
 func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	userId := userInfo["userId"].(float64)
+	followerId := userInfo["userId"].(float64)
 
-	validate = validator.New(validator.WithRequiredStructEnabled())
-	decoder := json.NewDecoder(r.Body)
-	payload := struct {
-		FollowingId int `json:"followingId" validate:"required"`
-	}{}
-	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
-	}
-
-	err := validate.Struct(payload)
+	followingIdStr := r.PathValue("id")
+	followingId, err := strconv.Atoi(followingIdStr)
 	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
-		}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
 	}
 
-	err = h.service.FollowOtherUser(int(userId), payload.FollowingId)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	err = h.service.FollowOtherUser(int(followerId), followingId)
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been followed"})
@@ -186,30 +171,53 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 
 func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	userId := userInfo["userId"].(float64)
+	followerId := userInfo["userId"].(float64)
 
-	validate = validator.New(validator.WithRequiredStructEnabled())
-	decoder := json.NewDecoder(r.Body)
-	payload := struct {
-		FollowingId int `json:"followingId" validate:"required"`
-	}{}
-	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParseRequestBody, Code: http.StatusInternalServerError}
-	}
-
-	err := validate.Struct(payload)
+	followingIdStr := r.PathValue("id")
+	followingId, err := strconv.Atoi(followingIdStr)
 	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
-		}
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
 	}
 
-	err = h.service.UnfollowOtherUser(int(userId), payload.FollowingId)
-	if e, ok := err.(*models.AppError); ok {
-		return e
+	err = h.service.UnfollowOtherUser(int(followerId), followingId)
+	if err != nil {
+		return utils.HandleErr(err)
 	}
 
 	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been unfollowed"})
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}
+
+func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *models.AppError {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
+
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
+	email := userInfo["email"].(string)
+
+	query := r.URL.Query()
+	pageStr := query.Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
+
+	feed, err := h.service.GetFeed(id, email, page)
+	if err != nil {
+		return utils.HandleErr(err)
+	}
+
+	res, err := json.Marshal(models.SuccessResponse{Data: feed})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
