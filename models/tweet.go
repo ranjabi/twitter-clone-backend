@@ -12,4 +12,5 @@ type Tweet struct {
 	UserId     int        `json:"userId" db:"user_id"`
 	LikeCount  int        `json:"likeCount" db:"like_count"`
 	IsLiked    bool       `json:"isLiked" db:"is_liked"`
+	Username   string     `json:"username" db:"username"`
 }

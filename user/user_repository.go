@@ -87,11 +87,12 @@ func (r *UserRepository) GetFeed(id int, page int) ([]models.Tweet, error) {
 	offset := (page - 1) * limit
 
 	query := `
-		SELECT t.*, 
+		SELECT t.*, u.username as username,
 			CASE WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked
 		FROM tweets t
 		LEFT JOIN follows f ON t.user_id = f.following_id
 		LEFT JOIN likes tl ON t.id = tl.tweet_id AND tl.user_id = @id
+		INNER JOIN users u ON u.id = t.user_id
 		WHERE f.follower_id = @id OR t.user_id = @id
 		ORDER BY t.created_at DESC
 		LIMIT @limit
@@ -134,10 +135,11 @@ func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
 
 func (r *UserRepository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	query := `
-		SELECT *, FALSE as is_liked
-			FROM tweets
-			WHERE user_id = @userId
-			ORDER BY created_at DESC
+		SELECT t.*, u.username, FALSE as is_liked
+			FROM tweets t
+			INNER JOIN users u ON u.id = t.user_id
+			WHERE t.user_id = @userId
+			ORDER BY t.created_at DESC
 			LIMIT 10
 	`
 	args := pgx.NamedArgs{
