@@ -22,10 +22,9 @@ import (
 )
 
 const (
-	newUserId       = 3
-	newUserUsername = "username99"
-	newUserEmail    = "email99@email.com"
-	newUserPassword = "password99"
+	newUserUsername = "username0"
+	newUserEmail    = "email0@email.com"
+	newUserPassword = "password0"
 	newUserToken    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzIiwidXNlcm5hbWUiOiJ1c2VybmFtZTk5In0.EyzXI50ozNYwu7W9YuiLS-s7xojazWLfMXXUKJeIRwQ"
 
 	userId       = 1
@@ -37,15 +36,14 @@ const (
 	user2Id = 2
 	user3Id = 3
 
-	userNotExistId    = 10000
+	userNotExistId    = 100000
 	userNotExistEmail = "not-exist@email.com"
 
 	tweetId             = 1
 	tweetUpdatedContent = "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In vehicula lacinia lacus. Vestibulum tincidunt dui nunc, at interdum neque posuere id."
 
-	tweetNotExistId = 10000
+	tweetNotExistId = 100000
 
-	newTweetId      = 61
 	newTweetContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas neque turpis, posuere non tortor ac, accumsan tempus est."
 	newTweetUserId  = 1
 )
@@ -248,7 +246,7 @@ func TestUserFollow(t *testing.T) {
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/follow", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/%d/follow", os.Getenv("TEST_BASE_URL"), user3Id), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	req.Header.Set("Content-Type", "application/json")
@@ -285,7 +283,7 @@ func TestUserFollowAlreadyFollowed(t *testing.T) {
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/follow", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/%d/follow", os.Getenv("TEST_BASE_URL"), user2Id), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	req.Header.Set("Content-Type", "application/json")
@@ -322,7 +320,7 @@ func TestUserUnfollow(t *testing.T) {
 	assert.NoError(t, err)
 
 	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/unfollow", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/%d/unfollow", os.Getenv("TEST_BASE_URL"), user2Id), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
 	req.Header.Set("Content-Type", "application/json")
@@ -377,6 +375,7 @@ func TestTweetCreate(t *testing.T) {
 	assert.NoError(t, err)
 
 	if data, ok := resBodyJson["data"].(map[string]any); ok {
+		delete(data, "id")
 		delete(data, "createdAt")
 	}
 
@@ -387,11 +386,14 @@ func TestTweetCreate(t *testing.T) {
 	expected := fmt.Sprintf(`{
     "message": "Tweet created successfully",
     "data": {
-        "id": %d,
         "content": "%s",
-		"userId": %d
+		"userId": %d,
+		"isLiked": false,
+		"likeCount": 0,
+		"modifiedAt": null,
+		"username": ""
     }
-}`, newTweetId, newTweetContent, userId)
+}`, newTweetContent, userId)
 
 	assert.JSONEq(t, expected, string(resBodyStr))
 	assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -488,14 +490,7 @@ func TestTweetUpdateNotFound(t *testing.T) {
 }
 
 func TestTweetDelete(t *testing.T) {
-	reqBody := map[string]any{
-		"id": tweetId,
-	}
-	reqBodyByte, err := json.Marshal(reqBody)
-	assert.NoError(t, err)
-
-	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweets", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweets/%d", os.Getenv("TEST_BASE_URL"), tweetId), nil)
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+userToken)
@@ -525,14 +520,7 @@ func TestTweetDelete(t *testing.T) {
 }
 
 func TestTweetDeleteNotFound(t *testing.T) {
-	reqBody := map[string]any{
-		"id": tweetNotExistId,
-	}
-	reqBodyByte, err := json.Marshal(reqBody)
-	assert.NoError(t, err)
-
-	reqBodyStr := string(reqBodyByte)
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweets", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/tweets/%d", os.Getenv("TEST_BASE_URL"), tweetNotExistId), nil)
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+userToken)
