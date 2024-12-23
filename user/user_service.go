@@ -77,7 +77,7 @@ func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId i
 		id, username, email, ... -> identified by $.
 		recentTweets -> identified by $.recentTweets
 	*/
-	userCacheStr, err := s.userRepository.GetUserCache(1)
+	userCacheStr, err := s.userRepository.GetUserCache(user.Id)
 	if err != nil {
 		return nil, err
 	}
