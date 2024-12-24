@@ -17,7 +17,7 @@
 * [Lesson Learned](#lesson-learned)
 
 ## About The Project
-A clone of twitter web application with features like tweets, user profile, and news feed. I tried to use go library as little as possible, maximizing the existing features of GO. Some of the things that I implemented can be seen at [Leeson Learned](#lesson-learned)
+A clone of the Twitter web application with features such as tweets, user profiles, and a news feed. I aimed to minimize the use of external Go libraries, leveraging Go's native features as much as possible. Some of the things I implemented can be found under [Leeson Learned](#lesson-learned)
 
 ### Build With
 - Go
@@ -35,8 +35,6 @@ Features:
 - [x] E2E Testing
 
 ### Stage 2
-From this stage, the development was done in `/v2/...` endpoint prefix.
-
 Improvements:
 - [x] Refactored to layered architecture (handler, service, and repository)
 - [x] Request validation
@@ -53,7 +51,7 @@ Features:
 ![Entity Relationship Diagram](/images/erd.png)
 
 ## Caching Mechanism
-User profile display the information about a user, such as username, follower/following count, and recent tweets. The structure of response looks like below. containing below information is getting cached.
+The user profile displays information such as the username, follower/following count, and recent tweets. The response structure is shown below, with the following information being cached.
 ```
 userResponse := struct {
     Id                 int            `json:"id"`
@@ -65,7 +63,7 @@ userResponse := struct {
 }
 ```
 
-The decision tree of caching can be seen below. Cache saved as `key=user.id:{id}, value = userResponse`.
+The decision tree of caching can be seen below. The cache is saved as `key=user.id:{id}, value = userResponse`.
 ```
 is $ (root key) exist?
     yes
@@ -76,7 +74,7 @@ is $ (root key) exist?
         no
         cache miss for $.recentTweets
         get recentTweets from db and store it to cache
-        -> return data from db (recentTweets) + cache (userProfile)
+        -> return the combined data from db (recentTweets) and cache (userProfile)
     no
     get userProfile with recentTweets from db
     store it to cache
@@ -84,15 +82,14 @@ is $ (root key) exist?
 ```
 
 ### Cache Expiration
-Everytime user profile is added to cache, the expiration time will set to 10 minutes.
+Each time a user profile is added to the cache, the expiration time is set to 10 minutes.
 User profile can only meet its expiration date until the end (and be deleted after that) if only these operations are performed:
 
 - `JSON.SET` running partial update on `$.recentTweets`
 - `JSON.DEL` running partial update on `$.recentTweets`
 
-Both operation performed when a user create a new tweet. The expiration time will be reset again to 10 minutes when **user profile get accessed**.
+Both operations are triggered when a user creates a new tweet. The expiration time resets to 10 minutes each time the **user profile is accessed**.
 
 ## Lesson Learned
-- Define my own HTTP appHandler for custom error handling. This made me able to structure the error response to be send to the client.
-- Implemented logging by reading the incoming HTTP request. The result is error method, request url, and request body can be seen in the logs.
-
+- Defined a custom HTTP appHandler for error handling, allowing structured error responses to be sent to the client.
+- Implemented logging by capturing incoming HTTP requests. This logs the error method, request URL, and request body.
