@@ -11,4 +11,5 @@ type User struct {
 	Password           string  `json:"password"`
 	Token              string  `json:"token"`
 	IsFollowed         bool    `json:"isFollowed"`
+	NextPageId         *int    `json:"nextPageId"`
 }

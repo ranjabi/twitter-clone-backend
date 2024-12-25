@@ -13,12 +13,16 @@ import (
 
 const (
 	userProfilePath             = "$"
-	userProfileRecentTWeetsPath = "$.recentTweets"
+	userProfileRecentTWeetsPath = "$"
 	userProfileExpirationTime   = 10 * time.Minute
 )
 
 func getUserProfileCacheKey(id int) string {
 	return fmt.Sprintf("user.id:%d", id)
+}
+
+func getRecentTweetsCacheKey(id int) string {
+	return fmt.Sprintf("user.id:%d:recentTweets", id)
 }
 
 type UserRepository struct {
@@ -39,22 +43,6 @@ func (r *UserRepository) GetUserCache(id int) (string, error) {
 	return res, nil
 }
 
-func (r *UserRepository) GetUserRecentTweetsCache(id int) (string, error) {
-	res, err := r.rdConn.JSONGet(r.ctx, getUserProfileCacheKey(id), userProfileRecentTWeetsPath).Result()
-	if err != nil {
-		return "", err
-	}
-	return res, nil
-}
-
-func (r *UserRepository) DeleteUserRecentTweetsCache(id int) error {
-	_, err := r.rdConn.JSONDel(r.ctx, getUserProfileCacheKey(id), userProfileRecentTWeetsPath).Result()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *UserRepository) SetUserCache(user *models.User) (string, error) {
 	res, err := r.rdConn.JSONSet(r.ctx, getUserProfileCacheKey(user.Id), userProfilePath, user).Result()
 	if err != nil {
@@ -68,8 +56,17 @@ func (r *UserRepository) SetUserCache(user *models.User) (string, error) {
 
 	return res, nil
 }
+
+func (r *UserRepository) GetUserRecentTweetsCache(id int) (string, error) {
+	res, err := r.rdConn.JSONGet(r.ctx, getRecentTweetsCacheKey(id), userProfileRecentTWeetsPath).Result()
+	if err != nil {
+		return "", err
+	}
+	return res, nil
+}
+
 func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
-	res, err := r.rdConn.JSONSet(r.ctx, getUserProfileCacheKey(user.Id), userProfileRecentTWeetsPath, tweets).Result()
+	res, err := r.rdConn.JSONSet(r.ctx, getRecentTweetsCacheKey(user.Id), userProfileRecentTWeetsPath, tweets).Result()
 	if err != nil {
 		return "", err
 	}
@@ -80,6 +77,14 @@ func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []mo
 	}
 
 	return res, nil
+}
+
+func (r *UserRepository) DeleteUserRecentTweetsCache(id int) error {
+	_, err := r.rdConn.JSONDel(r.ctx, getRecentTweetsCacheKey(id), userProfileRecentTWeetsPath).Result()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
@@ -146,17 +151,22 @@ func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
 	return &newUser, nil
 }
 
-func (r *UserRepository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
+func (r *UserRepository) GetRecentTweets(userId int, page int) ([]models.Tweet, error) {
+	limit := 10
+	offset := (page - 1) * limit
 	query := `
 		SELECT t.*, u.username, FALSE as is_liked
 			FROM tweets t
 			INNER JOIN users u ON u.id = t.user_id
 			WHERE t.user_id = @userId
 			ORDER BY t.created_at DESC
-			LIMIT 10
+			LIMIT @limit
+			OFFSET @offset
 	`
 	args := pgx.NamedArgs{
 		"userId": userId,
+		"limit":  limit,
+		"offset": offset,
 	}
 	rows, err := r.pgConn.Query(r.ctx, query, args)
 	if err != nil {
@@ -171,14 +181,13 @@ func (r *UserRepository) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	return lastTenTweets, nil
 }
 
-func (r *UserRepository) GetLastTenTweetsInteractions(userId int, tweetsId []int) ([]models.TweetInteraction, error) {
+func (r *UserRepository) GetTweetsInteractions(userId int, tweetsId []int) ([]models.TweetInteraction, error) {
 	query := `
 		SELECT tweet_id as tweet_id, 
 			CASE WHEN user_id = @userId THEN TRUE ELSE FALSE END as is_liked
         FROM likes
         WHERE tweet_id = ANY(@tweetsId)
         AND user_id = @userId
-		LIMIT 10
 	`
 	args := pgx.NamedArgs{
 		"userId":   userId,

@@ -115,24 +115,20 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 
 func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
 	username := r.PathValue("username")
+	queryParams := r.URL.Query()
+	page := queryParams.Get("page")
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
+	}
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	followerId := userInfo["userId"].(float64)
-	user, err := h.service.GetUserByUsernameWithRecentTweets(username, int(followerId))
+	user, err := h.service.GetUserByUsernameWithRecentTweets(username, int(followerId), pageInt)
 	if err != nil {
 		return utils.HandleErr(err)
 	}
 
-	userResponse := models.User{
-		Id:                 user.Id,
-		Username:           user.Username,
-		FollowerCount:      user.FollowerCount,
-		FollowingCount:     user.FollowingCount,
-		IsFollowed:         user.IsFollowed,
-		RecentTweetsLength: len(user.RecentTweets),
-		RecentTweets:       user.RecentTweets,
-	}
-
-	res, err := json.Marshal(models.SuccessResponse{Data: userResponse})
+	res, err := json.Marshal(models.SuccessResponse{Data: user})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}

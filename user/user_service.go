@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"net/http"
 	"twitter-clone-backend/models"
@@ -34,10 +35,10 @@ func (s Service) GetUserById(id int) (*models.User, error) {
 	return user, nil
 }
 
-func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
-	lastTenTweets, err := s.userRepository.GetLastTenTweets(userId)
+func (s *Service) GetRecentTweets(userId int, page int) ([]models.Tweet, error) {
+	lastTenTweets, err := s.userRepository.GetRecentTweets(userId, page)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to get 10 recent tweets"}
+		return nil, &models.AppError{Err: err, Message: "Failed to get recent tweets"}
 	}
 
 	var tweetsId []int
@@ -45,9 +46,9 @@ func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 		tweetsId = append(tweetsId, tweet.Id)
 	}
 
-	lastTenTweetsInteractions, err := s.userRepository.GetLastTenTweetsInteractions(userId, tweetsId)
+	lastTenTweetsInteractions, err := s.userRepository.GetTweetsInteractions(userId, tweetsId)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to get 10 recent tweets interactions"}
+		return nil, &models.AppError{Err: err, Message: "Failed to get recent tweets interactions"}
 	}
 
 	for i := range lastTenTweets {
@@ -61,7 +62,7 @@ func (s *Service) GetLastTenTweets(userId int) ([]models.Tweet, error) {
 	return lastTenTweets, nil
 }
 
-func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId int) (*models.User, error) {
+func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId int, page int) (*models.User, error) {
 	user, err := s.userRepository.GetUserByUsername(username)
 	if err != nil {
 		return nil, err
@@ -81,52 +82,97 @@ func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId i
 	if err != nil {
 		return nil, err
 	}
+
 	if userCacheStr != "" {
 		// $ ada
-		userRecentTweetsCache, err := s.userRepository.GetUserRecentTweetsCache(user.Id)
-		if err != nil {
-			return nil, err
-		}
 		var userCache []models.User
 		err = json.Unmarshal([]byte(userCacheStr), &userCache)
 		if err != nil {
 			return nil, err
 		}
 		user = &userCache[0]
-
-		if userRecentTweetsCache != "[]" {
-			// $.recentTweets ada
-			utils.CacheLog("HIT UserCache UserRecentTweetsCache")
-			return user, nil
-		}
-
-		// $.recentTweets gaada
-		lastTenTweets, err := s.GetLastTenTweets(user.Id)
+		userRecentTweetsCacheStr, err := s.userRepository.GetUserRecentTweetsCache(user.Id)
 		if err != nil {
 			return nil, err
 		}
-		user.RecentTweets = lastTenTweets
 
-		utils.CacheLog("HIT UserRecentTweetsCache")
-		_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
-		if err != nil {
-			return nil, err
+		if page == 1 {
+			if userRecentTweetsCacheStr != "" {
+				// $.recentTweets ada
+				var userRecentTweetsCache [][]models.Tweet
+				err = json.Unmarshal([]byte(userRecentTweetsCacheStr), &userRecentTweetsCache)
+				if err != nil {
+					return nil, err
+				}
+				user.RecentTweets = userRecentTweetsCache[0]
+				utils.CacheLog("HIT UserCache UserRecentTweetsCache")
+				return user, nil
+			}
+
+			lastTenTweets, err := s.GetRecentTweets(user.Id, page)
+			if err != nil {
+				return nil, err
+			}
+			user.RecentTweets = lastTenTweets
+			user.RecentTweetsLength = len(lastTenTweets)
+			if len(lastTenTweets) < 10 {
+				user.NextPageId = nil
+			} else {
+				nextPageId := page + 1
+				user.NextPageId = &nextPageId
+			}
+
+			utils.CacheLog("HIT UserRecentTweetsCache")
+			_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
+			if err != nil {
+				return nil, err
+			}
+		} else if page > 1 {
+			lastTenTweets, err := s.GetRecentTweets(user.Id, page)
+			if err != nil {
+				return nil, err
+			}
+			user.RecentTweets = lastTenTweets
+			user.RecentTweetsLength = len(lastTenTweets)
+			if len(lastTenTweets) < 10 {
+				user.NextPageId = nil
+			} else {
+				nextPageId := page + 1
+				user.NextPageId = &nextPageId
+			}
 		}
 
 		return user, nil
 	}
 
 	// $ gaada $.recentTweets gaada
-	lastTenTweets, err := s.GetLastTenTweets(user.Id)
+	lastTenTweets, err := s.GetRecentTweets(user.Id, page)
 	if err != nil {
 		return nil, err
 	}
 	user.RecentTweets = lastTenTweets
+	user.RecentTweetsLength = len(lastTenTweets)
+	if len(lastTenTweets) < 10 {
+		user.NextPageId = nil
+	} else {
+		nextPageId := page + 1
+		user.NextPageId = &nextPageId
+	}
 
-	utils.CacheLog("MISS UserCache UserRecentTweetsCache")
-	_, err = s.userRepository.SetUserCache(user)
-	if err != nil {
-		return nil, err
+	if page == 1 {
+		utils.CacheLog("MISS UserCache UserRecentTweetsCache")
+		userWithoutRecentTweets := user
+		temp := user.RecentTweets
+		userWithoutRecentTweets.RecentTweets = nil
+		_, err = s.userRepository.SetUserCache(userWithoutRecentTweets)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
+		if err != nil {
+			return nil, err
+		}
+		user.RecentTweets = temp
 	}
 
 	return user, nil

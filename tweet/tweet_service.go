@@ -65,6 +65,11 @@ func (s *Service) DeleteTweet(id int) error {
 		return &models.AppError{Err: err, Message: "Failed to delete tweet"}
 	}
 
+	err = s.userRepository.DeleteUserRecentTweetsCache(id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
