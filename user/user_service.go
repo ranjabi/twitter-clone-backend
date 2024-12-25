@@ -41,24 +41,6 @@ func (s *Service) GetRecentTweets(userId int, page int) ([]models.Tweet, error) 
 		return nil, &models.AppError{Err: err, Message: "Failed to get recent tweets"}
 	}
 
-	var tweetsId []int
-	for _, tweet := range lastTenTweets {
-		tweetsId = append(tweetsId, tweet.Id)
-	}
-
-	lastTenTweetsInteractions, err := s.userRepository.GetTweetsInteractions(userId, tweetsId)
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to get recent tweets interactions"}
-	}
-
-	for i := range lastTenTweets {
-		for j := range lastTenTweetsInteractions {
-			if lastTenTweets[i].Id == lastTenTweetsInteractions[j].TweetId {
-				lastTenTweets[i].IsLiked = lastTenTweetsInteractions[j].IsLiked
-			}
-		}
-	}
-
 	return lastTenTweets, nil
 }
 
@@ -106,26 +88,25 @@ func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId i
 				}
 				user.RecentTweets = userRecentTweetsCache[0]
 				utils.CacheLog("HIT UserCache UserRecentTweetsCache")
-				return user, nil
-			}
-
-			lastTenTweets, err := s.GetRecentTweets(user.Id, page)
-			if err != nil {
-				return nil, err
-			}
-			user.RecentTweets = lastTenTweets
-			user.RecentTweetsLength = len(lastTenTweets)
-			if len(lastTenTweets) < 10 {
-				user.NextPageId = nil
 			} else {
-				nextPageId := page + 1
-				user.NextPageId = &nextPageId
-			}
+				lastTenTweets, err := s.GetRecentTweets(user.Id, page)
+				if err != nil {
+					return nil, err
+				}
+				user.RecentTweets = lastTenTweets
+				user.RecentTweetsLength = len(lastTenTweets)
+				if len(lastTenTweets) < 10 {
+					user.NextPageId = nil
+				} else {
+					nextPageId := page + 1
+					user.NextPageId = &nextPageId
+				}
 
-			utils.CacheLog("HIT UserRecentTweetsCache")
-			_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
-			if err != nil {
-				return nil, err
+				utils.CacheLog("HIT UserRecentTweetsCache")
+				_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
+				if err != nil {
+					return nil, err
+				}
 			}
 		} else if page > 1 {
 			lastTenTweets, err := s.GetRecentTweets(user.Id, page)
@@ -141,38 +122,53 @@ func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId i
 				user.NextPageId = &nextPageId
 			}
 		}
-
-		return user, nil
-	}
-
-	// $ gaada $.recentTweets gaada
-	lastTenTweets, err := s.GetRecentTweets(user.Id, page)
-	if err != nil {
-		return nil, err
-	}
-	user.RecentTweets = lastTenTweets
-	user.RecentTweetsLength = len(lastTenTweets)
-	if len(lastTenTweets) < 10 {
-		user.NextPageId = nil
 	} else {
-		nextPageId := page + 1
-		user.NextPageId = &nextPageId
+		// $ gaada $.recentTweets gaada
+		lastTenTweets, err := s.GetRecentTweets(user.Id, page)
+		if err != nil {
+			return nil, err
+		}
+		user.RecentTweets = lastTenTweets
+		user.RecentTweetsLength = len(lastTenTweets)
+		if len(lastTenTweets) < 10 {
+			user.NextPageId = nil
+		} else {
+			nextPageId := page + 1
+			user.NextPageId = &nextPageId
+		}
+
+		if page == 1 {
+			utils.CacheLog("MISS UserCache UserRecentTweetsCache")
+			userWithoutRecentTweets := user
+			temp := user.RecentTweets
+			userWithoutRecentTweets.RecentTweets = nil
+			_, err = s.userRepository.SetUserCache(userWithoutRecentTweets)
+			if err != nil {
+				return nil, err
+			}
+			_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
+			if err != nil {
+				return nil, err
+			}
+			user.RecentTweets = temp
+		}
 	}
 
-	if page == 1 {
-		utils.CacheLog("MISS UserCache UserRecentTweetsCache")
-		userWithoutRecentTweets := user
-		temp := user.RecentTweets
-		userWithoutRecentTweets.RecentTweets = nil
-		_, err = s.userRepository.SetUserCache(userWithoutRecentTweets)
-		if err != nil {
-			return nil, err
+	var tweetsId []int
+	for _, tweet := range user.RecentTweets {
+		tweetsId = append(tweetsId, tweet.Id)
+	}
+
+	tweetsInteractions, err := s.userRepository.GetTweetsInteractions(user.Id, tweetsId)
+	if err != nil {
+		return nil, &models.AppError{Err: err, Message: "Failed to get recent tweets interactions"}
+	}
+	for i := range tweetsId {
+		for j := range tweetsInteractions {
+			if user.RecentTweets[i].Id == tweetsInteractions[j].TweetId {
+				user.RecentTweets[i].IsLiked = tweetsInteractions[j].IsLiked
+			}
 		}
-		_, err = s.userRepository.SetUserRecentTweetsCache(user, lastTenTweets)
-		if err != nil {
-			return nil, err
-		}
-		user.RecentTweets = temp
 	}
 
 	return user, nil
