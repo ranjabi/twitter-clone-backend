@@ -132,7 +132,7 @@ func (s Service) GetUserByUsernameWithRecentTweets(username string, followerId i
 	return user, nil
 }
 
-func (s Service) GetFeed(id int, email string, page int) ([]models.Tweet, error) {
+func (s Service) GetFeed(id int, email string, page int) (*models.Feed, error) {
 	isUserExist, err := s.userRepository.IsUserExistByEmail(email)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}

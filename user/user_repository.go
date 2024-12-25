@@ -82,7 +82,7 @@ func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []mo
 	return res, nil
 }
 
-func (r *UserRepository) GetFeed(id int, page int) ([]models.Tweet, error) {
+func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
 	limit := 10
 	offset := (page - 1) * limit
 
@@ -108,12 +108,25 @@ func (r *UserRepository) GetFeed(id int, page int) ([]models.Tweet, error) {
 		return nil, err
 	}
 
-	feed, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Tweet])
+	tweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Tweet])
 	if err != nil {
 		return nil, err
 	}
 
-	return feed, nil
+	var nextPageId *int
+	if len(tweets) < limit {
+		nextPageId = nil
+	} else {
+		nextPage := page + 1
+		nextPageId = &nextPage
+	}
+
+	feed := models.Feed{
+		Tweets:     tweets,
+		NextPageId: nextPageId,
+	}
+
+	return &feed, nil
 }
 
 func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
