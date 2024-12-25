@@ -94,7 +94,7 @@ func (r *UserRepository) GetFeed(id int, page int) ([]models.Tweet, error) {
 		LEFT JOIN likes tl ON t.id = tl.tweet_id AND tl.user_id = @id
 		INNER JOIN users u ON u.id = t.user_id
 		WHERE f.follower_id = @id OR t.user_id = @id
-		ORDER BY t.created_at DESC
+		ORDER BY t.created_at DESC, t.user_id DESC
 		LIMIT @limit
 		OFFSET @offset
 	`
