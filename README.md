@@ -1,7 +1,7 @@
 # Twitter Clone Backend
 
 <p align="center">
-<img src="images/thumbnail.png" alt="Twitter Clone" style="width: 40%; height: 40%; align: center"/>
+<img src="images/thumbnail.png" alt="Twitter Clone" style="width: 60%; height: 60%; align: center"/>
 </p>
 
 ## Table of Contents
