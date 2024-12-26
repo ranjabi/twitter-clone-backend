@@ -57,7 +57,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		Username: newUser.Username,
 		Email:    newUser.Email,
 	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully", Data: newUserResponse})
+	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully. Please login", Data: newUserResponse})
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
 	}
