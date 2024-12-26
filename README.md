@@ -46,7 +46,6 @@ Features:
 
 ### Stage 3
 - [x] Implemented redis for user profile caching
- <!-- (including user last 10 tweets) -->
 - [x] News feed
 
 ## ERD
