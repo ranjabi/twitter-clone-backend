@@ -6,8 +6,8 @@ type User struct {
 	Email              string  `json:"email"`
 	FollowerCount      int     `json:"followerCount"`
 	FollowingCount     int     `json:"followingCount"`
-	RecentTweetsLength int     `json:"recentTweetsLength"`
-	RecentTweets       []Tweet `json:"recentTweets"`
+	RecentTweetsLength int     `json:"tweetsLength"`
+	RecentTweets       []Tweet `json:"tweets"`
 	Password           string  `json:"password"`
 	Token              string  `json:"token"`
 	IsFollowed         bool    `json:"isFollowed"`

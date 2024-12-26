@@ -124,13 +124,16 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 }
 
 func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
-	id := r.PathValue("id")
-	idInt, err := strconv.Atoi(id)
+	tweetIdStr := r.PathValue("id")
+	tweetId, err := strconv.Atoi(tweetIdStr)
 	if err != nil {
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
 	}
 
-	err = h.service.DeleteTweet(idInt)
+	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
+	userId := userInfo["userId"].(float64)
+
+	err = h.service.DeleteTweet(int(userId), tweetId)
 	if err != nil {
 		return utils.HandleErr(err)
 	}
