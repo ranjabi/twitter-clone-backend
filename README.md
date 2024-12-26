@@ -19,7 +19,7 @@
 ## About The Project
 A clone of the Twitter web application with features such as tweets, user profiles, and a news feed. I aimed to minimize the use of external Go libraries, leveraging Go's native features as much as possible. Some of the things I implemented can be found under [Leeson Learned](#lesson-learned).
 
-For frontend repository can be seen at https://github.com/ranjabi/twitter-clone-frontend
+The frontend repository can be found at: https://github.com/ranjabi/twitter-clone-frontend
 
 ### Build With
 - Go
