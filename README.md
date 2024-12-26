@@ -64,16 +64,16 @@ userResponse := struct {
 }
 ```
 
-The decision tree of caching can be seen below. The cache is saved as `key=user.id:{id}, value = userResponse`.
+The decision tree of caching can be seen below. The cache is saved as `key=user.id:{id}, value = userResponse` for user profile information and `key=user.id:{id}:recentTweets, value = recentTweets` for the recent tweets.
 ```
-is $ (root key) exist?
+is user.id:{id} exist?
     yes
-    is $.recentTweets exist?
+    is user.id:{id}:recentTweets exist?
         yes
         -> return cache
 
         no
-        cache miss for $.recentTweets
+        cache miss for user.id:{id}:recentTweets
         get recentTweets from db and store it to cache
         -> return the combined data from db (recentTweets) and cache (userProfile)
     no
@@ -84,12 +84,11 @@ is $ (root key) exist?
 
 ### Cache Expiration
 Each time a user profile is added to the cache, the expiration time is set to 10 minutes.
-User profile can only meet its expiration date until the end (and be deleted after that) if only these operations are performed:
+The following operations will delete the user's recent tweets cache:
+- Creating, updating, or deleting a tweet
+- Liking or unliking a tweet by a follower
 
-- `JSON.SET` running partial update on `$.recentTweets`
-- `JSON.DEL` running partial update on `$.recentTweets`
-
-Both operations are triggered when a user creates a new tweet. The expiration time resets to 10 minutes each time the **user profile is accessed**.
+As a result, the cache will be recreated when a follower requests the user's profile. Additionally, the expiration time resets to 10 minutes each time **the user's profile is accessed**.
 
 ## Lesson Learned
 - Defined a custom HTTP appHandler for error handling, allowing structured error responses to be sent to the client.
