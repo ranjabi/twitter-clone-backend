@@ -19,8 +19,6 @@ import (
 )
 
 func main() {
-	log.SetFlags(log.Lshortfile)
-
 	env := os.Getenv("ENV_NAME")
 	err := godotenv.Load(env)
 	if err != nil {
@@ -36,7 +34,8 @@ func main() {
 	pgConn, rdConn := db.Setup(ctx)
 	defer db.ClosePostgresConnection()
 
-	mux := new(middleware.AppMux)
+	mux := new(AppMux)
+	mux.RegisterMiddleware(middleware.Logging)
 	mux.RegisterMiddleware(middleware.JwtAuthorization)
 
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
@@ -48,7 +47,7 @@ func main() {
 	userHandler := user.NewHandler(userService)
 	tweetHandler := tweet.NewHandler(tweetService)
 
-	// if use mux.Handle then error will goes into AppHandler
+	// use mux.Handle so the error will goes into AppHandler
 	mux.Handle("GET		/v2/health-check", healthCheck.HealthCheck(pgConn, rdConn, ctx))
 	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
 	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)

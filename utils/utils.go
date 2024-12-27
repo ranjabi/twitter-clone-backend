@@ -46,17 +46,9 @@ func GetDbConnectionUrlFromEnv() string {
 	)
 	log.SetPrefix("db: ")
 	log.Println("Connecting to:", connString)
-	defer log.SetPrefix("db: ")
+	log.SetPrefix("")
 
 	return connString
-}
-
-func PrintV(name string, input any) {
-	fmt.Printf("LOG %s:\n%v\n", name, input)
-}
-
-func PrintVStruct(name string, input any) {
-	fmt.Printf("LOG %s:\n%#v\n", name, input)
 }
 
 func HandleErr(err error) *models.AppError {

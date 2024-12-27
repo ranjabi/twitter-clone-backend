@@ -149,7 +149,7 @@ func TestUserRegister(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := fmt.Sprintf(`{
-		"message": "Account created successfully",
+		"message": "Account created successfully. Please login",
 		"data": {
 			"username": "%s",
 			"email": "%s"
