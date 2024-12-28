@@ -45,6 +45,7 @@ Features:
 - [x] Like/unlike
 
 ### Stage 3
+Features:
 - [x] Implemented redis for user profile caching
 - [x] News feed
 
