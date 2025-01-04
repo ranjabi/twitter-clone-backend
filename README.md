@@ -27,28 +27,6 @@ The frontend repository can be found at: https://github.com/ranjabi/twitter-clon
 - Redis
 - CI/CD: Docker, Github Actions
 
-## Development Process
-### Stage 1
-Features:
-- [x] Register
-- [x] Login
-- [x] Tweet (create, edit, delete)
-- [x] Follow/unfollow
-- [x] E2E Testing
-
-### Stage 2
-Improvements:
-- [x] Refactored to layered architecture (handler, service, and repository)
-- [x] Request validation
-
-Features:
-- [x] Like/unlike
-
-### Stage 3
-Features:
-- [x] Implemented redis for user profile caching
-- [x] News feed
-
 ## ERD
 ![Entity Relationship Diagram](/images/erd.png)
 
@@ -90,6 +68,28 @@ The following operations will delete the user's recent tweets cache:
 - Liking or unliking a tweet by a follower
 
 As a result, the cache will be recreated when a follower requests the user's profile. Additionally, the expiration time resets to 10 minutes each time **the user's profile is accessed**.
+
+## Development Process
+### Stage 1
+Features:
+- [x] Register
+- [x] Login
+- [x] Tweet (create, edit, delete)
+- [x] Follow/unfollow
+- [x] E2E Testing
+
+### Stage 2
+Improvements:
+- [x] Refactored to layered architecture (handler, service, and repository)
+- [x] Request validation
+
+Features:
+- [x] Like/unlike
+
+### Stage 3
+Features:
+- [x] Implemented redis for user profile caching
+- [x] News feed
 
 ## Lesson Learned
 - Defined a custom HTTP appHandler for error handling, allowing structured error responses to be sent to the client.
