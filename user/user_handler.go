@@ -26,6 +26,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 	validate = validator.New(validator.WithRequiredStructEnabled())
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
+		FullName string `json:"fullName" validate:"required"`
 		Username string `json:"username" validate:"required"`
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`
@@ -42,6 +43,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 
 	// karena manggil layer di dalam, maka pakai message dan error dari layer dalam
 	newUser, err := h.service.CreateUser(models.User{
+		FullName: payload.FullName,
 		Username: payload.Username,
 		Email:    payload.Email,
 		Password: payload.Password,
@@ -51,9 +53,11 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 	}
 
 	newUserResponse := struct {
+		FullName string `json:"fullName"`
 		Username string `json:"username"`
 		Email    string `json:"email"`
 	}{
+		FullName: newUser.FullName,
 		Username: newUser.Username,
 		Email:    newUser.Email,
 	}

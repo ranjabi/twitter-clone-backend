@@ -1,11 +1,11 @@
 -- +goose Up
 -- +goose StatementBegin
-INSERT INTO users (username, email, password) 
-VALUES ('username', 'email@email.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i'); -- password
-INSERT INTO users (username, email, password) 
-VALUES ('username2', 'email2@email.com', '$2a$14$mabfBxkkjs2s6l60tJFo8ucUYGcBtcrH5dBtdmUIC20nArmQNyoyK'); -- password2
-INSERT INTO users (username, email, password) 
-VALUES ('username3', 'email3@email.com', '$2a$14$xdif3Of1bxQQs3zw8tm/vua5YnoronphqASgIpaaMjIiL1AjufrIW'); -- password3
+INSERT INTO users (full_name, username, email, password) 
+VALUES ('Michael Jordan', 'jordan', 'email@email.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i'); -- password
+INSERT INTO users (full_name, username, email, password) 
+VALUES ('Kevin Hart', 'kevin', 'email2@email.com', '$2a$14$mabfBxkkjs2s6l60tJFo8ucUYGcBtcrH5dBtdmUIC20nArmQNyoyK'); -- password2
+INSERT INTO users (full_name, username, email, password) 
+VALUES ('Alex', 'alex', 'email3@email.com', '$2a$14$xdif3Of1bxQQs3zw8tm/vua5YnoronphqASgIpaaMjIiL1AjufrIW'); -- password3
 
 -- insert 20 tweets created by user1
 INSERT INTO tweets (content, user_id, created_at)  
@@ -323,16 +323,9 @@ VALUES (
 
 -- +goose Down
 -- +goose StatementBegin
-DELETE FROM follows
-WHERE follower_id=(SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1) AND following_id=(SELECT id FROM users WHERE email = 'email2@email.com' LIMIT 1);
+DELETE FROM follows;
 
-DELETE FROM tweets 
-WHERE user_id=(SELECT id FROM users WHERE email = 'email@email.com' LIMIT 1);
+DELETE FROM tweets;
 
-DELETE FROM users
-WHERE email='email@email.com';
-DELETE FROM users
-WHERE email='email2@email.com';
-DELETE FROM users
-WHERE email='email3@email.com';
+DELETE FROM users;
 -- +goose StatementEnd

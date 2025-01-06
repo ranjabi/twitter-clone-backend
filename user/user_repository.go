@@ -92,7 +92,7 @@ func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
 	offset := (page - 1) * limit
 
 	query := `
-		SELECT t.*, u.username as username,
+		SELECT t.*, u.full_name as full_name, u.username as username,
 			CASE WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked
 		FROM tweets t
 		LEFT JOIN follows f ON t.user_id = f.following_id
@@ -136,14 +136,15 @@ func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
 
 func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
 	var newUser models.User
-	query := `INSERT INTO users (username, email, password) VALUES (LOWER(@username), LOWER(@email), @password) RETURNING username, email`
+	query := `INSERT INTO users (full_name, username, email, password) VALUES (@full_name, LOWER(@username), LOWER(@email), @password) RETURNING full_name, username, email`
 	args := pgx.NamedArgs{
-		"username": user.Username,
-		"email":    user.Email,
-		"password": string(user.Password),
+		"full_name": user.FullName,
+		"username":  user.Username,
+		"email":     user.Email,
+		"password":  string(user.Password),
 	}
 
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newUser.Username, &newUser.Email)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newUser.FullName, &newUser.Username, &newUser.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +156,7 @@ func (r *UserRepository) GetRecentTweets(userId int, page int) ([]models.Tweet, 
 	limit := 10
 	offset := (page - 1) * limit
 	query := `
-		SELECT t.*, u.username, FALSE as is_liked
+		SELECT t.*, u.full_name, u.username, FALSE as is_liked
 			FROM tweets t
 			INNER JOIN users u ON u.id = t.user_id
 			WHERE t.user_id = @userId
