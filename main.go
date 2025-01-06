@@ -12,7 +12,7 @@ import (
 	"github.com/rs/cors"
 
 	"twitter-clone-backend/db"
-	"twitter-clone-backend/healthCheck"
+	"twitter-clone-backend/healthcheck"
 	"twitter-clone-backend/middleware"
 	"twitter-clone-backend/tweet"
 	"twitter-clone-backend/user"
@@ -48,7 +48,7 @@ func main() {
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// use mux.Handle so the error will goes into AppHandler
-	mux.Handle("GET		/v2/health-check", healthCheck.HealthCheck(pgConn, rdConn, ctx))
+	mux.Handle("GET		/v2/health-check", healthcheck.HealthCheck(pgConn, rdConn, ctx))
 	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
 	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
 
