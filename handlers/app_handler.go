@@ -11,7 +11,7 @@ import (
 
 type AppHandler func(http.ResponseWriter, *http.Request) *models.AppError
 
-// todo: confirm this by looking at error trace when err is nul at ServiceError <--- The ServeHTTP method called by the appHandler function and displays the returned error
+// TODO: confirm this by looking at error trace when err is nul at ServiceError <--- The ServeHTTP method called by the appHandler function and displays the returned error
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if e := fn(w, r); e != nil {
 		if e.Code == 0 {

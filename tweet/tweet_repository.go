@@ -110,7 +110,7 @@ func (r *TweetRepository) GetTweetLikeCountById(id int) (int, error) {
 	return likeCount, nil
 }
 
-// todo: should separate to LikeRepository?
+// TODO: should separate to LikeRepository?
 func (r *TweetRepository) LikeTweet(userId int, tweetId int) (int, error) {
 	var likeCount int
 	tx, err := r.pgConn.Begin(r.ctx)

@@ -161,7 +161,6 @@ func TestUserRegister(t *testing.T) {
 	res.Body.Close()
 }
 
-// use user data from seed
 func TestUserLogin(t *testing.T) {
 	reqBody := map[string]any{
 		"email":    userEmail,
@@ -170,7 +169,7 @@ func TestUserLogin(t *testing.T) {
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
-	reqBodyStr := string(reqBodyByte) // Convert bytes to string
+	reqBodyStr := string(reqBodyByte)
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/login", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
@@ -211,7 +210,7 @@ func TestUserLoginNotExist(t *testing.T) {
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
-	reqBodyStr := string(reqBodyByte) // Convert bytes to string
+	reqBodyStr := string(reqBodyByte)
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/login", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 
@@ -349,7 +348,6 @@ func TestUserUnfollow(t *testing.T) {
 	res.Body.Close()
 }
 
-// use user from seed
 func TestTweetCreate(t *testing.T) {
 	reqBody := map[string]any{
 		"content": newTweetContent,
@@ -357,7 +355,7 @@ func TestTweetCreate(t *testing.T) {
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
-	reqBodyStr := string(reqBodyByte) // Convert bytes to string
+	reqBodyStr := string(reqBodyByte)
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/tweets", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
@@ -382,7 +380,6 @@ func TestTweetCreate(t *testing.T) {
 	resBodyStr, err := json.MarshalIndent(resBodyJson, "", "\t")
 	assert.NoError(t, err)
 
-	// ignore data.createdAt
 	expected := fmt.Sprintf(`{
     "message": "Tweet created successfully",
     "data": {
@@ -408,7 +405,7 @@ func TestTweetUpdate(t *testing.T) {
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
-	reqBodyStr := string(reqBodyByte) // Convert bytes to string
+	reqBodyStr := string(reqBodyByte)
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/tweets", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
@@ -425,7 +422,6 @@ func TestTweetUpdate(t *testing.T) {
 	err = json.Unmarshal(resBody, &resBodyJson)
 	assert.NoError(t, err)
 
-	// ignore time
 	if data, ok := resBodyJson["data"].(map[string]any); ok {
 		delete(data, "modifiedAt")
 		delete(data, "createdAt")
@@ -456,7 +452,7 @@ func TestTweetUpdateNotFound(t *testing.T) {
 	reqBodyByte, err := json.Marshal(reqBody)
 	assert.NoError(t, err)
 
-	reqBodyStr := string(reqBodyByte) // Convert bytes to string
+	reqBodyStr := string(reqBodyByte)
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/tweets", os.Getenv("TEST_BASE_URL")), strings.NewReader(reqBodyStr))
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")

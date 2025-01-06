@@ -51,7 +51,7 @@ func JwtAuthorization(next http.Handler) http.Handler {
 
 		claims, ok := token.Claims.(jwt.MapClaims) // type assertion
 		if !ok || !token.Valid {
-			// todo: where this goes?
+			// TODO: where this goes?
 			http.Error(w, "Jwt claims failed", http.StatusBadRequest)
 			return
 		}

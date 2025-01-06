@@ -52,7 +52,7 @@ func GetDbConnectionUrlFromEnv() string {
 }
 
 func HandleErr(err error) *models.AppError {
-	// kelemahan: cuman bisa nampilin track sampai handler
+	// TODO kelemahan: cuman bisa nampilin track sampai handler
 	if e, ok := err.(*models.AppError); ok {
 		return e
 	} else {
@@ -62,7 +62,7 @@ func HandleErr(err error) *models.AppError {
 }
 
 func CacheLog(content any) {
-	// Get the caller information (skip 1 frame to get the caller of CacheLog)
+	// TODO Get the caller information (skip 1 frame to get the caller of CacheLog)
 	_, fullFilePath, line, ok := runtime.Caller(1)
 	if !ok {
 		fullFilePath = "unknown_file"

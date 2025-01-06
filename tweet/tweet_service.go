@@ -45,7 +45,7 @@ func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 
 	err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.UserId)
 	if err != nil {
-		// todo: what is the output if it goes into this?
+		// TODO: what is the output if it goes into this?
 		return nil, err
 	}
 

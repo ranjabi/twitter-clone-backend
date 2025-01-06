@@ -5,16 +5,12 @@ type SuccessResponse struct {
 	Data    any    `json:"data"`
 }
 
+// TODO test
 type SuccessResponseMessage struct {
 	Message string `json:"message"`
 }
 
-// todo: add Data: nil with NewErrorResponse
+// TODO: add Data: nil with NewErrorResponse
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
-
-// todo: why not method of ErrorResponse?
-// func NewErrorResponse(message string) *ErrorResponse {
-// 	return &ErrorResponse{Message: message, Data: nil}
-// }
