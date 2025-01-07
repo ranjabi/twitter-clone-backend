@@ -14,8 +14,8 @@ import (
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/healthcheck"
 	"twitter-clone-backend/middleware"
-	"twitter-clone-backend/tweet"
-	"twitter-clone-backend/user"
+	"twitter-clone-backend/usecases/tweet"
+	"twitter-clone-backend/usecases/user"
 )
 
 func main() {

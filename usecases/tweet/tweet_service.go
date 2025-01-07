@@ -3,7 +3,7 @@ package tweet
 import (
 	"net/http"
 	"twitter-clone-backend/models"
-	"twitter-clone-backend/user"
+	"twitter-clone-backend/usecases/user"
 )
 
 type Service struct {
