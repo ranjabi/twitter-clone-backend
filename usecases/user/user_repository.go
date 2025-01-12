@@ -92,7 +92,7 @@ func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
 	offset := (page - 1) * limit
 
 	query := `
-		SELECT t.*, u.full_name as full_name, u.username as username,
+		SELECT t.*, u.full_name as full_name, u.username as username, u.profile_image as profile_image,
 			CASE WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked
 		FROM tweets t
 		LEFT JOIN follows f ON t.user_id = f.following_id
