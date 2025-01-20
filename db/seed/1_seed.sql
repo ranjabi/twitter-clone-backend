@@ -2,25 +2,25 @@
 -- +goose StatementBegin
 --===== USERS =====
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('John Doe', 'johndoe', 'johndoe@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/yellow-1.png');
+VALUES ('John Doe', 'johndoe', 'johndoe@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/blue-1.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Jane Smith', 'janesmith', 'janesmith@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/yellow-2.png');
+VALUES ('Jane Smith', 'janesmith', 'janesmith@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-2.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Mike Johnson', 'mikejohnson', 'mikejohnson@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/yellow-3.png');
+VALUES ('Mike Johnson', 'mikejohnson', 'mikejohnson@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/yellow-2.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Emily Davis', 'emilydavis', 'emilydavis@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-1.png');
+VALUES ('Emily Davis', 'emilydavis', 'emilydavis@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-3.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Chris Brown', 'chrisbrown', 'chrisbrown@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-2.png');
+VALUES ('Chris Brown', 'chrisbrown', 'chrisbrown@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/yellow-3.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Sarah Wilson', 'sarahwilson', 'sarahwilson@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-3.png');
+VALUES ('Sarah Wilson', 'sarahwilson', 'sarahwilson@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/blue-4.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('David Lee', 'davidlee', 'davidlee@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/blue-1.png');
+VALUES ('David Lee', 'davidlee', 'davidlee@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/blue-2.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Olivia Martinez', 'oliviamartinez', 'oliviamartinez@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/blue-2.png');
+VALUES ('Olivia Martinez', 'oliviamartinez', 'oliviamartinez@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/yellow-1.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
 VALUES ('Daniel Clark', 'danielclark', 'danielclark@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/blue-3.png');
 INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Sophia Anderson', 'sophiaanderson', 'sophiaanderson@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/blue-4.png');
+VALUES ('Sophia Anderson', 'sophiaanderson', 'sophiaanderson@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-1.png');
 
 
 
