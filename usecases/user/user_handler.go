@@ -96,15 +96,19 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 	}
 
 	userResponse := struct {
-		Id       int    `json:"id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		Token    string `json:"token"`
+		Id           int    `json:"id"`
+		Username     string `json:"username"`
+		FullName     string `json:"fullName"`
+		Email        string `json:"email"`
+		ProfileImage string `json:"profileImage"`
+		Token        string `json:"token"`
 	}{
-		Id:       user.Id,
-		Username: user.Username,
-		Email:    user.Email,
-		Token:    user.Token,
+		Id:           user.Id,
+		Username:     user.Username,
+		FullName:     user.FullName,
+		Email:        user.Email,
+		ProfileImage: user.ProfileImage,
+		Token:        user.Token,
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userResponse})
 	if err != nil {

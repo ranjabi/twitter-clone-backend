@@ -5,6 +5,7 @@ type User struct {
 	Username           string  `json:"username"`
 	FullName           string  `json:"fullName"`
 	Email              string  `json:"email"`
+	ProfileImage       string  `json:"profileImage"`
 	FollowerCount      int     `json:"followerCount"`
 	FollowingCount     int     `json:"followingCount"`
 	RecentTweetsLength int     `json:"tweetsLength"`
