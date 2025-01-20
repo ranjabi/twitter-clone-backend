@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"encoding/json"
-	// "encoding/json"
 	"fmt"
 	"net/http"
 	"twitter-clone-backend/models"
@@ -234,8 +233,9 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 	}
 
 	claims := jwt.MapClaims{
-		"userId":   user.Id,
+		"id":       user.Id,
 		"username": user.Username,
+		"fullName": user.FullName,
 		"email":    user.Email,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

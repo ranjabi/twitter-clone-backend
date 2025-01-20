@@ -130,7 +130,7 @@ func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *model
 		return &models.AppError{Err: err, Message: utils.ErrMsgFailedToParsePathValue}
 	}
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	followerId := userInfo["userId"].(float64)
+	followerId := userInfo["id"].(float64)
 	user, err := h.service.GetUserByUsernameWithRecentTweets(username, int(followerId), pageInt)
 	if err != nil {
 		return utils.HandleErr(err)
@@ -149,7 +149,7 @@ func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *model
 
 func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	followerId := userInfo["userId"].(float64)
+	followerId := userInfo["id"].(float64)
 
 	followingIdStr := r.PathValue("id")
 	followingId, err := strconv.Atoi(followingIdStr)
@@ -175,7 +175,7 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 
 func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request) *models.AppError {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	followerId := userInfo["userId"].(float64)
+	followerId := userInfo["id"].(float64)
 
 	followingIdStr := r.PathValue("id")
 	followingId, err := strconv.Atoi(followingIdStr)

@@ -27,7 +27,7 @@ func NewHandler(service Service) Handler {
 
 func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	userId := userInfo["userId"].(float64)
+	userId := userInfo["id"].(float64)
 
 	payload := struct {
 		Content string `json:"content" validate:"required"`
@@ -131,7 +131,7 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	userId := userInfo["userId"].(float64)
+	userId := userInfo["id"].(float64)
 
 	err = h.service.DeleteTweet(int(userId), tweetId)
 	if err != nil {
@@ -157,7 +157,7 @@ func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *models
 	}
 
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	userId := userInfo["userId"].(float64)
+	userId := userInfo["id"].(float64)
 
 	likeCount, err := h.service.LikeTweet(int(userId), idInt)
 	if err != nil {
@@ -190,7 +190,7 @@ func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
-	userId := userInfo["userId"].(float64)
+	userId := userInfo["id"].(float64)
 
 	likeCount, err := h.service.UnlikeTweet(int(userId), idInt)
 	if err != nil {
