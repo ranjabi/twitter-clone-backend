@@ -239,12 +239,12 @@ func (r *UserRepository) GetUserById(id int) (*models.User, error) {
 
 func (r *UserRepository) GetUserByUsername(username string) (*models.User, error) {
 	var user models.User
-	query := `SELECT id, username, email, password, follower_count, following_count FROM users WHERE username=@username`
+	query := `SELECT id, username, full_name, email, profile_image, password, follower_count, following_count FROM users WHERE username=@username`
 	args := pgx.NamedArgs{
 		"username": username,
 	}
 
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.FollowerCount, &user.FollowingCount)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfileImage, &user.Password, &user.FollowerCount, &user.FollowingCount)
 	if err != nil {
 		return nil, err
 	}
