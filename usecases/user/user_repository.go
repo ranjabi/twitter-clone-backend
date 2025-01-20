@@ -156,7 +156,7 @@ func (r *UserRepository) GetRecentTweets(userId int, page int) ([]models.Tweet, 
 	limit := 10
 	offset := (page - 1) * limit
 	query := `
-		SELECT t.*, u.full_name, u.username, FALSE as is_liked
+		SELECT t.*, u.full_name, u.username, u.profile_image, FALSE as is_liked
 			FROM tweets t
 			INNER JOIN users u ON u.id = t.user_id
 			WHERE t.user_id = @userId
