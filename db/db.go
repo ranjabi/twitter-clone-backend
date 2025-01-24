@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"path/filepath"
 	"sync"
 	"twitter-clone-backend/utils"
 
@@ -23,35 +24,56 @@ var (
 	rdConn *redis.Client
 )
 
-func GetPostgresConnection(connString string) (*pgxpool.Pool, error) {
-	var err error
+func Setup(ctx context.Context) (*pgxpool.Pool, *redis.Client, error) {
+	log.SetPrefix("DB: ")
+	defer log.SetPrefix("")
+
+	pgConn, err := GetPostgresConnection(ctx, utils.GetDbConnectionUrlFromEnv())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rdConn, err := GetRedisConnection()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if env := os.Getenv("ENV_NAME"); strings.Contains(env, "prod") {
+		applyMigrationsAndSeed(ctx)
+	}
+
+	return pgConn, rdConn, nil
+}
+
+func GetPostgresConnection(ctx context.Context, connString string) (*pgxpool.Pool, error) {
+	var initErr error
 
 	pgOnce.Do(func() {
-		pgConn, err = pgxpool.New(context.Background(), connString)
+		var err error
+		pgConn, err = pgxpool.New(ctx, connString)
 		if err != nil {
-			log.Fatal("Error to create postgres database connection:", err)
+			initErr = fmt.Errorf("error creating postgres database connection: %w", err)
+			return
 		}
 
 		var testResult int
-		err = pgConn.QueryRow(context.Background(), "SELECT 1").Scan(&testResult)
+		err = pgConn.QueryRow(ctx, "SELECT 1").Scan(&testResult)
 		if err != nil {
-			log.Fatal("Postgres failed to connect:", err)
+			initErr = fmt.Errorf("postgres failed to run test query: %w", err)
+			return
 		}
 
-		log.Println("Postgres database connection successfully obtained")
+		log.Println("Postgres database connection successfully established")
 	})
 
-	return pgConn, err
-}
-
-func ClosePostgresConnection() {
-	if pgConn != nil {
-		pgConn.Close()
-		log.Println("Postgres database connection closed")
+	if initErr != nil {
+		return nil, initErr
 	}
+
+	return pgConn, nil
 }
 
-func GetRedisConnection() *redis.Client {
+func GetRedisConnection() (*redis.Client, error) {
 	rdOnce.Do(func() {
 		rdConn = redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
@@ -62,12 +84,12 @@ func GetRedisConnection() *redis.Client {
 
 	_, err := rdConn.Ping(context.Background()).Result()
 	if err != nil {
-		log.Fatal("Redis failed to connect:", err)
+		return nil, err
 	}
 
 	log.Println("Redis database connection successfully obtained")
 
-	return rdConn
+	return rdConn, nil
 }
 
 func applyMigrationsAndSeed(ctx context.Context) {
@@ -99,20 +121,9 @@ func applyMigrationsAndSeed(ctx context.Context) {
 	log.Println("Migrations has been applied!")
 }
 
-func Setup(ctx context.Context) (*pgxpool.Pool, *redis.Client) {
-	log.SetPrefix("db: ")
-	defer log.SetPrefix("")
-
-	pgConn, err := GetPostgresConnection(utils.GetDbConnectionUrlFromEnv())
-	if err != nil {
-		log.Fatal("Error getting database connection:", err)
+func ClosePostgresConnection() {
+	if pgConn != nil {
+		pgConn.Close()
+		log.Println("Postgres database connection closed")
 	}
-
-	rdConn := GetRedisConnection()
-
-	if env := os.Getenv("ENV_NAME"); strings.Contains(env, "prod") {
-		applyMigrationsAndSeed(ctx)
-	}
-
-	return pgConn, rdConn
 }

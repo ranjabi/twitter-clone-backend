@@ -31,8 +31,10 @@ func main() {
 	}
 
 	ctx := context.Background()
-	pgConn, rdConn := db.Setup(ctx)
-	defer db.ClosePostgresConnection()
+	pgConn, rdConn, err := db.Setup(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	mux := new(AppMux)
 	mux.RegisterMiddleware(middleware.Logging)
