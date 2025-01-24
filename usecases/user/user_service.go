@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"twitter-clone-backend/constants"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
@@ -196,7 +197,7 @@ func (s Service) CreateUser(user models.User) (*models.User, error) {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
 	if isUserExist {
-		return nil, &models.AppError{Err: err, Message: "Email is already used", Code: http.StatusConflict}
+		return nil, &models.AppError{Err: err, Message: constants.EMAIL_ALREADY_EXIST_MSG, Code: http.StatusConflict}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)

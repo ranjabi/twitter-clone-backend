@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"twitter-clone-backend/constants"
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/usecases/user"
@@ -26,9 +27,10 @@ import (
 
 var pgConn *pgxpool.Pool
 var rdConn *redis.Client
+var ctx context.Context
 
 func TestMain(m *testing.M) {
-	ctx := context.Background()
+	ctx = context.Background()
 
 	err := godotenv.Load("../../.env.dev.local")
 	if err != nil {
@@ -84,8 +86,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreateUser_Ok(t *testing.T) {
-	ctx := context.Background()
-
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, userRepository)
 
@@ -99,4 +99,17 @@ func TestCreateUser_Ok(t *testing.T) {
 	assert.NotNil(t, newUser)
 	assert.Equal(t, strings.ToLower(testUser.Email), newUser.Email)
 	// assert.Equal(t, testUser.Password, newUser.Password)
+}
+
+func TestCreateUser_EmailAlreadyExist(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	userService := user.NewService(ctx, userRepository)
+
+	testUser := models.User{
+		Email:    "johndoe@example.com",
+		Password: faker.Password(),
+	}
+
+	_, err := userService.CreateUser(testUser)
+	assert.EqualError(t, err, constants.EMAIL_ALREADY_EXIST_MSG)
 }

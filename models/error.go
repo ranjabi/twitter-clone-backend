@@ -11,5 +11,5 @@ func (e *AppError) Error() string {
 		return e.Message + ": " + e.Err.Error()
 	}
 
-	return e.Message + ": Without additional error"
+	return e.Message
 }
