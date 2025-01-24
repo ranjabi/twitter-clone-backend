@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"log"
 	"path/filepath"
+	"twitter-clone-backend/config"
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/models"
-	"twitter-clone-backend/utils"
 
 	"os"
 	"testing"
@@ -41,16 +41,22 @@ var validUser2 = models.User{
 var notExistUser = models.User{
 	Id: 100,
 }
+var cfg *config.Config
 
 func TestMain(m *testing.M) {
+	var err error
+	cfg, err = config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx = context.Background()
 
-	err := godotenv.Load("../../.env.dev.local")
+	err = godotenv.Load("../../.env.dev.local")
 	if err != nil {
 		log.Fatal("Error loading .env file: ", err)
 	}
 
-	pgConn, _, err = db.Setup(ctx)
+	pgConn, _, err = db.Setup(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,7 +64,7 @@ func TestMain(m *testing.M) {
 	// ----- Migration and seed start -----
 	log.SetPrefix("DB: ")
 	log.Println("Starting migration and seed...")
-	db, err := sql.Open("pgx", utils.GetDbConnectionUrlFromEnv())
+	db, err := sql.Open("pgx", cfg.PgConnString)
 	if err != nil {
 		log.Fatal(err)
 	}

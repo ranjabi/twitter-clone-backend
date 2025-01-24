@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 
+	"twitter-clone-backend/config"
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/healthcheck"
 	"twitter-clone-backend/middleware"
@@ -30,20 +31,25 @@ func main() {
 		log.Println("LOADED ENV: .env")
 	}
 
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
-	pgConn, rdConn, err := db.Setup(ctx)
+	pgConn, rdConn, err := db.Setup(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	mux := new(AppMux)
 	mux.RegisterMiddleware(middleware.Logging)
-	mux.RegisterMiddleware(middleware.JwtAuthorization)
+	mux.RegisterMiddleware(middleware.JwtAuthorization(cfg))
 
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 
-	userService := user.NewService(ctx, userRepository)
+	userService := user.NewService(ctx, cfg, userRepository)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
 
 	userHandler := user.NewHandler(userService)

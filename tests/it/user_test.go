@@ -12,7 +12,7 @@ import (
 
 func TestFollow_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, userRepository)
+	userService := user.NewService(ctx, cfg, userRepository)
 
 	followingUserBefore, err := userService.GetUserById(validUser.Id)
 	assert.NoError(t, err)
@@ -40,7 +40,7 @@ func TestFollow_Ok(t *testing.T) {
 
 func TestFollow_AlreadyFollowed(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, userRepository)
+	userService := user.NewService(ctx, cfg, userRepository)
 
 	followingUserBefore, err := userService.GetUserById(validUser.Id)
 	assert.NoError(t, err)
@@ -60,7 +60,7 @@ func TestFollow_AlreadyFollowed(t *testing.T) {
 
 func TestFollow_FolloweeNotExist(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, userRepository)
+	userService := user.NewService(ctx, cfg, userRepository)
 
 	err := userService.FollowOtherUser(validUser.Id, notExistUser.Id)
 	assert.EqualError(t, err, errmsg.USER_NOT_FOUND)
@@ -68,7 +68,7 @@ func TestFollow_FolloweeNotExist(t *testing.T) {
 
 func TestUnfollow_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, userRepository)
+	userService := user.NewService(ctx, cfg, userRepository)
 
 	err := userService.FollowOtherUser(validUser.Id, validUser2.Id)
 	assert.NoError(t, err)
@@ -96,7 +96,7 @@ func TestUnfollow_Ok(t *testing.T) {
 
 func TestUnfollow_AlreadyNotFollowed(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, userRepository)
+	userService := user.NewService(ctx, cfg, userRepository)
 
 	err := userService.UnfollowOtherUser(validUser.Id, validUser2.Id)
 	assert.NoError(t, err)
@@ -104,7 +104,7 @@ func TestUnfollow_AlreadyNotFollowed(t *testing.T) {
 
 func TestUnfollow_FolloweeNotExist(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, userRepository)
+	userService := user.NewService(ctx, cfg, userRepository)
 
 	err := userService.UnfollowOtherUser(validUser.Id, notExistUser.Id)
 	assert.NoError(t, err)

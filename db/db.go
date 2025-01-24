@@ -10,7 +10,7 @@ import (
 
 	"path/filepath"
 	"sync"
-	"twitter-clone-backend/utils"
+	"twitter-clone-backend/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pressly/goose/v3"
@@ -24,11 +24,11 @@ var (
 	rdConn *redis.Client
 )
 
-func Setup(ctx context.Context) (*pgxpool.Pool, *redis.Client, error) {
+func Setup(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, *redis.Client, error) {
 	log.SetPrefix("DB: ")
 	defer log.SetPrefix("")
 
-	pgConn, err := GetPostgresConnection(ctx, utils.GetDbConnectionUrlFromEnv())
+	pgConn, err := GetPostgresConnection(ctx, cfg.PgConnString)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -39,7 +39,7 @@ func Setup(ctx context.Context) (*pgxpool.Pool, *redis.Client, error) {
 	}
 
 	if env := os.Getenv("ENV_NAME"); strings.Contains(env, "prod") {
-		applyMigrationsAndSeed(ctx)
+		applyMigrationsAndSeed(ctx, cfg)
 	}
 
 	return pgConn, rdConn, nil
@@ -92,10 +92,10 @@ func GetRedisConnection() (*redis.Client, error) {
 	return rdConn, nil
 }
 
-func applyMigrationsAndSeed(ctx context.Context) {
+func applyMigrationsAndSeed(ctx context.Context, cfg *config.Config) {
 	log.Println("Applying migrations and seed...")
 
-	db, err := sql.Open("pgx", utils.GetDbConnectionUrlFromEnv())
+	db, err := sql.Open("pgx", cfg.PgConnString)
 	if err != nil {
 		log.Fatal("Error opening database connection:", err)
 	}

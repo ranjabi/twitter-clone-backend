@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"twitter-clone-backend/utils"
+	"twitter-clone-backend/config"
 
 	"os"
 	"testing"
@@ -49,14 +49,19 @@ const (
 )
 
 func TestMain(m *testing.M) {
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
-	err := godotenv.Load("../.env.dev")
+	err = godotenv.Load("../.env.dev")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	fmt.Println("LOADED BASE URL:", os.Getenv("TEST_BASE_URL"))
 
-	db, err := sql.Open("pgx", utils.GetDbConnectionUrlFromEnv())
+	db, err := sql.Open("pgx", cfg.PgConnString)
 	if err != nil {
 		log.Fatal("Error opening database connection:", err)
 	}

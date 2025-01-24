@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"twitter-clone-backend/config"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -17,11 +18,12 @@ import (
 
 type Service struct {
 	ctx            context.Context
+	cfg            *config.Config
 	userRepository UserRepository
 }
 
-func NewService(ctx context.Context, userRepository UserRepository) Service {
-	return Service{ctx: ctx, userRepository: userRepository}
+func NewService(ctx context.Context, cfg *config.Config, userRepository UserRepository) Service {
+	return Service{ctx, cfg, userRepository}
 }
 
 func (s Service) GetUserById(id int) (*models.User, error) {
@@ -241,7 +243,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 		"email":    user.Email,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(utils.JWT_SIGNATURE_KEY))
+	signedToken, err := token.SignedString([]byte(s.cfg.JwtSecret))
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to sign token"}
 	}
