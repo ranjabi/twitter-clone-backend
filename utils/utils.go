@@ -12,11 +12,6 @@ import (
 type contextKey string
 
 const (
-	ErrMsgFailedToParsePathValue        = "Failed to parse path value"
-	ErrMsgFailedToParseRequestBody      = "Failed to parse request body"
-	ErrMsgFailedToSerializeResponseBody = "Failed to serialize response body"
-	ErrMsgMethodNotAllowed              = "Method not allowed"
-
 	RED    = "\033[31m"
 	GREEN  = "\033[32m"
 	YELLOW = "\033[33m"

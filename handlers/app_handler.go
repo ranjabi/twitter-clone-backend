@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 )
@@ -23,7 +24,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
 		if err != nil {
-			http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
+			http.Error(w, errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, http.StatusInternalServerError)
 		}
 
 		w.Header().Set("Content-Type", "application/json")

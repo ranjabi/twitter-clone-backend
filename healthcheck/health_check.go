@@ -8,9 +8,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 
+	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/handlers"
 	"twitter-clone-backend/models"
-	"twitter-clone-backend/utils"
 )
 
 func HealthCheck(db *pgxpool.Pool, rdConn *redis.Client, ctx context.Context) handlers.AppHandler {
@@ -31,7 +31,7 @@ func HealthCheck(db *pgxpool.Pool, rdConn *redis.Client, ctx context.Context) ha
 			},
 		})
 		if err != nil {
-			return &models.AppError{Err: err, Message: utils.ErrMsgFailedToSerializeResponseBody, Code: http.StatusInternalServerError}
+			return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

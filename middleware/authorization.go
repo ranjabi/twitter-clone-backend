@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
@@ -31,7 +32,7 @@ func JwtAuthorization(next http.Handler) http.Handler {
 		if !strings.Contains(authorizationHeader, "Bearer") {
 			res, err := json.Marshal(models.ErrorResponse{Message: "Unauthorized access"})
 			if err != nil {
-				http.Error(w, utils.ErrMsgFailedToSerializeResponseBody, http.StatusInternalServerError)
+				http.Error(w, errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, http.StatusInternalServerError)
 			}
 
 			w.Header().Set("Content-Type", "application/json")
