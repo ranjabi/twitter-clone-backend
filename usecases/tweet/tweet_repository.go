@@ -35,6 +35,21 @@ func (r *TweetRepository) CreateTweet(tweet models.Tweet) (*models.Tweet, error)
 	return &newTweet, nil
 }
 
+func (r *TweetRepository) FindById(id int) (*models.Tweet, error) {
+	var tweet models.Tweet
+	query := `SELECT id, content, created_at, user_id from tweets WHERE id = @id`
+	args := pgx.NamedArgs{
+		"id": id,
+	}
+
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&tweet.Id, &tweet.Content, &tweet.CreatedAt, &tweet.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tweet, nil
+}
+
 func (r *TweetRepository) IsTweetExistById(id int) (bool, error) {
 	var isTweetExist bool
 	query := `SELECT EXISTS (SELECT 1 FROM tweets WHERE id=@id)`

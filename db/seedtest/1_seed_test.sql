@@ -9,13 +9,18 @@ VALUES ('Test test 2', 'test2', 'test2@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSh
 
 
 -- ----- FOLLOWS -----
-INSERT INTO follows (follower_id, following_id) 
-VALUES (
-    (SELECT id FROM users WHERE email = 'test@example.com' LIMIT 1), 
-    (SELECT id FROM users WHERE email = 'test2@example.com' LIMIT 1)
-);
+-- INSERT INTO follows (follower_id, following_id) 
+-- VALUES (
+--     (SELECT id FROM users WHERE email = 'test@example.com' LIMIT 1), 
+--     (SELECT id FROM users WHERE email = 'test2@example.com' LIMIT 1)
+-- );
 
 -- ----- TWEETS -----
+INSERT INTO tweets (content, user_id, created_at)  
+VALUES (
+    'content', 
+    (SELECT id FROM users WHERE email = 'test@example.com' LIMIT 1), NOW()
+);
 -- +goose StatementEnd
 
 -- +goose Down

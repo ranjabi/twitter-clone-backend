@@ -26,3 +26,21 @@ func TestCreateTweet_Ok(t *testing.T) {
 	assert.Equal(t, testTweet.Content, newTweet.Content)
 	assert.Equal(t, testTweet.UserId, newTweet.UserId)
 }
+
+func TestUpdateTweet_Ok(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+	tweetService := tweet.NewService(tweetRepository, userRepository)
+
+	tweet, err := tweetRepository.FindById(validTweet.Id)
+	assert.NoError(t, err)
+	assert.NotNil(t, tweet)
+
+	tweet.Content = "Updated"
+
+	updatedTweet, err := tweetService.UpdateTweet(*tweet)
+	assert.NoError(t, err)
+	assert.NotNil(t, updatedTweet)
+	assert.Equal(t, "Updated", updatedTweet.Content)
+	assert.Equal(t, validTweet.UserId, updatedTweet.UserId)
+}
