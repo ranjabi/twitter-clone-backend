@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegister_Ok(t *testing.T) {
+func TestAuthRegister_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -29,7 +29,7 @@ func TestRegister_Ok(t *testing.T) {
 	assert.Equal(t, strings.ToLower(testUser.Email), newUser.Email)
 }
 
-func TestRegister_EmailAlreadyExist(t *testing.T) {
+func TestAuthRegister_EmailAlreadyExist(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -42,7 +42,7 @@ func TestRegister_EmailAlreadyExist(t *testing.T) {
 	assert.EqualError(t, err, errmsg.EMAIL_ALREADY_EXIST)
 }
 
-func TestLogin_Ok(t *testing.T) {
+func TestAuthLogin_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -54,7 +54,7 @@ func TestLogin_Ok(t *testing.T) {
 	assert.Equal(t, user.FullName, validUser.FullName)
 }
 
-func TestLogin_UserNotFound(t *testing.T) {
+func TestAuthLogin_UserNotFound(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -62,7 +62,7 @@ func TestLogin_UserNotFound(t *testing.T) {
 	assert.EqualError(t, err, errmsg.USER_NOT_FOUND)
 }
 
-func TestLogin_WrongCredential(t *testing.T) {
+func TestAuthLogin_WrongCredential(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 

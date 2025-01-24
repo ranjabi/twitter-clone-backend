@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateTweet_Ok(t *testing.T) {
+func TestTweetCreate_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
@@ -27,7 +27,7 @@ func TestCreateTweet_Ok(t *testing.T) {
 	assert.Equal(t, testTweet.UserId, newTweet.UserId)
 }
 
-func TestUpdateTweet_Ok(t *testing.T) {
+func TestTweetUpdate_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository, userRepository)

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFollow_Ok(t *testing.T) {
+func TestUserFollow_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -38,7 +38,7 @@ func TestFollow_Ok(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestFollow_AlreadyFollowed(t *testing.T) {
+func TestUserFollow_AlreadyFollowed(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -58,7 +58,7 @@ func TestFollow_AlreadyFollowed(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestFollow_FolloweeNotExist(t *testing.T) {
+func TestUserFollow_FolloweeNotExist(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -66,7 +66,7 @@ func TestFollow_FolloweeNotExist(t *testing.T) {
 	assert.EqualError(t, err, errmsg.USER_NOT_FOUND)
 }
 
-func TestUnfollow_Ok(t *testing.T) {
+func TestUserUnfollow_Ok(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -94,7 +94,7 @@ func TestUnfollow_Ok(t *testing.T) {
 	assert.Equal(t, followingUserAfter.FollowingCount, followingUserBefore.FollowingCount-1)
 }
 
-func TestUnfollow_AlreadyNotFollowed(t *testing.T) {
+func TestUserUnfollow_AlreadyNotFollowed(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -102,7 +102,7 @@ func TestUnfollow_AlreadyNotFollowed(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestUnfollow_FolloweeNotExist(t *testing.T) {
+func TestUserUnfollow_FolloweeNotExist(t *testing.T) {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
