@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"twitter-clone-backend/constants"
+	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -197,7 +198,7 @@ func (s Service) CreateUser(user models.User) (*models.User, error) {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
 	if isUserExist {
-		return nil, &models.AppError{Err: err, Message: constants.EMAIL_ALREADY_EXIST_MSG, Code: http.StatusConflict}
+		return nil, &models.AppError{Err: err, Message: errmsg.EMAIL_ALREADY_EXIST, Code: http.StatusConflict}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
@@ -220,7 +221,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
 	if !isUserExist {
-		return nil, &models.AppError{Err: err, Message: constants.USER_NOT_FOUND_MSG, Code: http.StatusNotFound}
+		return nil, &models.AppError{Err: err, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
 	}
 
 	user, err := s.userRepository.GetUserByEmail(email)
@@ -230,7 +231,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: constants.WRONG_CREDENTIAL_MSG}
+		return nil, &models.AppError{Err: err, Message: errmsg.WRONG_CREDENTIAL}
 	}
 
 	claims := jwt.MapClaims{
@@ -252,7 +253,14 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 
 func (s Service) FollowOtherUser(followerId int, followingId int) error {
 	if err := s.userRepository.FollowOtherUser(followerId, followingId); err != nil {
-		return &models.AppError{Err: err, Message: "Failed to follow", Code: http.StatusConflict}
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			if pgErr.Code == "23505" { // unique violation
+				return &models.AppError{Err: nil, Message: errmsg.ALREADY_FOLLOWED, Code: http.StatusNotFound}
+			} else if pgErr.Code == "23503" { // foreign key constraint
+				return &models.AppError{Err: nil, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
+			}
+		}
+		return err
 	}
 
 	return nil
@@ -260,7 +268,7 @@ func (s Service) FollowOtherUser(followerId int, followingId int) error {
 
 func (s Service) UnfollowOtherUser(followerId int, followingId int) error {
 	if err := s.userRepository.UnfollowOtherUser(followerId, followingId); err != nil {
-		return &models.AppError{Err: err, Message: "Failed to unfollow", Code: http.StatusConflict}
+		return err
 	}
 
 	return nil

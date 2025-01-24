@@ -303,6 +303,15 @@ func (r *UserRepository) FollowOtherUser(followerId int, followingId int) error 
 		return err
 	}
 
+	query = "UPDATE users SET following_count = following_count + 1 WHERE id = @follower_id"
+	args = pgx.NamedArgs{
+		"follower_id": followerId,
+	}
+	_, err = r.pgConn.Exec(r.ctx, query, args)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -312,14 +321,26 @@ func (r *UserRepository) UnfollowOtherUser(followerId int, followingId int) erro
 		"follower_id":  followerId,
 		"following_id": followingId,
 	}
-	_, err := r.pgConn.Exec(r.ctx, query, args)
+	cmdTag, err := r.pgConn.Exec(r.ctx, query, args)
 	if err != nil {
 		return err
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return nil
 	}
 
 	query = "UPDATE users SET follower_count = follower_count - 1 WHERE id = @following_id"
 	args = pgx.NamedArgs{
 		"following_id": followingId,
+	}
+	_, err = r.pgConn.Exec(r.ctx, query, args)
+	if err != nil {
+		return err
+	}
+
+	query = "UPDATE users SET following_count = following_count - 1 WHERE id = @follower_id"
+	args = pgx.NamedArgs{
+		"follower_id": followerId,
 	}
 	_, err = r.pgConn.Exec(r.ctx, query, args)
 	if err != nil {
