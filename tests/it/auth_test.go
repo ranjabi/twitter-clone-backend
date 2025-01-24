@@ -29,6 +29,13 @@ var pgConn *pgxpool.Pool
 var rdConn *redis.Client
 var ctx context.Context
 
+var validUser = models.User{
+	Email:    "johndoe@example.com",
+	Username: "johndoe",
+	FullName: "John Doe",
+	Password: "password",
+}
+
 func TestMain(m *testing.M) {
 	ctx = context.Background()
 
@@ -98,7 +105,6 @@ func TestCreateUser_Ok(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, newUser)
 	assert.Equal(t, strings.ToLower(testUser.Email), newUser.Email)
-	// assert.Equal(t, testUser.Password, newUser.Password)
 }
 
 func TestCreateUser_EmailAlreadyExist(t *testing.T) {
@@ -106,10 +112,38 @@ func TestCreateUser_EmailAlreadyExist(t *testing.T) {
 	userService := user.NewService(ctx, userRepository)
 
 	testUser := models.User{
-		Email:    "johndoe@example.com",
+		Email:    validUser.Email,
 		Password: faker.Password(),
 	}
 
 	_, err := userService.CreateUser(testUser)
 	assert.EqualError(t, err, constants.EMAIL_ALREADY_EXIST_MSG)
+}
+
+func TestLoginUser_Ok(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	userService := user.NewService(ctx, userRepository)
+
+	user, err := userService.CheckUserCredential(validUser.Email, validUser.Password)
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, user.Email, validUser.Email)
+	assert.Equal(t, user.Username, validUser.Username)
+	assert.Equal(t, user.FullName, validUser.FullName)
+}
+
+func TestLoginUser_UserNotFound(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	userService := user.NewService(ctx, userRepository)
+
+	_, err := userService.CheckUserCredential(faker.Email(), faker.Password())
+	assert.EqualError(t, err, constants.USER_NOT_FOUND_MSG)
+}
+
+func TestLoginUser_WrongCredential(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	userService := user.NewService(ctx, userRepository)
+
+	_, err := userService.CheckUserCredential(validUser.Email, faker.Password())
+	assert.EqualError(t, err, constants.WRONG_CREDENTIAL_MSG)
 }

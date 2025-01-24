@@ -220,7 +220,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
 	}
 	if !isUserExist {
-		return nil, &models.AppError{Err: err, Message: "User not found. Please create an account", Code: http.StatusNotFound}
+		return nil, &models.AppError{Err: err, Message: constants.USER_NOT_FOUND_MSG, Code: http.StatusNotFound}
 	}
 
 	user, err := s.userRepository.GetUserByEmail(email)
@@ -230,7 +230,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Email/password is wrong"}
+		return nil, &models.AppError{Err: err, Message: constants.WRONG_CREDENTIAL_MSG}
 	}
 
 	claims := jwt.MapClaims{
