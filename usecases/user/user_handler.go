@@ -16,11 +16,11 @@ import (
 var validate *validator.Validate
 
 type Handler struct {
-	service Service
+	userService Service
 }
 
-func NewHandler(service Service) Handler {
-	return Handler{service: service}
+func NewHandler(userService Service) Handler {
+	return Handler{userService}
 }
 
 func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *models.AppError {
@@ -43,7 +43,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 	}
 
 	// karena manggil layer di dalam, maka pakai message dan error dari layer dalam
-	newUser, err := h.service.CreateUser(models.User{
+	newUser, err := h.userService.CreateUser(models.User{
 		FullName: payload.FullName,
 		Username: payload.Username,
 		Email:    payload.Email,
@@ -91,7 +91,7 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 		}
 	}
 
-	user, err := h.service.CheckUserCredential(payload.Email, payload.Password)
+	user, err := h.userService.CheckUserCredential(payload.Email, payload.Password)
 	if err != nil {
 		return utils.HandleErr(err)
 	}
@@ -132,7 +132,7 @@ func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *model
 	}
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	followerId := userInfo["id"].(float64)
-	user, err := h.service.GetUserByUsernameWithRecentTweets(username, int(followerId), pageInt)
+	user, err := h.userService.GetProfileByUsernameWithRecentTweetsForFollower(username, int(followerId), pageInt)
 	if err != nil {
 		return utils.HandleErr(err)
 	}
@@ -158,7 +158,7 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
-	err = h.service.FollowOtherUser(int(followerId), followingId)
+	err = h.userService.FollowOtherUser(int(followerId), followingId)
 	if err != nil {
 		return utils.HandleErr(err)
 	}
@@ -184,7 +184,7 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
-	err = h.service.UnfollowOtherUser(int(followerId), followingId)
+	err = h.userService.UnfollowOtherUser(int(followerId), followingId)
 	if err != nil {
 		return utils.HandleErr(err)
 	}
@@ -217,7 +217,7 @@ func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *models.A
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
-	feed, err := h.service.GetFeed(id, email, page)
+	feed, err := h.userService.GetFeed(id, email, page)
 	if err != nil {
 		return utils.HandleErr(err)
 	}

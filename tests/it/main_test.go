@@ -26,14 +26,14 @@ var rdConn *redis.Client
 var ctx context.Context
 
 var validUser = models.User{
-	Id:       11,
+	Id:       1,
 	Email:    "test@example.com",
 	Username: "test",
 	FullName: "Test test",
 	Password: "password",
 }
 var validUser2 = models.User{
-	Id:       12,
+	Id:       2,
 	Email:    "test2@example.com",
 	Username: "test2",
 	FullName: "Test test 2",
@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	pgConn, _, err = db.Setup(ctx, cfg)
+	pgConn, rdConn, err = db.Setup(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestMain(m *testing.M) {
 
 	// TODO: make dynamic and accept from env
 	migrationsPath := filepath.Join(cwd, "..", "..", "db", "migrations")
-	seedPath := filepath.Join(cwd, "..", "..", "db", "seed")
+	seedPath := filepath.Join(cwd, "..", "..", "db", "seedtest")
 
 	log.Println("Starting migration reset...")
 	if err := goose.RunWithOptionsContext(ctx, "reset", db, migrationsPath, []string{}); err != nil {

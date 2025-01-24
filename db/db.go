@@ -76,9 +76,8 @@ func GetPostgresConnection(ctx context.Context, connString string) (*pgxpool.Poo
 func GetRedisConnection() (*redis.Client, error) {
 	rdOnce.Do(func() {
 		rdConn = redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
-			Password: os.Getenv("REDIS_PASSWORD"),
-			DB:       0, // Use default DB
+			Addr: fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
+			DB:   0, // Use default DB
 		})
 	})
 
@@ -87,7 +86,7 @@ func GetRedisConnection() (*redis.Client, error) {
 		return nil, err
 	}
 
-	log.Println("Redis database connection successfully obtained")
+	log.Println("Redis database connection successfully obtained:")
 
 	return rdConn, nil
 }

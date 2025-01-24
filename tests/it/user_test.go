@@ -109,3 +109,17 @@ func TestUnfollow_FolloweeNotExist(t *testing.T) {
 	err := userService.UnfollowOtherUser(validUser.Id, notExistUser.Id)
 	assert.NoError(t, err)
 }
+
+// func TestGetProfileByUsernameWithRecentTweetsForFollower_Ok(t *testing.T) {
+// 	/*
+// 	validUser follow validUser2
+// 	validUser2 create 11 tweets
+// 	validUser see validUser2 profile -> GetProfileByUsernameWithRecentTweetsForFollower(validUser2.username, validUser.id)
+// 	*/
+
+// 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+// 	userService := user.NewService(ctx, cfg, userRepository)
+
+// 	err := userService.FollowOtherUser(validUser.Id, validUser2.Id)
+// 	assert.NoError(t, err)
+// }
