@@ -3,6 +3,7 @@ package it
 import (
 	"context"
 	"database/sql"
+
 	"log"
 	"path/filepath"
 	"twitter-clone-backend/config"
@@ -45,15 +46,15 @@ var cfg *config.Config
 
 func TestMain(m *testing.M) {
 	var err error
-	cfg, err = config.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
 	ctx = context.Background()
 
 	err = godotenv.Load("../../.env.dev.local")
 	if err != nil {
-		log.Fatal("Error loading .env file: ", err)
+		log.Fatal(err)
+	}
+	cfg, err = config.Load()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	pgConn, _, err = db.Setup(ctx, cfg)

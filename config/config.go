@@ -3,8 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -15,11 +13,6 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	err := godotenv.Load(".env")
-	if err != nil {
-		return nil, err
-	}
-
 	config := Config{
 		PgConnString: fmt.Sprintf(
 			"postgres://%s:%s@%s:%s/%s",
