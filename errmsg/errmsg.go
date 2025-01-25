@@ -11,4 +11,5 @@ const (
 	FAILED_FOLLOW       = "Failed to follow"
 	ALREADY_FOLLOWED    = "User already followed"
 	FAILED_UNFOLLOW     = "Failed to unfollow"
+	TWEET_NOT_FOUND     = "Tweet not found"
 )

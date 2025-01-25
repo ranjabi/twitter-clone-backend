@@ -39,14 +39,18 @@ var validUser2 = models.User{
 	FullName: "Test test 2",
 	Password: "password",
 }
+var notExistUser = models.User{
+	Id: 100,
+}
 var validTweet = models.Tweet{
 	Id:      1,
 	Content: "content",
 	UserId:  1,
 }
-var notExistUser = models.User{
+var notExistTweet = models.Tweet{
 	Id: 100,
 }
+
 var cfg *config.Config
 
 func TestMain(m *testing.M) {

@@ -2,6 +2,7 @@ package tweet
 
 import (
 	"net/http"
+	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/usecases/user"
 )
@@ -35,7 +36,7 @@ func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 		return nil, &models.AppError{Err: err, Message: "Failed to check tweet"}
 	}
 	if !isTweetExist {
-		return nil, &models.AppError{Err: err, Message: "Tweet not found", Code: http.StatusNotFound}
+		return nil, &models.AppError{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}
 	}
 
 	newTweet, err := s.tweetRepository.UpdateTweet(tweet)
@@ -58,7 +59,7 @@ func (s *Service) DeleteTweet(userId int, tweetId int) error {
 		return &models.AppError{Err: err, Message: "Failed to check tweet"}
 	}
 	if !isTweetExist {
-		return &models.AppError{Err: err, Message: "Tweet not found", Code: http.StatusNotFound}
+		return &models.AppError{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}
 	}
 
 	if err := s.tweetRepository.DeleteTweet(tweetId); err != nil {
@@ -79,7 +80,7 @@ func (s *Service) LikeTweet(userId int, tweetId int) (int, error) {
 		return 0, &models.AppError{Err: err, Message: "Failed to check tweet"}
 	}
 	if !isTweetExist {
-		return 0, &models.AppError{Err: err, Message: "Tweet not found", Code: http.StatusNotFound}
+		return 0, &models.AppError{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}
 	}
 
 	isTweetLiked, err := s.tweetRepository.IsTweetLiked(userId, tweetId)
@@ -112,7 +113,7 @@ func (s *Service) UnlikeTweet(userId int, tweetId int) (int, error) {
 		return 0, &models.AppError{Err: err, Message: "Failed to check tweet"}
 	}
 	if !isTweetExist {
-		return 0, &models.AppError{Err: err, Message: "Tweet not found", Code: http.StatusNotFound}
+		return 0, &models.AppError{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}
 	}
 
 	isTweetLiked, err := s.tweetRepository.IsTweetLiked(userId, tweetId)

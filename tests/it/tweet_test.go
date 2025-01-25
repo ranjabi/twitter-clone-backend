@@ -2,6 +2,7 @@ package it
 
 import (
 	"testing"
+	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/usecases/tweet"
 	"twitter-clone-backend/usecases/user"
@@ -43,4 +44,34 @@ func TestTweetUpdate_Ok(t *testing.T) {
 	assert.NotNil(t, updatedTweet)
 	assert.Equal(t, "Updated", updatedTweet.Content)
 	assert.Equal(t, validTweet.UserId, updatedTweet.UserId)
+}
+
+func TestTweetUpdate_NotFound(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+	tweetService := tweet.NewService(tweetRepository, userRepository)
+
+	_, err := tweetService.UpdateTweet(notExistTweet)
+	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
+}
+
+func TestTweetDelete_Ok(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+	tweetService := tweet.NewService(tweetRepository, userRepository)
+
+	err := tweetService.DeleteTweet(validUser.Id, validTweet.Id)
+	assert.NoError(t, err)
+
+	_, err = tweetService.CreateTweet(validTweet)
+	assert.NoError(t, err)
+}
+
+func TestTweetDelete_NotFound(t *testing.T) {
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+	tweetService := tweet.NewService(tweetRepository, userRepository)
+
+	err := tweetService.DeleteTweet(validUser.Id, notExistTweet.Id)
+	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
 }
