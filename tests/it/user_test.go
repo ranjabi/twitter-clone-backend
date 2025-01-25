@@ -1,7 +1,10 @@
 package it
 
 import (
+	"fmt"
 	"twitter-clone-backend/errmsg"
+	"twitter-clone-backend/models"
+	"twitter-clone-backend/usecases/tweet"
 	"twitter-clone-backend/usecases/user"
 
 	"testing"
@@ -110,16 +113,51 @@ func TestUserUnfollow_FolloweeNotExist(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// func TestGetProfileByUsernameWithRecentTweetsForFollower_Ok(t *testing.T) {
-// 	/*
-// 	validUser follow validUser2
-// 	validUser2 create 11 tweets
-// 	validUser see validUser2 profile -> GetProfileByUsernameWithRecentTweetsForFollower(validUser2.username, validUser.id)
-// 	*/
+func TestUserProfileWithRecentTweetsForFollower_Ok(t *testing.T) {
+	/*
+		validUser follow validUser2
+		validUser2 create 11 tweets
+		TODO validUser like tweet-1 (for interaction)
+		validUser see validUser2 profile
+	*/
 
-// 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-// 	userService := user.NewService(ctx, cfg, userRepository)
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 
-// 	err := userService.FollowOtherUser(validUser.Id, validUser2.Id)
-// 	assert.NoError(t, err)
-// }
+	userService := user.NewService(ctx, cfg, userRepository)
+
+	tweetNumber := 11
+	for i := 0; i < tweetNumber; i++ {
+		tweet := models.Tweet{
+			UserId:  validUser2.Id,
+			Content: fmt.Sprintf("Tweet %d", i+1),
+		}
+		createdTweet, err := tweetRepository.CreateTweet(tweet)
+		assert.NoError(t, err)
+		assert.NotNil(t, createdTweet)
+	}
+
+	profile, err := userService.GetProfileByUsernameWithRecentTweetsForFollower(validUser2.Username, validUser.Id, 1)
+	assert.NoError(t, err)
+	assert.NotNil(t, profile)
+
+	// first page
+	assert.Len(t, profile.RecentTweets, 10)
+	assert.Equal(t, 10, profile.RecentTweetsLength)
+
+	for i, tweet := range profile.RecentTweets {
+		assert.Equal(t, fmt.Sprintf("Tweet %d", tweetNumber-i), tweet.Content)
+	}
+
+	// second page
+	profile, err = userService.GetProfileByUsernameWithRecentTweetsForFollower(validUser2.Username, validUser.Id, 2)
+	assert.NoError(t, err)
+	assert.NotNil(t, profile)
+
+	assert.Len(t, profile.RecentTweets, 1)
+	assert.Equal(t, 1, profile.RecentTweetsLength)
+
+	for _, tweet := range profile.RecentTweets {
+		assert.Equal(t, fmt.Sprintf("Tweet %d", 1), tweet.Content)
+	}
+}
