@@ -254,8 +254,8 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 func (s Service) FollowOtherUser(followerId int, followingId int) error {
 	if err := s.userRepository.FollowOtherUser(followerId, followingId); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgErr.Code == "23505" { // unique violation
-				return &models.AppError{Err: nil, Message: errmsg.ALREADY_FOLLOWED, Code: http.StatusNotFound}
+			if pgErr.Code == "23505" { // unique violation, already followed
+				return nil
 			} else if pgErr.Code == "23503" { // foreign key constraint
 				return &models.AppError{Err: nil, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
 			}

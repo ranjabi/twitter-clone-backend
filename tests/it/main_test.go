@@ -113,3 +113,22 @@ func TestMain(m *testing.M) {
 
 	os.Exit(code)
 }
+
+func ResetAndSeed() {
+	goose.SetLogger(goose.NopLogger())
+	db, err := sql.Open("pgx", cfg.PgConnString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	seedPath := filepath.Join(cwd, "..", "..", "db", "seedtest")
+	if err := goose.RunWithOptionsContext(ctx, "down", db, seedPath, []string{}, goose.WithNoVersioning()); err != nil {
+		log.Fatal(err)
+	}
+	if err := goose.RunWithOptionsContext(ctx, "up", db, seedPath, []string{}, goose.WithNoVersioning()); err != nil {
+		log.Fatal(err)
+	}
+}

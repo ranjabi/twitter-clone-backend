@@ -1,11 +1,12 @@
 -- +goose Up
 -- +goose StatementBegin
 -- ----- USERS -----
-INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Test test', 'test', 'test@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-1.png');
-INSERT INTO users (full_name, username, email, password, profile_image) 
-VALUES ('Test test 2', 'test2', 'test2@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-1.png');
+INSERT INTO users (id, full_name, username, email, password, profile_image) 
+VALUES (1, 'Test test', 'test', 'test@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-1.png');
+INSERT INTO users (id, full_name, username, email, password, profile_image) 
+VALUES (2, 'Test test 2', 'test2', 'test2@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i', 'https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-1.png');
 
+SELECT setval(pg_get_serial_sequence('users', 'id'), 3);
 
 
 -- ----- FOLLOWS -----
@@ -16,11 +17,14 @@ VALUES ('Test test 2', 'test2', 'test2@example.com', '$2a$14$ZqZ1FmMgZNYvO.Q2rSh
 -- );
 
 -- ----- TWEETS -----
-INSERT INTO tweets (content, user_id, created_at)  
+INSERT INTO tweets (id, content, user_id, created_at)  
 VALUES (
+    1,
     'content', 
     (SELECT id FROM users WHERE email = 'test@example.com' LIMIT 1), NOW()
 );
+
+SELECT setval(pg_get_serial_sequence('tweets', 'id'), 2);
 -- +goose StatementEnd
 
 -- +goose Down

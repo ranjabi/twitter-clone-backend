@@ -15,6 +15,7 @@ import (
 )
 
 func TestAuthRegister_Ok(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -30,6 +31,7 @@ func TestAuthRegister_Ok(t *testing.T) {
 }
 
 func TestAuthRegister_EmailAlreadyExist(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -43,6 +45,7 @@ func TestAuthRegister_EmailAlreadyExist(t *testing.T) {
 }
 
 func TestAuthLogin_Ok(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -55,6 +58,7 @@ func TestAuthLogin_Ok(t *testing.T) {
 }
 
 func TestAuthLogin_UserNotFound(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -63,6 +67,7 @@ func TestAuthLogin_UserNotFound(t *testing.T) {
 }
 
 func TestAuthLogin_WrongCredential(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 

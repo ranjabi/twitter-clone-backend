@@ -12,6 +12,7 @@ import (
 )
 
 func TestTweetCreate_Ok(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
@@ -29,6 +30,7 @@ func TestTweetCreate_Ok(t *testing.T) {
 }
 
 func TestTweetUpdate_Ok(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
@@ -47,6 +49,7 @@ func TestTweetUpdate_Ok(t *testing.T) {
 }
 
 func TestTweetUpdate_NotFound(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
@@ -56,18 +59,17 @@ func TestTweetUpdate_NotFound(t *testing.T) {
 }
 
 func TestTweetDelete_Ok(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
 
 	err := tweetService.DeleteTweet(validUser.Id, validTweet.Id)
 	assert.NoError(t, err)
-
-	_, err = tweetService.CreateTweet(validTweet)
-	assert.NoError(t, err)
 }
 
 func TestTweetDelete_NotFound(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
@@ -75,3 +77,11 @@ func TestTweetDelete_NotFound(t *testing.T) {
 	err := tweetService.DeleteTweet(validUser.Id, notExistTweet.Id)
 	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
 }
+
+// TODO continue
+// func TestTweetLike_Ok(t *testing.T) {
+// 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+// 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+// 	tweetService := tweet.NewService(tweetRepository, userRepository)
+
+// }

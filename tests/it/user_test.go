@@ -14,6 +14,7 @@ import (
 )
 
 func TestUserFollow_Ok(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -36,12 +37,10 @@ func TestUserFollow_Ok(t *testing.T) {
 
 	assert.Equal(t, followedUserAfter.FollowerCount, followedUserBefore.FollowerCount+1)
 	assert.Equal(t, followingUserAfter.FollowingCount, followingUserBefore.FollowingCount+1)
-
-	err = userService.UnfollowOtherUser(validUser.Id, validUser2.Id)
-	assert.NoError(t, err)
 }
 
 func TestUserFollow_AlreadyFollowed(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -55,13 +54,11 @@ func TestUserFollow_AlreadyFollowed(t *testing.T) {
 	err = userService.FollowOtherUser(validUser.Id, validUser2.Id)
 	assert.NoError(t, err)
 	err = userService.FollowOtherUser(validUser.Id, validUser2.Id)
-	assert.EqualError(t, err, errmsg.ALREADY_FOLLOWED)
-
-	err = userService.UnfollowOtherUser(validUser.Id, validUser2.Id)
 	assert.NoError(t, err)
 }
 
 func TestUserFollow_FolloweeNotExist(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -70,6 +67,7 @@ func TestUserFollow_FolloweeNotExist(t *testing.T) {
 }
 
 func TestUserUnfollow_Ok(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -98,6 +96,7 @@ func TestUserUnfollow_Ok(t *testing.T) {
 }
 
 func TestUserUnfollow_AlreadyNotFollowed(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -106,6 +105,7 @@ func TestUserUnfollow_AlreadyNotFollowed(t *testing.T) {
 }
 
 func TestUserUnfollow_FolloweeNotExist(t *testing.T) {
+	ResetAndSeed()
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	userService := user.NewService(ctx, cfg, userRepository)
 
@@ -114,6 +114,7 @@ func TestUserUnfollow_FolloweeNotExist(t *testing.T) {
 }
 
 func TestUserProfileWithRecentTweetsForFollower_Ok(t *testing.T) {
+	ResetAndSeed()
 	/*
 		validUser follow validUser2
 		validUser2 create 11 tweets
@@ -161,3 +162,5 @@ func TestUserProfileWithRecentTweetsForFollower_Ok(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("Tweet %d", 1), tweet.Content)
 	}
 }
+
+// TODO func TestUserGetFeed 
