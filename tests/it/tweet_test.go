@@ -1,6 +1,7 @@
 package it
 
 import (
+	"fmt"
 	"testing"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
@@ -78,10 +79,45 @@ func TestTweetDelete_NotFound(t *testing.T) {
 	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
 }
 
-// TODO continue
-// func TestTweetLike_Ok(t *testing.T) {
-// 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-// 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-// 	tweetService := tweet.NewService(tweetRepository, userRepository)
+func TestTweetLike_Ok(t *testing.T) {
+	ResetAndSeed()
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+	tweetService := tweet.NewService(tweetRepository, userRepository)
 
-// }
+	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
+	assert.NoError(t, err)
+	assert.NotNil(t, tweetBefore)
+
+	likeCount, err := tweetService.LikeTweet(validUser.Id, validTweet.Id)
+	assert.NoError(t, err)
+	assert.NotZero(t, likeCount)
+
+	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
+	fmt.Printf("%#v\n", tweetAfter)
+	assert.NoError(t, err)
+	assert.NotNil(t, tweetAfter)
+
+	assert.Equal(t, likeCount, tweetBefore.LikeCount+1)
+	assert.Equal(t, tweetAfter.LikeCount, tweetBefore.LikeCount+1)
+	// TODO assert.Equal(t, true, tweetAfter.IsLiked)
+}
+
+func TestTweetLike_AlreadyLiked(t *testing.T) {
+	ResetAndSeed()
+	userRepository := user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+	tweetService := tweet.NewService(tweetRepository, userRepository)
+
+	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
+	assert.NoError(t, err)
+	assert.NotNil(t, tweetBefore)
+
+	likeCount, err := tweetService.LikeTweet(validUser.Id, validTweet.Id)
+	assert.NoError(t, err)
+	assert.NotZero(t, likeCount)
+
+	likeCount, err = tweetService.LikeTweet(validUser.Id, validTweet.Id)
+	assert.NoError(t, err)
+	assert.NotZero(t, likeCount)
+}

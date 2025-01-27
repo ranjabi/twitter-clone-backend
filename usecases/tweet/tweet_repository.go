@@ -37,12 +37,12 @@ func (r *TweetRepository) CreateTweet(tweet models.Tweet) (*models.Tweet, error)
 
 func (r *TweetRepository) FindById(id int) (*models.Tweet, error) {
 	var tweet models.Tweet
-	query := `SELECT id, content, created_at, user_id from tweets WHERE id = @id`
+	query := `SELECT id, content, created_at, user_id, like_count from tweets WHERE id = @id`
 	args := pgx.NamedArgs{
 		"id": id,
 	}
 
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&tweet.Id, &tweet.Content, &tweet.CreatedAt, &tweet.UserId)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&tweet.Id, &tweet.Content, &tweet.CreatedAt, &tweet.UserId, &tweet.LikeCount)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,6 @@ func (r *TweetRepository) LikeTweet(userId int, tweetId int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback(r.ctx)
 
 	query := "INSERT INTO likes (user_id, tweet_id) VALUES (@user_id, @tweet_id)"
 	args := pgx.NamedArgs{
@@ -167,7 +166,6 @@ func (r *TweetRepository) UnlikeTweet(userId int, tweetId int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback(r.ctx)
 
 	query := "DELETE FROM likes WHERE user_id = @user_id and tweet_id = @tweet_id"
 	args := pgx.NamedArgs{
