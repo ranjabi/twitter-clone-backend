@@ -9,3 +9,7 @@ type AppError struct {
 func (e *AppError) Error() string {
 	return e.Message
 }
+
+func (e *AppError) GetCode() int {
+	return e.Code
+}

@@ -1,29 +1,24 @@
 package it
 
 import (
-	"fmt"
 	"testing"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
-	"twitter-clone-backend/usecases/tweet"
-	"twitter-clone-backend/usecases/user"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTweetCreate_Ok(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
 	testTweet := models.Tweet{
 		Content: faker.Sentence(),
 		UserId:  validUser.Id,
 	}
-
 	newTweet, err := tweetService.CreateTweet(testTweet)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, newTweet)
 	assert.Equal(t, testTweet.Content, newTweet.Content)
@@ -31,18 +26,16 @@ func TestTweetCreate_Ok(t *testing.T) {
 }
 
 func TestTweetUpdate_Ok(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
 	tweet, err := tweetRepository.FindById(validTweet.Id)
 	assert.NoError(t, err)
 	assert.NotNil(t, tweet)
 
 	tweet.Content = "Updated"
-
 	updatedTweet, err := tweetService.UpdateTweet(*tweet)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, updatedTweet)
 	assert.Equal(t, "Updated", updatedTweet.Content)
@@ -50,40 +43,32 @@ func TestTweetUpdate_Ok(t *testing.T) {
 }
 
 func TestTweetUpdate_NotFound(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
-	_, err := tweetService.UpdateTweet(notExistTweet)
+	_, err = tweetService.UpdateTweet(notExistTweet)
 	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
 }
 
 func TestTweetDelete_Ok(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
-	err := tweetService.DeleteTweet(validUser.Id, validTweet.Id)
+	err = tweetService.DeleteTweet(validUser.Id, validTweet.Id)
 	assert.NoError(t, err)
 }
 
 func TestTweetDelete_NotFound(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
-	err := tweetService.DeleteTweet(validUser.Id, notExistTweet.Id)
+	err = tweetService.DeleteTweet(validUser.Id, notExistTweet.Id)
 	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
 }
 
 func TestTweetLike_Ok(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
 	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
 	assert.NoError(t, err)
@@ -94,7 +79,7 @@ func TestTweetLike_Ok(t *testing.T) {
 	assert.NotZero(t, likeCount)
 
 	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
-	fmt.Printf("%#v\n", tweetAfter)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, tweetAfter)
 
@@ -104,10 +89,8 @@ func TestTweetLike_Ok(t *testing.T) {
 }
 
 func TestTweetLike_AlreadyLiked(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
 	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
 	assert.NoError(t, err)

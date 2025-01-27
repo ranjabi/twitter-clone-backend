@@ -39,7 +39,20 @@ func Setup(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, *redis.Clien
 	}
 
 	if env := os.Getenv("ENV_NAME"); strings.Contains(env, "prod") {
-		applyMigrationsAndSeed(ctx, cfg)
+		actions := []string{"migrate.reset", "migrate.up", "seed.up"}
+
+		// called from root project, so cwd will be root
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, nil, err
+		}
+		migrationsPath := filepath.Join(cwd, "db", "migrations")
+		seedPath := filepath.Join(cwd, "db", "seed")
+
+		err = ApplyMigrationsAndSeed(ctx, cfg, actions, migrationsPath, seedPath, false)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return pgConn, rdConn, nil
@@ -91,38 +104,42 @@ func GetRedisConnection() (*redis.Client, error) {
 	return rdConn, nil
 }
 
-func applyMigrationsAndSeed(ctx context.Context, cfg *config.Config) {
-	log.Println("Applying migrations and seed...")
+func ApplyMigrationsAndSeed(ctx context.Context, cfg *config.Config, actions []string, migrationsPath string, seedPath string, isSilent bool) error {
+	if !isSilent {
+		log.Println("Applying migrations and seed...")
+	}
+
+	if isSilent {
+		goose.SetLogger(goose.NopLogger())
+	}
 
 	db, err := sql.Open("pgx", cfg.PgConnString)
 	if err != nil {
-		log.Fatal("Error opening database connection:", err)
+		return fmt.Errorf("fail to open database connection: %w", err)
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
+	for _, action := range actions {
+		if !isSilent {
+			log.Printf("Starting %s...\n", action)
+		}
+		var options []goose.OptionsFunc
+
+		parts := strings.Split(action, ".")
+		path, cmd := parts[0], parts[1]
+		if path == "migrate" {
+			path = migrationsPath
+		} else if path == "seed" {
+			path = seedPath
+			options = append(options, goose.WithNoVersioning())
+		}
+
+		if err := goose.RunWithOptionsContext(ctx, cmd, db, path, []string{}, options...); err != nil {
+			return fmt.Errorf("db operation failed: %w", err)
+		}
 	}
 
-	migrationsPath := filepath.Join(cwd, "db", "migrations")
-	seedPath := filepath.Join(cwd, "db", "seed")
-
-	log.Println("Starting migration up...")
-	if err := goose.RunWithOptionsContext(ctx, "up", db, migrationsPath, []string{}); err != nil {
-		log.Fatal("Migration up failed:", err)
+	if !isSilent {
+		log.Println("Migration or seed has been applied!")
 	}
-
-	log.Println("Starting seed up...")
-	if err := goose.RunWithOptionsContext(ctx, "up", db, seedPath, []string{}, goose.WithNoVersioning()); err != nil {
-		log.Fatal("Seed up failed:", err)
-	}
-
-	log.Println("Migrations has been applied!")
-}
-
-func ClosePostgresConnection() {
-	if pgConn != nil {
-		pgConn.Close()
-		log.Println("Postgres database connection closed")
-	}
+	return nil
 }

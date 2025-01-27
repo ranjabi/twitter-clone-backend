@@ -2,6 +2,7 @@ package it
 
 import (
 	"fmt"
+	"net/http"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/usecases/tweet"
@@ -14,9 +15,8 @@ import (
 )
 
 func TestUserFollow_Ok(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, cfg, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
 	followingUserBefore, err := userService.GetUserById(validUser.Id)
 	assert.NoError(t, err)
@@ -40,9 +40,8 @@ func TestUserFollow_Ok(t *testing.T) {
 }
 
 func TestUserFollow_AlreadyFollowed(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, cfg, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
 	followingUserBefore, err := userService.GetUserById(validUser.Id)
 	assert.NoError(t, err)
@@ -58,20 +57,22 @@ func TestUserFollow_AlreadyFollowed(t *testing.T) {
 }
 
 func TestUserFollow_FolloweeNotExist(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, cfg, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
-	err := userService.FollowOtherUser(validUser.Id, notExistUser.Id)
+	err = userService.FollowOtherUser(validUser.Id, notExistUser.Id)
+
 	assert.EqualError(t, err, errmsg.USER_NOT_FOUND)
+	assert.IsType(t, &models.AppError{}, err)
+	appErr := err.(*models.AppError)
+	assert.Equal(t, http.StatusNotFound, appErr.GetCode())
 }
 
 func TestUserUnfollow_Ok(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, cfg, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
-	err := userService.FollowOtherUser(validUser.Id, validUser2.Id)
+	err = userService.FollowOtherUser(validUser.Id, validUser2.Id)
 	assert.NoError(t, err)
 
 	followingUserBefore, err := userService.GetUserById(validUser.Id)
@@ -96,25 +97,24 @@ func TestUserUnfollow_Ok(t *testing.T) {
 }
 
 func TestUserUnfollow_AlreadyNotFollowed(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, cfg, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
-	err := userService.UnfollowOtherUser(validUser.Id, validUser2.Id)
+	err = userService.UnfollowOtherUser(validUser.Id, validUser2.Id)
 	assert.NoError(t, err)
 }
 
 func TestUserUnfollow_FolloweeNotExist(t *testing.T) {
-	ResetAndSeed()
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	userService := user.NewService(ctx, cfg, userRepository)
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 
-	err := userService.UnfollowOtherUser(validUser.Id, notExistUser.Id)
+	err = userService.UnfollowOtherUser(validUser.Id, notExistUser.Id)
 	assert.NoError(t, err)
 }
 
 func TestUserProfileWithRecentTweetsForFollower_Ok(t *testing.T) {
-	ResetAndSeed()
+	err := ResetAndSeed()
+	assert.NoError(t, err)
 	/*
 		validUser follow validUser2
 		validUser2 create 11 tweets

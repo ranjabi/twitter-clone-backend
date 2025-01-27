@@ -231,7 +231,7 @@ func (s Service) CheckUserCredential(email string, password string) (*models.Use
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: errmsg.WRONG_CREDENTIAL}
+		return nil, &models.AppError{Err: err, Message: errmsg.WRONG_CREDENTIAL, Code: http.StatusUnauthorized}
 	}
 
 	claims := jwt.MapClaims{

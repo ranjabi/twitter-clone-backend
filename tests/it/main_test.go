@@ -2,13 +2,14 @@ package it
 
 import (
 	"context"
-	"database/sql"
 
 	"log"
 	"path/filepath"
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/usecases/tweet"
+	"twitter-clone-backend/usecases/user"
 
 	"os"
 	"testing"
@@ -17,41 +18,49 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" // for pgx sql driver
 	"github.com/joho/godotenv"
 
-	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 )
 
-var pgConn *pgxpool.Pool
-var rdConn *redis.Client
-var ctx context.Context
+var (
+	pgConn         *pgxpool.Pool
+	rdConn         *redis.Client
+	ctx            context.Context
+	cfg            *config.Config
+	migrationsPath string
+	seedPath       string
 
-var validUser = models.User{
-	Id:       1,
-	Email:    "test@example.com",
-	Username: "test",
-	FullName: "Test test",
-	Password: "password",
-}
-var validUser2 = models.User{
-	Id:       2,
-	Email:    "test2@example.com",
-	Username: "test2",
-	FullName: "Test test 2",
-	Password: "password",
-}
-var notExistUser = models.User{
-	Id: 100,
-}
-var validTweet = models.Tweet{
-	Id:      1,
-	Content: "content",
-	UserId:  1,
-}
-var notExistTweet = models.Tweet{
-	Id: 100,
-}
+	userRepository  user.UserRepository
+	tweetRepository tweet.TweetRepository
 
-var cfg *config.Config
+	userService  user.Service
+	tweetService tweet.Service
+
+	validUser = models.User{
+		Id:       1,
+		Email:    "test@example.com",
+		Username: "test",
+		FullName: "Test test",
+		Password: "password",
+	}
+	validUser2 = models.User{
+		Id:       2,
+		Email:    "test2@example.com",
+		Username: "test2",
+		FullName: "Test test 2",
+		Password: "password",
+	}
+	notExistUser = models.User{
+		Id: 100,
+	}
+	validTweet = models.Tweet{
+		Id:      1,
+		Content: "content",
+		UserId:  1,
+	}
+	notExistTweet = models.Tweet{
+		Id: 100,
+	}
+)
 
 func TestMain(m *testing.M) {
 	var err error
@@ -70,65 +79,39 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer pgConn.Close()
+
+	userRepository = user.NewRepository(ctx, pgConn, rdConn)
+	tweetRepository = tweet.NewRepository(ctx, pgConn, rdConn)
+
+	userService = user.NewService(ctx, cfg, userRepository)
+	tweetService = tweet.NewService(tweetRepository, userRepository)
 
 	// ----- Migration and seed start -----
-	log.SetPrefix("DB: ")
-	log.Println("Starting migration and seed...")
-	db, err := sql.Open("pgx", cfg.PgConnString)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// TODO: make dynamic and accept from env
-	migrationsPath := filepath.Join(cwd, "..", "..", "db", "migrations")
-	seedPath := filepath.Join(cwd, "..", "..", "db", "seedtest")
+	migrationsPath = filepath.Join(cwd, "..", "..", "db", "migrations")
+	seedPath = filepath.Join(cwd, "..", "..", "db", "seedtest")
 
-	log.Println("Starting migration reset...")
-	if err := goose.RunWithOptionsContext(ctx, "reset", db, migrationsPath, []string{}); err != nil {
+	actions := []string{"migrate.reset", "migrate.up", "seed.up"}
+	err = db.ApplyMigrationsAndSeed(ctx, cfg, actions, migrationsPath, seedPath, false)
+	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.Println("Starting migration up...")
-	if err := goose.RunWithOptionsContext(ctx, "up", db, migrationsPath, []string{}); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("Starting seed up...")
-	if err := goose.RunWithOptionsContext(ctx, "up", db, seedPath, []string{}, goose.WithNoVersioning()); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("Migration and seed has been applied!")
-	log.SetPrefix("")
 	// ----- Migration and seed end -----
 
 	code := m.Run()
-
-	pgConn.Close()
-
 	os.Exit(code)
 }
 
-func ResetAndSeed() {
-	goose.SetLogger(goose.NopLogger())
-	db, err := sql.Open("pgx", cfg.PgConnString)
+func ResetAndSeed() error {
+	actions := []string{"seed.down", "seed.up"}
+	err := db.ApplyMigrationsAndSeed(ctx, cfg, actions, migrationsPath, seedPath, true)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	seedPath := filepath.Join(cwd, "..", "..", "db", "seedtest")
-	if err := goose.RunWithOptionsContext(ctx, "down", db, seedPath, []string{}, goose.WithNoVersioning()); err != nil {
-		log.Fatal(err)
-	}
-	if err := goose.RunWithOptionsContext(ctx, "up", db, seedPath, []string{}, goose.WithNoVersioning()); err != nil {
-		log.Fatal(err)
-	}
+	return nil
 }
