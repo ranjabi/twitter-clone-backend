@@ -163,6 +163,8 @@ func TestUserProfileWithRecentTweetsForFollower_Ok(t *testing.T) {
 	}
 }
 
+// from handler
 // TODO func TestUserGetFeed
-// TODO func GetUserById
+
 // TODO func GetRecentTweets
+// TODO func GetUserById

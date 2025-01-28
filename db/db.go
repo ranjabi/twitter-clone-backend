@@ -38,21 +38,23 @@ func Setup(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, *redis.Clien
 		return nil, nil, err
 	}
 
-	if env := os.Getenv("ENV_NAME"); strings.Contains(env, "prod") {
-		actions := []string{"migrate.reset", "migrate.up", "seed.up"}
-
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, nil, err
+	}
+	migrationsPath := filepath.Join(cwd, "db", "migrations")
+	var seedPath string
+	env := os.Getenv("SEED")
+	if strings.Contains(env, "test") {
 		// called from root project, so cwd will be root
-		cwd, err := os.Getwd()
-		if err != nil {
-			return nil, nil, err
-		}
-		migrationsPath := filepath.Join(cwd, "db", "migrations")
-		seedPath := filepath.Join(cwd, "db", "seed")
-
-		err = ApplyMigrationsAndSeed(ctx, cfg, actions, migrationsPath, seedPath, false)
-		if err != nil {
-			return nil, nil, err
-		}
+		seedPath = filepath.Join(cwd, "db", "seedtest")
+	} else {
+		seedPath = filepath.Join(cwd, "db", "seed")
+	}
+	actions := []string{"migrate.reset", "migrate.up", "seed.up"}
+	err = ApplyMigrationsAndSeed(ctx, cfg, actions, migrationsPath, seedPath, false)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return pgConn, rdConn, nil

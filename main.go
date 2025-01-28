@@ -25,11 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	if env != "" {
-		log.Println("LOADED ENV:", env)
-	} else {
-		log.Println("LOADED ENV: .env")
-	}
+	log.Println("Loaded ENV:", env)
 
 	cfg, err := config.Load()
 	if err != nil {
