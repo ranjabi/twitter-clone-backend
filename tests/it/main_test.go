@@ -75,7 +75,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	pgConn, rdConn, err = db.Setup(ctx, cfg)
+	pgConn, rdConn, err = db.SetupConnection(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

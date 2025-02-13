@@ -7,8 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
-	"path/filepath"
 	"sync"
 	"twitter-clone-backend/config"
 
@@ -24,7 +22,7 @@ var (
 	rdConn *redis.Client
 )
 
-func Setup(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, *redis.Client, error) {
+func SetupConnection(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, *redis.Client, error) {
 	log.SetPrefix("DB: ")
 	defer log.SetPrefix("")
 
@@ -34,25 +32,6 @@ func Setup(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, *redis.Clien
 	}
 
 	rdConn, err := GetRedisConnection()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, nil, err
-	}
-	migrationsPath := filepath.Join(cwd, "db", "migrations")
-	var seedPath string
-	env := os.Getenv("SEED")
-	if strings.Contains(env, "test") {
-		// called from root project, so cwd will be root
-		seedPath = filepath.Join(cwd, "db", "seedtest")
-	} else {
-		seedPath = filepath.Join(cwd, "db", "seed")
-	}
-	actions := []string{"migrate.reset", "migrate.up", "seed.up"}
-	err = ApplyMigrationsAndSeed(ctx, cfg, actions, migrationsPath, seedPath, false)
 	if err != nil {
 		return nil, nil, err
 	}

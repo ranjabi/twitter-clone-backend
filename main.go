@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
@@ -33,9 +35,24 @@ func main() {
 	}
 
 	ctx := context.Background()
-	pgConn, rdConn, err := db.Setup(ctx, cfg)
+	pgConn, rdConn, err := db.SetupConnection(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	migrationsPath := filepath.Join(cwd, "db", "migrations")
+	var seedPath string
+	if strings.Contains(env, "prod") {
+		seedPath = filepath.Join(cwd, "db", "seed")
+		actions := []string{"migrate.reset", "migrate.up", "seed.up"}
+		err = db.ApplyMigrationsAndSeed(ctx, cfg, actions, migrationsPath, seedPath, false)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	mux := new(AppMux)
