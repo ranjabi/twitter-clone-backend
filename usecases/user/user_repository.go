@@ -136,15 +136,16 @@ func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
 
 func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
 	var newUser models.User
-	query := `INSERT INTO users (full_name, username, email, password) VALUES (@full_name, LOWER(@username), LOWER(@email), @password) RETURNING full_name, username, email`
+	query := `INSERT INTO users (full_name, username, email, password, profile_image) VALUES (@full_name, LOWER(@username), LOWER(@email), @password, @profile_image) RETURNING id, full_name, username, email`
 	args := pgx.NamedArgs{
-		"full_name": user.FullName,
-		"username":  user.Username,
-		"email":     user.Email,
-		"password":  string(user.Password),
+		"full_name":     user.FullName,
+		"username":      user.Username,
+		"email":         user.Email,
+		"password":      string(user.Password),
+		"profile_image": user.ProfileImage,
 	}
 
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newUser.FullName, &newUser.Username, &newUser.Email)
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newUser.Id, &newUser.FullName, &newUser.Username, &newUser.Email)
 	if err != nil {
 		return nil, err
 	}

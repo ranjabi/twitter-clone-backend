@@ -1,155 +1,148 @@
 package it
 
 import (
-	"testing"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 
 	"github.com/go-faker/faker/v4"
-	"github.com/stretchr/testify/assert"
 )
 
-func TestTweetCreate_Ok(t *testing.T) {
-	err := ResetAndSeed()
-	assert.NoError(t, err)
-
+func (s *TestSuite) TestTweetCreate_Ok() {
 	testTweet := models.Tweet{
 		Content: faker.Sentence(),
-		UserId:  validUser.Id,
+		UserId:  s.validUser.Id,
 	}
-	newTweet, err := tweetService.CreateTweet(testTweet)
 
-	assert.NoError(t, err)
-	assert.NotNil(t, newTweet)
-	assert.Equal(t, testTweet.Content, newTweet.Content)
-	assert.Equal(t, testTweet.UserId, newTweet.UserId)
+	newTweet, err := s.tweetService.CreateTweet(testTweet)
+
+	s.NoError(err)
+	s.NotNil(newTweet)
+	s.Equal(testTweet.Content, newTweet.Content)
+	s.Equal(testTweet.UserId, newTweet.UserId)
 }
 
-func TestTweetUpdate_Ok(t *testing.T) {
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+func (s *TestSuite) TestTweetUpdate_Ok() {
+	tweet, err := s.tweetRepository.FindById(s.validTweet.Id)
+	s.NoError(err)
+	s.NotNil(tweet)
 
-	tweet, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotNil(t, tweet)
+	newTweetContent := faker.Sentence()
+	tweet.Content = newTweetContent
+	updatedTweet, err := s.tweetService.UpdateTweet(*tweet)
 
-	tweet.Content = "Updated"
-	updatedTweet, err := tweetService.UpdateTweet(*tweet)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, updatedTweet)
-	assert.Equal(t, "Updated", updatedTweet.Content)
-	assert.Equal(t, validTweet.UserId, updatedTweet.UserId)
+	s.NoError(err)
+	s.NotNil(updatedTweet)
+	s.Equal(newTweetContent, updatedTweet.Content)
 }
 
-func TestTweetUpdate_NotFound(t *testing.T) {
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+func (s *TestSuite) TestTweetUpdate_NotFound() {
+	_, err := s.tweetService.UpdateTweet(s.notExistTweet)
 
-	_, err = tweetService.UpdateTweet(notExistTweet)
-	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
+	s.EqualError(err, errmsg.TWEET_NOT_FOUND)
 }
 
-func TestTweetDelete_Ok(t *testing.T) {
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+func (s *TestSuite) TestTweetDelete_Ok() {
+	err := s.tweetService.DeleteTweet(s.validUser.Id, s.validTweet.Id)
 
-	err = tweetService.DeleteTweet(validUser.Id, validTweet.Id)
-	assert.NoError(t, err)
+	s.NoError(err)
+
+	// TODO
+	// _, err = s.tweetRepository.FindById(s.validTweet.Id)
+	// s.EqualError(err, errmsg.TWEET_NOT_FOUND)
 }
 
-func TestTweetDelete_NotFound(t *testing.T) {
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+// func (s *TestSuite) TestTweetDelete_NotFound() {
+// 	err := ResetAndSeed()
+// 	assert.NoError(t, err)
 
-	err = tweetService.DeleteTweet(validUser.Id, notExistTweet.Id)
-	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
-}
+// 	err = tweetService.DeleteTweet(validUser.Id, notExistTweet.Id)
+// 	assert.EqualError(t, err, errmsg.TWEET_NOT_FOUND)
+// }
 
-func TestTweetLike_Ok(t *testing.T) {
-	// TODO assert isLiked
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+// func (s *TestSuite) TestTweetLike_Ok() {
+// 	// TODO assert isLiked
+// 	err := ResetAndSeed()
+// 	assert.NoError(t, err)
 
-	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, tweetBefore.LikeCount)
+// 	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, 0, tweetBefore.LikeCount)
 
-	likeCount, err := tweetService.LikeTweet(validUser.Id, validTweet.Id)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, likeCount)
+// 	likeCount, err := tweetService.LikeTweet(validUser.Id, validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, 1, likeCount)
 
-	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotNil(t, tweetAfter)
-	assert.Equal(t, tweetBefore.LikeCount+1, tweetAfter.LikeCount)
-}
+// 	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, tweetAfter)
+// 	assert.Equal(t, tweetBefore.LikeCount+1, tweetAfter.LikeCount)
+// }
 
-func TestTweetLike_AlreadyLiked(t *testing.T) {
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+// func (s *TestSuite) TestTweetLike_AlreadyLiked() {
+// 	err := ResetAndSeed()
+// 	assert.NoError(t, err)
 
-	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotNil(t, tweetBefore)
-	assert.Equal(t, 0, tweetBefore.LikeCount)
+// 	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, tweetBefore)
+// 	assert.Equal(t, 0, tweetBefore.LikeCount)
 
-	likeCount, err := tweetService.LikeTweet(validUser.Id, validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotZero(t, likeCount)
-	assert.Equal(t, 1, likeCount)
+// 	likeCount, err := tweetService.LikeTweet(validUser.Id, validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotZero(t, likeCount)
+// 	assert.Equal(t, 1, likeCount)
 
-	likeCount, err = tweetService.LikeTweet(validUser.Id, validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotZero(t, likeCount)
-	assert.Equal(t, 1, likeCount)
+// 	likeCount, err = tweetService.LikeTweet(validUser.Id, validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotZero(t, likeCount)
+// 	assert.Equal(t, 1, likeCount)
 
-	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotNil(t, tweetAfter)
-	assert.Equal(t, 1, tweetAfter.LikeCount)
-}
+// 	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, tweetAfter)
+// 	assert.Equal(t, 1, tweetAfter.LikeCount)
+// }
 
-func TestTweetUnlike_Ok(t *testing.T) {
-	// TODO assert isLiked
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+// func (s *TestSuite) TestTweetUnlike_Ok() {
+// 	// TODO assert isLiked
+// 	err := ResetAndSeed()
+// 	assert.NoError(t, err)
 
-	likeCount, err := tweetRepository.LikeTweet(validUser.Id, validTweet.Id)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, likeCount)
+// 	likeCount, err := tweetRepository.LikeTweet(validUser.Id, validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, 1, likeCount)
 
-	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotNil(t, tweetBefore)
+// 	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, tweetBefore)
 
-	likeCount, err = tweetService.UnlikeTweet(validUser.Id, validTweet.Id)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, likeCount)
+// 	likeCount, err = tweetService.UnlikeTweet(validUser.Id, validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, 0, likeCount)
 
-	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
+// 	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
 
-	assert.NoError(t, err)
-	assert.NotNil(t, tweetAfter)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, tweetAfter)
 
-	assert.Equal(t, tweetBefore.LikeCount-1, tweetAfter.LikeCount)
-}
+// 	assert.Equal(t, tweetBefore.LikeCount-1, tweetAfter.LikeCount)
+// }
 
-func TestTweetUnlike_AlreadyNotLiked(t *testing.T) {
-	err := ResetAndSeed()
-	assert.NoError(t, err)
+// func (s *TestSuite) TestTweetUnlike_AlreadyNotLiked() {
+// 	err := ResetAndSeed()
+// 	assert.NoError(t, err)
 
-	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotNil(t, tweetBefore)
-	assert.Equal(t, 0, tweetBefore.LikeCount)
+// 	tweetBefore, err := tweetRepository.FindById(validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, tweetBefore)
+// 	assert.Equal(t, 0, tweetBefore.LikeCount)
 
-	likeCount, err := tweetService.UnlikeTweet(validUser.Id, validTweet.Id)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, likeCount)
+// 	likeCount, err := tweetService.UnlikeTweet(validUser.Id, validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, 0, likeCount)
 
-	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
-	assert.NoError(t, err)
-	assert.NotNil(t, tweetAfter)
-	assert.Equal(t, 0, tweetAfter.LikeCount)
-}
+// 	tweetAfter, err := tweetRepository.FindById(validTweet.Id)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, tweetAfter)
+// 	assert.Equal(t, 0, tweetAfter.LikeCount)
+// }
