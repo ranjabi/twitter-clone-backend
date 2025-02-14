@@ -25,17 +25,36 @@ func getRecentTweetsCacheKey(id int) string {
 	return fmt.Sprintf("user.id:%d:recentTweets", id)
 }
 
-type UserRepository struct {
+type Repository struct {
 	ctx    context.Context
 	pgConn *pgxpool.Pool
 	rdConn *redis.Client
 }
 
-func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) UserRepository {
-	return UserRepository{ctx: ctx, pgConn: pgConn, rdConn: rdConn}
+func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Client) Repository {
+	return Repository{ctx, pgConn, rdConn}
 }
 
-func (r *UserRepository) GetUserCache(id int) (string, error) {
+func (r *Repository) CreateUser(user models.User) (*models.User, error) {
+	var newUser models.User
+	query := `INSERT INTO users (full_name, username, email, password, profile_image) VALUES (@full_name, LOWER(@username), LOWER(@email), @password, @profile_image) RETURNING id, full_name, username, email`
+	args := pgx.NamedArgs{
+		"full_name":     user.FullName,
+		"username":      user.Username,
+		"email":         user.Email,
+		"password":      string(user.Password),
+		"profile_image": user.ProfileImage,
+	}
+
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newUser.Id, &newUser.FullName, &newUser.Username, &newUser.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	return &newUser, nil
+}
+
+func (r *Repository) GetUserCache(id int) (string, error) {
 	res, err := r.rdConn.JSONGet(r.ctx, getUserProfileCacheKey(id), userProfilePath).Result()
 	if err != nil {
 		return "", err
@@ -43,7 +62,7 @@ func (r *UserRepository) GetUserCache(id int) (string, error) {
 	return res, nil
 }
 
-func (r *UserRepository) SetUserCache(user *models.User) (string, error) {
+func (r *Repository) SetUserCache(user *models.User) (string, error) {
 	res, err := r.rdConn.JSONSet(r.ctx, getUserProfileCacheKey(user.Id), userProfilePath, user).Result()
 	if err != nil {
 		return "", err
@@ -57,7 +76,7 @@ func (r *UserRepository) SetUserCache(user *models.User) (string, error) {
 	return res, nil
 }
 
-func (r *UserRepository) GetUserRecentTweetsCache(id int) (string, error) {
+func (r *Repository) GetUserRecentTweetsCache(id int) (string, error) {
 	res, err := r.rdConn.JSONGet(r.ctx, getRecentTweetsCacheKey(id), userProfileRecentTWeetsPath).Result()
 	if err != nil {
 		return "", err
@@ -65,7 +84,7 @@ func (r *UserRepository) GetUserRecentTweetsCache(id int) (string, error) {
 	return res, nil
 }
 
-func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
+func (r *Repository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
 	res, err := r.rdConn.JSONSet(r.ctx, getRecentTweetsCacheKey(user.Id), userProfileRecentTWeetsPath, tweets).Result()
 	if err != nil {
 		return "", err
@@ -79,7 +98,7 @@ func (r *UserRepository) SetUserRecentTweetsCache(user *models.User, tweets []mo
 	return res, nil
 }
 
-func (r *UserRepository) DeleteUserRecentTweetsCache(id int) error {
+func (r *Repository) DeleteUserRecentTweetsCache(id int) error {
 	_, err := r.rdConn.JSONDel(r.ctx, getRecentTweetsCacheKey(id), userProfileRecentTWeetsPath).Result()
 	if err != nil {
 		return err
@@ -87,7 +106,7 @@ func (r *UserRepository) DeleteUserRecentTweetsCache(id int) error {
 	return nil
 }
 
-func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
+func (r *Repository) GetFeed(id int, page int) (*models.Feed, error) {
 	limit := 10
 	offset := (page - 1) * limit
 
@@ -134,26 +153,7 @@ func (r *UserRepository) GetFeed(id int, page int) (*models.Feed, error) {
 	return &feed, nil
 }
 
-func (r *UserRepository) CreateUser(user models.User) (*models.User, error) {
-	var newUser models.User
-	query := `INSERT INTO users (full_name, username, email, password, profile_image) VALUES (@full_name, LOWER(@username), LOWER(@email), @password, @profile_image) RETURNING id, full_name, username, email`
-	args := pgx.NamedArgs{
-		"full_name":     user.FullName,
-		"username":      user.Username,
-		"email":         user.Email,
-		"password":      string(user.Password),
-		"profile_image": user.ProfileImage,
-	}
-
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newUser.Id, &newUser.FullName, &newUser.Username, &newUser.Email)
-	if err != nil {
-		return nil, err
-	}
-
-	return &newUser, nil
-}
-
-func (r *UserRepository) GetRecentTweets(userId int, page int) ([]models.Tweet, error) {
+func (r *Repository) GetRecentTweets(userId int, page int) ([]models.Tweet, error) {
 	limit := 10
 	offset := (page - 1) * limit
 	query := `
@@ -183,7 +183,7 @@ func (r *UserRepository) GetRecentTweets(userId int, page int) ([]models.Tweet, 
 	return lastTenTweets, nil
 }
 
-func (r *UserRepository) GetTweetsInteractions(userId int, tweetsId []int) ([]models.TweetInteraction, error) {
+func (r *Repository) GetTweetsInteractions(userId int, tweetsId []int) ([]models.TweetInteraction, error) {
 	query := `
 		SELECT tweet_id as tweet_id, 
 			CASE WHEN user_id = @userId THEN TRUE ELSE FALSE END as is_liked
@@ -208,7 +208,7 @@ func (r *UserRepository) GetTweetsInteractions(userId int, tweetsId []int) ([]mo
 	return lastTenTweets, nil
 }
 
-func (r *UserRepository) IsUserExistByEmail(email string) (bool, error) {
+func (r *Repository) IsUserExistByEmail(email string) (bool, error) {
 	var isUserExist bool
 	query := `SELECT EXISTS (SELECT 1 FROM users WHERE email=@email)`
 	args := pgx.NamedArgs{
@@ -223,7 +223,7 @@ func (r *UserRepository) IsUserExistByEmail(email string) (bool, error) {
 	return isUserExist, nil
 }
 
-func (r *UserRepository) GetUserById(id int) (*models.User, error) {
+func (r *Repository) FindById(id int) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, email, password, follower_count, following_count FROM users WHERE id=@id`
 	args := pgx.NamedArgs{
@@ -238,7 +238,7 @@ func (r *UserRepository) GetUserById(id int) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserByUsername(username string) (*models.User, error) {
+func (r *Repository) FindByUsername(username string) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, full_name, email, profile_image, password, follower_count, following_count FROM users WHERE username=@username`
 	args := pgx.NamedArgs{
@@ -253,7 +253,7 @@ func (r *UserRepository) GetUserByUsername(username string) (*models.User, error
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
+func (r *Repository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
 	query := `SELECT id, username, full_name, email, password, profile_image FROM users WHERE email=@email`
 	args := pgx.NamedArgs{
@@ -268,7 +268,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) IsFollowed(followerId int, followingId int) (bool, error) {
+func (r *Repository) IsFollowed(followerId int, followingId int) (bool, error) {
 	var isFollowed bool
 	query := `SELECT EXISTS (SELECT 1 FROM follows WHERE follower_id=@followerId AND following_id=@followingId)`
 	args := pgx.NamedArgs{
@@ -284,7 +284,7 @@ func (r *UserRepository) IsFollowed(followerId int, followingId int) (bool, erro
 	return isFollowed, nil
 }
 
-func (r *UserRepository) FollowOtherUser(followerId int, followingId int) error {
+func (r *Repository) FollowOtherUser(followerId int, followingId int) error {
 	query := `INSERT INTO follows (follower_id, following_id) VALUES (@follower_id, @following_id)`
 	args := pgx.NamedArgs{
 		"follower_id":  followerId,
@@ -316,7 +316,7 @@ func (r *UserRepository) FollowOtherUser(followerId int, followingId int) error 
 	return nil
 }
 
-func (r *UserRepository) UnfollowOtherUser(followerId int, followingId int) error {
+func (r *Repository) UnfollowOtherUser(followerId int, followingId int) error {
 	query := `DELETE FROM follows WHERE follower_id=@follower_id and following_id=@following_id`
 	args := pgx.NamedArgs{
 		"follower_id":  followerId,

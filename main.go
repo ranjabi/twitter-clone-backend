@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
@@ -17,6 +18,7 @@ import (
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/healthcheck"
 	"twitter-clone-backend/middleware"
+	"twitter-clone-backend/usecases/auth"
 	"twitter-clone-backend/usecases/tweet"
 	"twitter-clone-backend/usecases/user"
 )
@@ -62,10 +64,12 @@ func main() {
 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
 
-	userService := user.NewService(ctx, cfg, userRepository)
+	authService := auth.NewService(ctx, cfg, userRepository)
+	userService := user.NewService(ctx, userRepository)
 	tweetService := tweet.NewService(tweetRepository, userRepository)
 
-	userHandler := user.NewHandler(userService)
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	userHandler := user.NewHandler(userService, authService, validate)
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// use mux.Handle so the error will goes into AppHandler

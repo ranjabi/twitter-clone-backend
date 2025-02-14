@@ -4,29 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"twitter-clone-backend/config"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
-	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
 	ctx            context.Context
-	cfg            *config.Config
-	userRepository UserRepository
+	userRepository Repository
 }
 
-func NewService(ctx context.Context, cfg *config.Config, userRepository UserRepository) Service {
-	return Service{ctx, cfg, userRepository}
+func NewService(ctx context.Context, userRepository Repository) Service {
+	return Service{ctx, userRepository}
 }
 
-func (s Service) GetUserById(id int) (*models.User, error) {
-	user, err := s.userRepository.GetUserById(id)
+func (s Service) FindById(id int) (*models.User, error) {
+	user, err := s.userRepository.FindById(id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
@@ -47,7 +43,7 @@ func (s *Service) GetRecentTweets(userId int, page int) ([]models.Tweet, error) 
 }
 
 func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string, followerId int, page int) (*models.User, error) {
-	user, err := s.userRepository.GetUserByUsername(username)
+	user, err := s.userRepository.FindByUsername(username)
 	if err != nil {
 		return nil, err
 	}
@@ -190,65 +186,6 @@ func (s Service) GetFeed(id int, email string, page int) (*models.Feed, error) {
 	}
 
 	return feed, nil
-}
-
-func (s Service) CreateUser(user models.User) (*models.User, error) {
-	isUserExist, err := s.userRepository.IsUserExistByEmail(user.Email)
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
-	}
-	if isUserExist {
-		return nil, &models.AppError{Err: err, Message: errmsg.EMAIL_ALREADY_EXIST, Code: http.StatusConflict}
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to hash password"}
-	}
-
-	user.Password = string(hashedPassword)
-	newUser, err := s.userRepository.CreateUser(user)
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to create account"}
-	}
-
-	return newUser, nil
-}
-
-func (s Service) CheckUserCredential(email string, password string) (*models.User, error) {
-	isUserExist, err := s.userRepository.IsUserExistByEmail(email)
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
-	}
-	if !isUserExist {
-		return nil, &models.AppError{Err: err, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
-	}
-
-	user, err := s.userRepository.GetUserByEmail(email)
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to get user credential"}
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: errmsg.WRONG_CREDENTIAL, Code: http.StatusUnauthorized}
-	}
-
-	claims := jwt.MapClaims{
-		"id":       user.Id,
-		"username": user.Username,
-		"fullName": user.FullName,
-		"email":    user.Email,
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(s.cfg.JwtSecret))
-	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to sign token"}
-	}
-
-	user.Token = signedToken
-
-	return user, nil
 }
 
 func (s Service) FollowOtherUser(followerId int, followingId int) error {

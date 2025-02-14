@@ -13,18 +13,22 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-var validate *validator.Validate
+type AuthService interface {
+	CreateUser(user models.User) (*models.User, error)
+	Login(email string, password string) (*models.User, error)
+}
 
 type Handler struct {
 	userService Service
+	authService AuthService
+	validate    *validator.Validate
 }
 
-func NewHandler(userService Service) Handler {
-	return Handler{userService}
+func NewHandler(userService Service, authService AuthService, validate *validator.Validate) Handler {
+	return Handler{userService, authService, validate}
 }
 
 func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *models.AppError {
-	validate = validator.New(validator.WithRequiredStructEnabled())
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
 		FullName string `json:"fullName" validate:"required"`
@@ -36,14 +40,14 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusBadRequest}
 	}
 
-	if err := validate.Struct(payload); err != nil {
+	if err := h.validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusBadRequest}
 		}
 	}
 
 	// karena manggil layer di dalam, maka pakai message dan error dari layer dalam
-	newUser, err := h.userService.CreateUser(models.User{
+	newUser, err := h.authService.CreateUser(models.User{
 		FullName: payload.FullName,
 		Username: payload.Username,
 		Email:    payload.Email,
@@ -74,7 +78,6 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 }
 
 func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models.AppError {
-	validate = validator.New(validator.WithRequiredStructEnabled())
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
 		Email    string `json:"email" validate:"required,email"`
@@ -84,14 +87,14 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusInternalServerError}
 	}
 
-	err := validate.Struct(payload)
+	err := h.validate.Struct(payload)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
-	user, err := h.userService.CheckUserCredential(payload.Email, payload.Password)
+	user, err := h.authService.Login(payload.Email, payload.Password)
 	if err != nil {
 		return utils.HandleErr(err)
 	}

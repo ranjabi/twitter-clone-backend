@@ -9,10 +9,10 @@ import (
 
 type Service struct {
 	tweetRepository TweetRepository
-	userRepository  user.UserRepository
+	userRepository  user.Repository
 }
 
-func NewService(tweetRepository TweetRepository, userRepository user.UserRepository) Service {
+func NewService(tweetRepository TweetRepository, userRepository user.Repository) Service {
 	return Service{tweetRepository: tweetRepository, userRepository: userRepository}
 }
 
