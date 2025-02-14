@@ -175,13 +175,25 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]models.Tweet, erro
 	limit := 10
 	offset := (page - 1) * limit
 	query := `
-		SELECT t.*, u.full_name, u.username, u.profile_image, FALSE as is_liked
-			FROM tweets t
-			INNER JOIN users u ON u.id = t.user_id
-			WHERE t.user_id = @userId
-			ORDER BY t.created_at DESC
-			LIMIT @limit
-			OFFSET @offset
+		SELECT 
+			t.id AS tweet_id,
+			t.content AS tweet_content,
+			t.created_at AS tweet_created_at,
+			t.modified_at AS tweet_modified_at,
+			t.like_count AS tweet_like_count,
+			t.user_id AS tweet_user_id,
+			FALSE AS tweet_is_liked,
+
+			u.id AS user_id,
+			u.username AS user_username,
+			u.full_name AS user_full_name,
+			u.profile_image AS user_profile_image
+		FROM tweets t
+		INNER JOIN users u ON u.id = t.user_id
+		WHERE t.user_id = @userId
+		ORDER BY t.created_at DESC
+		LIMIT @limit
+		OFFSET @offset
 	`
 	args := pgx.NamedArgs{
 		"userId": userId,
@@ -193,7 +205,7 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]models.Tweet, erro
 		return nil, err
 	}
 
-	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Tweet])
+	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[models.Tweet])
 	if err != nil {
 		return nil, err
 	}
@@ -258,12 +270,25 @@ func (r *Repository) FindById(id int) (*models.User, error) {
 
 func (r *Repository) FindByUsername(username string) (*models.User, error) {
 	var user models.User
-	query := `SELECT id, username, full_name, email, profile_image, password, follower_count, following_count FROM users WHERE username=@username`
+	query := `
+		SELECT 
+			id AS user_id,
+			username AS user_username,
+			full_name AS user_full_name,
+			email AS user_email,
+			profile_image AS user_profile_image,
+			password AS user_password,
+			follower_count AS user_follower_count,
+			following_count AS user_following_count
+		FROM users
+		WHERE username = @username
+	`
 	args := pgx.NamedArgs{
 		"username": username,
 	}
 
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfileImage, &user.Password, &user.FollowerCount, &user.FollowingCount)
+	rows, _ := r.pgConn.Query(r.ctx, query, args)
+	user, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[models.User])
 	if err != nil {
 		return nil, err
 	}
@@ -316,17 +341,30 @@ func (r *Repository) IsFollowed(followerId int, followingId int) (bool, error) {
 }
 
 func (r *Repository) FollowOtherUser(followerId int, followingId int) error {
-	query := `INSERT INTO follows (follower_id, following_id) VALUES (@follower_id, @following_id)`
+	tx, err := r.pgConn.Begin(r.ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(r.ctx)
+
+	query := `
+		INSERT INTO follows (follower_id, following_id)
+		VALUES (@follower_id, @following_id)
+	`
 	args := pgx.NamedArgs{
 		"follower_id":  followerId,
 		"following_id": followingId,
 	}
-	_, err := r.pgConn.Exec(r.ctx, query, args)
+	_, err = r.pgConn.Exec(r.ctx, query, args)
 	if err != nil {
 		return err
 	}
 
-	query = "UPDATE users SET follower_count = follower_count + 1 WHERE id = @following_id"
+	query = `
+		UPDATE users
+		SET follower_count = follower_count + 1
+		WHERE id = @following_id
+	`
 	args = pgx.NamedArgs{
 		"following_id": followingId,
 	}
@@ -335,7 +373,11 @@ func (r *Repository) FollowOtherUser(followerId int, followingId int) error {
 		return err
 	}
 
-	query = "UPDATE users SET following_count = following_count + 1 WHERE id = @follower_id"
+	query = `
+		UPDATE users
+		SET following_count = following_count + 1
+		WHERE id = @follower_id
+	`
 	args = pgx.NamedArgs{
 		"follower_id": followerId,
 	}
@@ -344,11 +386,26 @@ func (r *Repository) FollowOtherUser(followerId int, followingId int) error {
 		return err
 	}
 
+	err = tx.Commit(r.ctx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (r *Repository) UnfollowOtherUser(followerId int, followingId int) error {
-	query := `DELETE FROM follows WHERE follower_id=@follower_id and following_id=@following_id`
+	tx, err := r.pgConn.Begin(r.ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(r.ctx)
+
+	query := `
+		DELETE FROM follows
+		WHERE follower_id = @follower_id
+		AND following_id = @following_id
+	`
 	args := pgx.NamedArgs{
 		"follower_id":  followerId,
 		"following_id": followingId,
@@ -361,7 +418,11 @@ func (r *Repository) UnfollowOtherUser(followerId int, followingId int) error {
 		return nil
 	}
 
-	query = "UPDATE users SET follower_count = follower_count - 1 WHERE id = @following_id"
+	query = `
+		UPDATE users
+		SET follower_count = follower_count - 1
+		WHERE id = @following_id
+	`
 	args = pgx.NamedArgs{
 		"following_id": followingId,
 	}
@@ -370,7 +431,11 @@ func (r *Repository) UnfollowOtherUser(followerId int, followingId int) error {
 		return err
 	}
 
-	query = "UPDATE users SET following_count = following_count - 1 WHERE id = @follower_id"
+	query = `
+		UPDATE users
+		SET following_count = following_count - 1
+		WHERE id = @follower_id
+	`
 	args = pgx.NamedArgs{
 		"follower_id": followerId,
 	}
@@ -379,5 +444,18 @@ func (r *Repository) UnfollowOtherUser(followerId int, followingId int) error {
 		return err
 	}
 
+	err = tx.Commit(r.ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) ClearRedisCache() error {
+	err := r.rdConn.FlushAll(r.ctx).Err()
+	if err != nil {
+		return err
+	}
 	return nil
 }

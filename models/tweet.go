@@ -2,17 +2,18 @@ package models
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Tweet struct {
-	Id               int        `json:"id"`
-	Content          string     `json:"content"`
-	CreatedAt        time.Time  `json:"createdAt" db:"created_at"`
-	ModifiedAt       *time.Time `json:"modifiedAt" db:"modified_at"`
-	LikeCount        int        `json:"likeCount" db:"like_count"`
-	UserId           int        `json:"userId" db:"user_id"`
-	IsLiked          bool       `json:"isLiked" db:"is_liked"`
-	Username         string     `json:"username" db:"username"`
-	UserFullName     string     `json:"userFullName" db:"full_name"`
-	UserProfileImage string     `json:"userProfileImage" db:"profile_image"`
+	Id         int         `json:"id" db:"tweet_id"`
+	Content    string      `json:"content" db:"tweet_content"`
+	CreatedAt  time.Time   `json:"createdAt" db:"tweet_created_at"`
+	ModifiedAt pgtype.Time `json:"modifiedAt" db:"tweet_modified_at"`
+	LikeCount  int         `json:"likeCount" db:"tweet_like_count"`
+	UserId     int         `json:"-" db:"tweet_user_id"`
+
+	IsLiked bool `json:"isLiked" db:"tweet_is_liked"`
+	User
 }

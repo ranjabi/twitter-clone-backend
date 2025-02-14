@@ -13,7 +13,7 @@ func (s *TestSuite) TestTweetCreate_Ok() {
 		UserId:  s.validUser.Id,
 	}
 
-	newTweet, err := s.tweetService.CreateTweet(testTweet)
+	newTweet, err := s.tweetService.Create(testTweet)
 
 	s.NoError(err)
 	s.NotNil(newTweet)

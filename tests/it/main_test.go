@@ -35,7 +35,9 @@ type TestSuite struct {
 	tweetService tweet.Service
 
 	validUser     *models.User
+	validUser2    *models.User
 	validTweet    *models.Tweet
+	notExistUser  models.User
 	notExistTweet models.Tweet
 }
 
@@ -70,6 +72,9 @@ func (s *TestSuite) SetupSuite() {
 	actions := []string{"migrate.reset"}
 	err = db.ApplyMigrationsAndSeed(s.ctx, s.cfg, actions, s.migrationsPath, "", true)
 	s.NoError(err)
+
+	err = s.userRepository.ClearRedisCache()
+	s.NoError(err)
 }
 
 func (s *TestSuite) TearDownSuite() {
@@ -91,7 +96,17 @@ func (s *TestSuite) SetupTest() {
 	s.NoError(err)
 	s.NotNil(s.validUser)
 
-	s.validTweet, err = s.tweetRepository.CreateTweet(models.Tweet{
+	s.validUser2, err = s.userRepository.Create(models.User{
+		Id:       2,
+		Email:    "test2@example.com",
+		Username: "testusername2",
+		FullName: "Test Full Name 2",
+		Password: "$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i",
+	})
+	s.NoError(err)
+	s.NotNil(s.validUser2)
+
+	s.validTweet, err = s.tweetRepository.Create(models.Tweet{
 		Id:      1,
 		Content: "Content",
 		UserId:  s.validUser.Id,
@@ -99,14 +114,21 @@ func (s *TestSuite) SetupTest() {
 	s.NoError(err)
 	s.NotNil(s.validTweet)
 
+	s.notExistUser = models.User{
+		Id: 9999,
+	}
+
 	s.notExistTweet = models.Tweet{
-		Id: 99999,
+		Id: 9999,
 	}
 }
 
 func (s *TestSuite) TearDownTest() {
 	actions := []string{"migrate.reset"}
 	err := db.ApplyMigrationsAndSeed(s.ctx, s.cfg, actions, s.migrationsPath, "", true)
+	s.NoError(err)
+
+	err = s.userRepository.ClearRedisCache()
 	s.NoError(err)
 }
 

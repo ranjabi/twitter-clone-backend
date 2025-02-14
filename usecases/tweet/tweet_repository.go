@@ -19,9 +19,13 @@ func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Clie
 	return TweetRepository{ctx: ctx, pgConn: pgConn}
 }
 
-func (r *TweetRepository) CreateTweet(tweet models.Tweet) (*models.Tweet, error) {
+func (r *TweetRepository) Create(tweet models.Tweet) (*models.Tweet, error) {
 	var newTweet models.Tweet
-	query := `INSERT INTO tweets (content, user_id)  VALUES (@content, @user_id) RETURNING id, content, created_at, user_id`
+	query := `
+		INSERT INTO tweets (content, user_id)
+		VALUES (@content, @user_id)
+		RETURNING id, content, created_at, user_id
+	`
 	args := pgx.NamedArgs{
 		"content": tweet.Content,
 		"user_id": tweet.UserId,

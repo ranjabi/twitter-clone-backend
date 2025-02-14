@@ -16,8 +16,8 @@ func NewService(tweetRepository TweetRepository, userRepository user.Repository)
 	return Service{tweetRepository: tweetRepository, userRepository: userRepository}
 }
 
-func (s *Service) CreateTweet(tweet models.Tweet) (*models.Tweet, error) {
-	newTweet, err := s.tweetRepository.CreateTweet(tweet)
+func (s *Service) Create(tweet models.Tweet) (*models.Tweet, error) {
+	newTweet, err := s.tweetRepository.Create(tweet)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to create tweet"}
 	}

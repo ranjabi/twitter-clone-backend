@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var validate *validator.Validate
@@ -43,7 +44,7 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		}
 	}
 
-	newTweet, err := h.service.CreateTweet(models.Tweet{
+	newTweet, err := h.service.Create(models.Tweet{
 		Content: payload.Content,
 		UserId:  int(userId),
 	})
@@ -101,11 +102,11 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 
 	newTweetResponse := struct {
-		Id         int        `json:"id"`
-		Content    string     `json:"content"`
-		CreatedAt  time.Time  `json:"createdAt"`
-		ModifiedAt *time.Time `json:"modifiedAt"`
-		UserId     int        `json:"userId"`
+		Id         int         `json:"id"`
+		Content    string      `json:"content"`
+		CreatedAt  time.Time   `json:"createdAt"`
+		ModifiedAt pgtype.Time `json:"modifiedAt"`
+		UserId     int         `json:"userId"`
 	}{
 		Id:         newTweet.Id,
 		Content:    newTweet.Content,

@@ -1,170 +1,139 @@
 package it
 
-// import (
-// 	"fmt"
-// 	"net/http"
-// 	"twitter-clone-backend/errmsg"
-// 	"twitter-clone-backend/models"
-// 	"twitter-clone-backend/usecases/tweet"
-// 	"twitter-clone-backend/usecases/user"
+import (
+	"fmt"
+	"net/http"
+	"twitter-clone-backend/errmsg"
+	"twitter-clone-backend/models"
+)
 
-// 	"testing"
+func (s *TestSuite) TestUserFollow_Ok() {
+	// Before
+	followerUserBefore, err := s.userRepository.FindById(s.validUser.Id)
+	s.NoError(err)
+	s.NotNil(followerUserBefore)
+	followeeUserBefore, err := s.userRepository.FindById(s.validUser2.Id)
+	s.NoError(err)
+	s.NotNil(followeeUserBefore)
 
-// 	_ "github.com/jackc/pgx/v5/stdlib" // for pgx sql driver
-// 	"github.com/stretchr/testify/assert"
-// )
+	// Test
+	err = s.userService.FollowOtherUser(s.validUser.Id, s.validUser2.Id)
+	s.NoError(err)
 
-// func TestUserFollow_Ok(t *testing.T) {
-// 	err := ResetAndSeed()
-// 	assert.NoError(t, err)
+	// After
+	followerUserAfter, err := s.userRepository.FindById(s.validUser.Id)
+	s.NoError(err)
+	s.NotNil(followerUserAfter)
+	followeeUserAfter, err := s.userRepository.FindById(s.validUser2.Id)
+	s.NoError(err)
+	s.NotNil(followeeUserAfter)
 
-// 	followingUserBefore, err := userService.GetUserById(validUser.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followingUserBefore)
-// 	followedUserBefore, err := userService.GetUserById(validUser2.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followedUserBefore)
+	s.Equal(followerUserBefore.FollowingCount+1, followerUserAfter.FollowingCount)
+	s.Equal(followeeUserBefore.FollowerCount+1, followeeUserAfter.FollowerCount)
+}
 
-// 	err = userService.FollowOtherUser(validUser.Id, validUser2.Id)
-// 	assert.NoError(t, err)
+func (s *TestSuite) TestUserFollow_AlreadyFollowed() {
+	// Before
+	followerUserBefore, err := s.userRepository.FindById(s.validUser.Id)
+	s.NoError(err)
+	s.NotNil(followerUserBefore)
+	followeeUserBefore, err := s.userRepository.FindById(s.validUser2.Id)
+	s.NoError(err)
+	s.NotNil(followeeUserBefore)
 
-// 	followingUserAfter, err := userService.GetUserById(validUser.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followingUserAfter)
-// 	followedUserAfter, err := userService.GetUserById(validUser2.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followedUserAfter)
+	// Test
+	err = s.userService.FollowOtherUser(s.validUser.Id, s.validUser2.Id)
+	s.NoError(err)
+	err = s.userService.FollowOtherUser(s.validUser.Id, s.validUser2.Id)
+	s.NoError(err)
+}
 
-// 	assert.Equal(t, followedUserAfter.FollowerCount, followedUserBefore.FollowerCount+1)
-// 	assert.Equal(t, followingUserAfter.FollowingCount, followingUserBefore.FollowingCount+1)
-// }
+func (s *TestSuite) TestUserFollow_FolloweeNotExist() {
+	// Test
+	err := s.userService.FollowOtherUser(s.validUser.Id, s.notExistUser.Id)
 
-// func TestUserFollow_AlreadyFollowed(t *testing.T) {
-// 	err := ResetAndSeed()
-// 	assert.NoError(t, err)
+	// After
+	s.EqualError(err, errmsg.USER_NOT_FOUND)
+	s.IsType(&models.AppError{}, err)
+	s.Equal(http.StatusNotFound, err.(*models.AppError).GetCode())
+}
 
-// 	followingUserBefore, err := userService.GetUserById(validUser.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followingUserBefore)
-// 	followedUserBefore, err := userService.GetUserById(validUser2.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followedUserBefore)
+func (s *TestSuite) TestUserUnfollow_Ok() {
+	// Before
+	err := s.userRepository.FollowOtherUser(s.validUser.Id, s.validUser2.Id)
+	s.NoError(err)
+	followerUserBefore, err := s.userRepository.FindById(s.validUser.Id)
+	s.NoError(err)
+	s.NotNil(followerUserBefore)
+	followeeUserBefore, err := s.userRepository.FindById(s.validUser2.Id)
+	s.NoError(err)
+	s.NotNil(followeeUserBefore)
 
-// 	err = userService.FollowOtherUser(validUser.Id, validUser2.Id)
-// 	assert.NoError(t, err)
-// 	err = userService.FollowOtherUser(validUser.Id, validUser2.Id)
-// 	assert.NoError(t, err)
-// }
+	// Test
+	err = s.userService.UnfollowOtherUser(s.validUser.Id, s.validUser2.Id)
+	s.NoError(err)
 
-// func TestUserFollow_FolloweeNotExist(t *testing.T) {
-// 	err := ResetAndSeed()
-// 	assert.NoError(t, err)
+	// After
+	followerUserAfter, err := s.userRepository.FindById(s.validUser.Id)
+	s.NoError(err)
+	s.NotNil(followerUserAfter)
+	followeeUserAfter, err := s.userRepository.FindById(s.validUser2.Id)
+	s.NoError(err)
+	s.NotNil(followeeUserAfter)
 
-// 	err = userService.FollowOtherUser(validUser.Id, notExistUser.Id)
+	s.Equal(followeeUserBefore.FollowerCount-1, followeeUserAfter.FollowerCount)
+	s.Equal(followerUserBefore.FollowingCount-1, followerUserAfter.FollowingCount)
+}
 
-// 	assert.EqualError(t, err, errmsg.USER_NOT_FOUND)
-// 	assert.IsType(t, &models.AppError{}, err)
-// 	appErr := err.(*models.AppError)
-// 	assert.Equal(t, http.StatusNotFound, appErr.GetCode())
-// }
+func (s *TestSuite) TestUserUnfollow_AlreadyNotFollowed() {
+	err := s.userService.UnfollowOtherUser(s.validUser.Id, s.validUser2.Id)
+	s.NoError(err)
+}
 
-// func TestUserUnfollow_Ok(t *testing.T) {
-// 	err := ResetAndSeed()
-// 	assert.NoError(t, err)
+func (s *TestSuite) TestUserUnfollow_FolloweeNotExist() {
+	err := s.userService.UnfollowOtherUser(s.validUser.Id, s.notExistUser.Id)
+	s.NoError(err)
+}
 
-// 	err = userService.FollowOtherUser(validUser.Id, validUser2.Id)
-// 	assert.NoError(t, err)
+func (s *TestSuite) TestUserProfileWithRecentTweetsForFollower_Ok() {
+	// validUser follow validUser2
+	// validUser2 create 11 tweets
+	// validUser see validUser2 profile
 
-// 	followingUserBefore, err := userService.GetUserById(validUser.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followingUserBefore)
-// 	followedUserBefore, err := userService.GetUserById(validUser2.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followedUserBefore)
+	// Before
+	tweetNumber := 11
+	for i := 0; i < tweetNumber; i++ {
+		tweet := models.Tweet{
+			UserId:  s.validUser2.Id,
+			Content: fmt.Sprintf("Tweet %d content", i+1),
+		}
+		createdTweet, err := s.tweetRepository.Create(tweet)
+		s.NoError(err)
+		s.NotNil(createdTweet)
+	}
 
-// 	err = userService.UnfollowOtherUser(validUser.Id, validUser2.Id)
-// 	assert.NoError(t, err)
+	// Test
+	// first page
+	profile, err := s.userService.GetProfileByUsernameWithRecentTweetsForFollower(s.validUser2.Username, s.validUser.Id, 1)
+	s.NoError(err)
+	s.NotNil(profile)
 
-// 	followingUserAfter, err := userService.GetUserById(validUser.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followingUserAfter)
-// 	followedUserAfter, err := userService.GetUserById(validUser2.Id)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, followedUserAfter)
+	s.Len(profile.RecentTweets, 10)
+	s.Equal(10, profile.RecentTweetsLength)
 
-// 	assert.Equal(t, followedUserAfter.FollowerCount, followedUserBefore.FollowerCount-1)
-// 	assert.Equal(t, followingUserAfter.FollowingCount, followingUserBefore.FollowingCount-1)
-// }
+	for i, tweet := range profile.RecentTweets {
+		s.Equal(fmt.Sprintf("Tweet %d content", tweetNumber-i), tweet.Content)
+	}
 
-// func TestUserUnfollow_AlreadyNotFollowed(t *testing.T) {
-// 	err := ResetAndSeed()
-// 	assert.NoError(t, err)
+	// second page
+	profile, err = s.userService.GetProfileByUsernameWithRecentTweetsForFollower(s.validUser2.Username, s.validUser.Id, 2)
+	s.NoError(err)
+	s.NotNil(profile)
 
-// 	err = userService.UnfollowOtherUser(validUser.Id, validUser2.Id)
-// 	assert.NoError(t, err)
-// }
+	s.Len(profile.RecentTweets, 1)
+	s.Equal(1, profile.RecentTweetsLength)
 
-// func TestUserUnfollow_FolloweeNotExist(t *testing.T) {
-// 	err := ResetAndSeed()
-// 	assert.NoError(t, err)
-
-// 	err = userService.UnfollowOtherUser(validUser.Id, notExistUser.Id)
-// 	assert.NoError(t, err)
-// }
-
-// func TestUserProfileWithRecentTweetsForFollower_Ok(t *testing.T) {
-// 	err := ResetAndSeed()
-// 	assert.NoError(t, err)
-// 	/*
-// 		validUser follow validUser2
-// 		validUser2 create 11 tweets
-// 		TODO validUser like tweet-1 (for interaction)
-// 		validUser see validUser2 profile
-// 	*/
-
-// 	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-// 	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
-
-// 	userService := user.NewService(ctx, cfg, userRepository)
-
-// 	tweetNumber := 11
-// 	for i := 0; i < tweetNumber; i++ {
-// 		tweet := models.Tweet{
-// 			UserId:  validUser2.Id,
-// 			Content: fmt.Sprintf("Tweet %d", i+1),
-// 		}
-// 		createdTweet, err := tweetRepository.CreateTweet(tweet)
-// 		assert.NoError(t, err)
-// 		assert.NotNil(t, createdTweet)
-// 	}
-
-// 	profile, err := userService.GetProfileByUsernameWithRecentTweetsForFollower(validUser2.Username, validUser.Id, 1)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, profile)
-
-// 	// first page
-// 	assert.Len(t, profile.RecentTweets, 10)
-// 	assert.Equal(t, 10, profile.RecentTweetsLength)
-
-// 	for i, tweet := range profile.RecentTweets {
-// 		assert.Equal(t, fmt.Sprintf("Tweet %d", tweetNumber-i), tweet.Content)
-// 	}
-
-// 	// second page
-// 	profile, err = userService.GetProfileByUsernameWithRecentTweetsForFollower(validUser2.Username, validUser.Id, 2)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, profile)
-
-// 	assert.Len(t, profile.RecentTweets, 1)
-// 	assert.Equal(t, 1, profile.RecentTweetsLength)
-
-// 	for _, tweet := range profile.RecentTweets {
-// 		assert.Equal(t, fmt.Sprintf("Tweet %d", 1), tweet.Content)
-// 	}
-// }
-
-// // from handler
-// // TODO func TestUserGetFeed
-
-// // TODO func GetRecentTweets
-// // TODO func GetUserById
+	for _, tweet := range profile.RecentTweets {
+		s.Equal(fmt.Sprintf("Tweet %d content", 1), tweet.Content)
+	}
+}
