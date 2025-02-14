@@ -14,7 +14,7 @@ import (
 )
 
 type AuthService interface {
-	CreateUser(user models.User) (*models.User, error)
+	Register(user models.User) (*models.User, error)
 	Login(email string, password string) (*models.User, error)
 }
 
@@ -47,7 +47,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 	}
 
 	// karena manggil layer di dalam, maka pakai message dan error dari layer dalam
-	newUser, err := h.authService.CreateUser(models.User{
+	newUser, err := h.authService.Register(models.User{
 		FullName: payload.FullName,
 		Username: payload.Username,
 		Email:    payload.Email,
@@ -57,16 +57,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		return utils.HandleErr(err)
 	}
 
-	newUserResponse := struct {
-		FullName string `json:"fullName"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
-	}{
-		FullName: newUser.FullName,
-		Username: newUser.Username,
-		Email:    newUser.Email,
-	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully. Please login", Data: newUserResponse})
+	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully. Please login", Data: newUser})
 	if err != nil {
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -99,22 +90,7 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 		return utils.HandleErr(err)
 	}
 
-	userResponse := struct {
-		Id           int    `json:"id"`
-		Username     string `json:"username"`
-		FullName     string `json:"fullName"`
-		Email        string `json:"email"`
-		ProfileImage string `json:"profileImage"`
-		Token        string `json:"token"`
-	}{
-		Id:           user.Id,
-		Username:     user.Username,
-		FullName:     user.FullName,
-		Email:        user.Email,
-		ProfileImage: user.ProfileImage,
-		Token:        user.Token,
-	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userResponse})
+	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: user})
 	if err != nil {
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}

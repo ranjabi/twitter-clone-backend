@@ -15,7 +15,7 @@ func (s *TestSuite) TestAuthRegister_Ok() {
 		Password: faker.Password(),
 	}
 
-	newUser, err := s.userService.CreateUser(testUser)
+	newUser, err := s.authService.Register(testUser)
 
 	s.NoError(err)
 	s.NotNil(newUser)
@@ -28,15 +28,15 @@ func (s *TestSuite) TestAuthRegister_EmailAlreadyExist() {
 		Password: faker.Password(),
 	}
 
-	_, err := s.userService.CreateUser(duplicateUser)
+	_, err := s.authService.Register(duplicateUser)
 
-	s.EqualError(err, errmsg.EMAIL_ALREADY_EXIST)
+	s.ErrorContains(err, errmsg.EMAIL_ALREADY_EXIST)
 	s.IsType(&models.AppError{}, err)
 	s.Equal(http.StatusConflict, err.(*models.AppError).GetCode())
 }
 
 func (s *TestSuite) TestAuthLogin_Ok() {
-	user, err := s.userService.CheckUserCredential(s.validUser.Email, "password")
+	user, err := s.authService.Login(s.validUser.Email, "password")
 
 	s.NoError(err)
 	s.NotNil(user)
@@ -46,17 +46,17 @@ func (s *TestSuite) TestAuthLogin_Ok() {
 }
 
 func (s *TestSuite) TestAuthLogin_UserNotFound() {
-	_, err := s.userService.CheckUserCredential(faker.Email(), faker.Password())
+	_, err := s.authService.Login(faker.Email(), faker.Password())
 
-	s.EqualError(err, errmsg.USER_NOT_FOUND)
+	s.ErrorContains(err, errmsg.USER_NOT_FOUND)
 	s.IsType(&models.AppError{}, err)
 	s.Equal(http.StatusNotFound, err.(*models.AppError).GetCode())
 }
 
 func (s *TestSuite) TestAuthLogin_WrongCredential() {
-	_, err := s.userService.CheckUserCredential(s.validUser.Email, faker.Password())
+	_, err := s.authService.Login(s.validUser.Email, faker.Password())
 
-	s.EqualError(err, errmsg.WRONG_CREDENTIAL)
+	s.ErrorContains(err, errmsg.WRONG_CREDENTIAL)
 	s.IsType(&models.AppError{}, err)
 	s.Equal(http.StatusUnauthorized, err.(*models.AppError).GetCode())
 }

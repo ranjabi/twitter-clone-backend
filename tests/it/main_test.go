@@ -8,6 +8,7 @@ import (
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/db"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/usecases/auth"
 	"twitter-clone-backend/usecases/tweet"
 	"twitter-clone-backend/usecases/user"
 
@@ -26,9 +27,10 @@ type TestSuite struct {
 	cfg            *config.Config
 	migrationsPath string
 
-	userRepository  user.UserRepository
+	userRepository  user.Repository
 	tweetRepository tweet.TweetRepository
 
+	authService  auth.Service
 	userService  user.Service
 	tweetService tweet.Service
 
@@ -57,7 +59,8 @@ func (s *TestSuite) SetupSuite() {
 	s.userRepository = user.NewRepository(s.ctx, s.pgConn, s.rdConn)
 	s.tweetRepository = tweet.NewRepository(s.ctx, s.pgConn, s.rdConn)
 
-	s.userService = user.NewService(s.ctx, s.cfg, s.userRepository)
+	s.authService = auth.NewService(s.ctx, s.cfg, s.userRepository)
+	s.userService = user.NewService(s.ctx, s.userRepository)
 	s.tweetService = tweet.NewService(s.tweetRepository, s.userRepository)
 
 	cwd, err := os.Getwd()
@@ -78,13 +81,12 @@ func (s *TestSuite) SetupTest() {
 	err := db.ApplyMigrationsAndSeed(s.ctx, s.cfg, actions, s.migrationsPath, "", true)
 	s.NoError(err)
 
-	s.validUser, err = s.userRepository.CreateUser(models.User{
-		Id:           1,
-		Email:        "test@example.com",
-		Username:     "testusername",
-		FullName:     "Test Full Name",
-		Password:     "$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i",
-		ProfileImage: "https://twitter-clone-tzjvdg.s3.ap-southeast-1.amazonaws.com/purple-1.png",
+	s.validUser, err = s.userRepository.Create(models.User{
+		Id:       1,
+		Email:    "test@example.com",
+		Username: "testusername",
+		FullName: "Test Full Name",
+		Password: "$2a$14$ZqZ1FmMgZNYvO.Q2rSht3.fGTX4IBq6VJMBoJ7bRXMAaEQk3pAP9i",
 	})
 	s.NoError(err)
 	s.NotNil(s.validUser)
@@ -103,9 +105,9 @@ func (s *TestSuite) SetupTest() {
 }
 
 func (s *TestSuite) TearDownTest() {
-	// actions := []string{"migrate.reset"}
-	// err := db.ApplyMigrationsAndSeed(s.ctx, s.cfg, actions, s.migrationsPath, "", true)
-	// s.NoError(err)
+	actions := []string{"migrate.reset"}
+	err := db.ApplyMigrationsAndSeed(s.ctx, s.cfg, actions, s.migrationsPath, "", true)
+	s.NoError(err)
 }
 
 var (

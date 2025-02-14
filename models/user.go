@@ -1,17 +1,19 @@
 package models
 
+import "github.com/jackc/pgx/v5/pgtype"
+
 type User struct {
-	Id                 int     `json:"id"`
-	Username           string  `json:"username"`
-	FullName           string  `json:"fullName"`
-	Email              string  `json:"email"`
-	ProfileImage       string  `json:"profileImage"`
-	FollowerCount      int     `json:"followerCount"`
-	FollowingCount     int     `json:"followingCount"`
-	RecentTweetsLength int     `json:"tweetsLength"`
-	RecentTweets       []Tweet `json:"tweets"`
-	Password           string  `json:"password"`
-	Token              string  `json:"token"`
-	IsFollowed         bool    `json:"isFollowed"`
-	NextPageId         *int    `json:"nextPageId"`
+	Id                 int         `json:"id" db:"user_id"`
+	Username           string      `json:"username" db:"user_username"`
+	FullName           string      `json:"fullName" db:"user_full_name"`
+	Email              string      `json:"email" db:"user_email"`
+	Password           string      `json:"-" db:"user_password"`
+	ProfileImage       pgtype.Text `json:"profileImage" db:"user_profile_image"`
+	FollowerCount      int         `json:"followerCount" db:"user_follower_count"`
+	FollowingCount     int         `json:"followingCount" db:"user_following_count"`
+	RecentTweetsLength int         `json:"tweetsLength" db:"-"`
+	RecentTweets       []Tweet     `json:"tweets" db:"-"`
+	Token              string      `json:"token" db:"-"`
+	IsFollowed         bool        `json:"isFollowed" db:"-"`
+	NextPageId         *int        `json:"nextPageId" db:"-"`
 }

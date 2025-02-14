@@ -10,7 +10,7 @@ import (
 	"twitter-clone-backend/usecases/user"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,7 +24,7 @@ func NewService(ctx context.Context, cfg *config.Config, userRepository user.Rep
 	return Service{ctx, cfg, userRepository}
 }
 
-func (s Service) CreateUser(user models.User) (*models.User, error) {
+func (s Service) Register(user models.User) (*models.User, error) {
 	isUserExist, err := s.userRepository.IsUserExistByEmail(user.Email)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
@@ -39,7 +39,7 @@ func (s Service) CreateUser(user models.User) (*models.User, error) {
 	}
 
 	user.Password = string(hashedPassword)
-	newUser, err := s.userRepository.CreateUser(user)
+	newUser, err := s.userRepository.Create(user)
 	if err != nil {
 		return nil, &models.AppError{Err: err, Message: "Failed to create account"}
 	}
@@ -51,7 +51,7 @@ func (s Service) Login(email string, password string) (*models.User, error) {
 	user, err := s.userRepository.FindByEmail(email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, &models.AppError{Err: err, Message: "User is not exist", Code: http.StatusNotFound}
+			return nil, &models.AppError{Err: err, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
 		}
 
 		return nil, err
