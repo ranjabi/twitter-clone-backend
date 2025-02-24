@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"twitter-clone-backend/constants"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/internal/constants"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
 
