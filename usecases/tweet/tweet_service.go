@@ -5,6 +5,8 @@ import (
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/usecases/user"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Service struct {
@@ -54,19 +56,14 @@ func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 }
 
 func (s *Service) DeleteTweet(userId int, tweetId int) error {
-	isTweetExist, err := s.tweetRepository.IsTweetExistById(tweetId)
-	if err != nil {
-		return &models.AppError{Err: err, Message: "Failed to check tweet"}
-	}
-	if !isTweetExist {
-		return &models.AppError{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}
-	}
-
 	if err := s.tweetRepository.DeleteTweet(tweetId); err != nil {
+		if err == pgx.ErrNoRows {
+			return &models.AppError{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}
+		}
 		return &models.AppError{Err: err, Message: "Failed to delete tweet"}
 	}
 
-	err = s.userRepository.DeleteUserRecentTweetsCache(userId)
+	err := s.userRepository.DeleteUserRecentTweetsCache(userId)
 	if err != nil {
 		return err
 	}

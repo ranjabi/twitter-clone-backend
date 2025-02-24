@@ -44,6 +44,8 @@ func (s *TestSuite) TestUserFollow_AlreadyFollowed() {
 	// Test
 	err = s.userService.FollowOtherUser(s.validUser.Id, s.validUser2.Id)
 	s.NoError(err)
+
+	// After
 	err = s.userService.FollowOtherUser(s.validUser.Id, s.validUser2.Id)
 	s.NoError(err)
 }

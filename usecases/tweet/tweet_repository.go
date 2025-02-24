@@ -70,15 +70,15 @@ func (r *TweetRepository) IsTweetExistById(id int) (bool, error) {
 }
 
 func (r *TweetRepository) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
-	var updatedTweet models.Tweet
-	query := `UPDATE tweets SET content=@content, modified_at=@modifiedAt WHERE id=@tweetId RETURNING id, content, modified_at, user_id`
+	query := `UPDATE tweets SET content=@content, modified_at=@modifiedAt WHERE id=@tweetId RETURNING id as tweet_id, content as tweet_content, modified_at as tweet_modified_at, user_id as tweet_user_id`
 	args := pgx.NamedArgs{
 		"tweetId":    tweet.Id,
 		"content":    tweet.Content,
 		"modifiedAt": time.Now(),
 	}
 
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&updatedTweet.Id, &updatedTweet.Content, &updatedTweet.ModifiedAt, &updatedTweet.UserId)
+	rows, _ := r.pgConn.Query(r.ctx, query, args)
+	updatedTweet, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[models.Tweet])
 	if err != nil {
 		return nil, err
 	}
