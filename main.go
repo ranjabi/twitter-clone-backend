@@ -68,12 +68,13 @@ func main() {
 	tweetService := tweet.NewService(tweetRepository, userRepository)
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
+	authHandler := auth.NewHandler(authService, validate)
 	userHandler := user.NewHandler(userService, authService, validate)
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// use mux.Handle so the error will goes into AppHandler
-	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
-	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
+	mux.Handle("POST 	/v2/register", authHandler.HandleRegisterUser)
+	mux.Handle("POST 	/v2/login", authHandler.HandleLoginUser)
 
 	mux.Handle("POST 	/v2/users/{id}/follow", userHandler.HandleFollowOtherUser)
 	mux.Handle("POST 	/v2/users/{id}/unfollow", userHandler.HandleUnfollowOtherUser)
