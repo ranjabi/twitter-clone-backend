@@ -16,7 +16,6 @@ import (
 
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/db"
-	"twitter-clone-backend/healthcheck"
 	"twitter-clone-backend/middleware"
 	"twitter-clone-backend/usecases/auth"
 	"twitter-clone-backend/usecases/tweet"
@@ -73,7 +72,6 @@ func main() {
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// use mux.Handle so the error will goes into AppHandler
-	mux.Handle("GET		/v2/health-check", healthcheck.HealthCheck(pgConn, rdConn, ctx))
 	mux.Handle("POST 	/v2/register", userHandler.HandleRegisterUser)
 	mux.Handle("POST 	/v2/login", userHandler.HandleLoginUser)
 

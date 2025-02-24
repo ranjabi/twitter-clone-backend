@@ -1,10 +1,14 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"twitter-clone-backend/handlers"
+	"strconv"
+	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/utils"
 )
 
 type AppMux struct {
@@ -49,7 +53,7 @@ func (mux *AppMux) Handle(pattern string, handler any) {
 
 	switch h := handler.(type) {
 	case func(http.ResponseWriter, *http.Request) *models.AppError:
-		wrappedHandler = handlers.AppHandler(h)
+		wrappedHandler = AppHandler(h)
 	case http.Handler:
 		wrappedHandler = h
 	default:
@@ -57,4 +61,27 @@ func (mux *AppMux) Handle(pattern string, handler any) {
 	}
 
 	mux.ServeMux.Handle(pattern, wrappedHandler)
+}
+
+type AppHandler func(http.ResponseWriter, *http.Request) *models.AppError
+
+// TODO: confirm this by looking at error trace when err is nul at ServiceError <--- The ServeHTTP method called by the appHandler function and displays the returned error
+func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if e := fn(w, r); e != nil {
+		if e.Code == 0 {
+			e.Code = http.StatusInternalServerError
+		}
+
+		fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), utils.RED), utils.ColorLog(http.StatusText(e.Code), utils.RED))
+		fmt.Println(utils.ColorLog(e.Error(), utils.RED))
+
+		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
+		if err != nil {
+			http.Error(w, errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, http.StatusInternalServerError)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(e.Code)
+		w.Write(res)
+	}
 }
