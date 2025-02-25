@@ -7,6 +7,7 @@ import (
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/usecases/user"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -47,7 +48,7 @@ func (s Service) Register(user models.User) (*models.User, error) {
 	return newUser, nil
 }
 
-func (s Service) Login(email string, password string) (*models.User, error) {
+func (s Service) Login(email string, password string) (*types.User, error) {
 	user, err := s.userRepository.FindByEmail(email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

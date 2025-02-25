@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -296,27 +297,37 @@ func (r *Repository) FindByUsername(username string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *Repository) FindByEmail(email string) (*models.User, error) {
-	var user models.User
+func (r *Repository) FindByEmail(email string) (*types.User, error) {
+	var user types.User
 	query := `
 		SELECT 
-			id as user_id, 
-			username as user_username, 
-			full_name as user_full_name, 
-			email as user_email, 
-			password as user_password, 
-			profile_image as user_profile_image 
+			id, 
+			username, 
+			full_name, 
+			email, 
+			password, 
+			profile_image,
+			follower_count,
+			following_count
 		FROM 
 			users 
 		WHERE 
-			email=@email
+			email = @email
 	`
 	args := pgx.NamedArgs{
 		"email": email,
 	}
 
-	rows, _ := r.pgConn.Query(r.ctx, query, args)
-	user, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[models.User])
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(
+		&user.Id,
+		&user.Username,
+		&user.FullName,
+		&user.Email,
+		&user.Password,
+		&user.ProfileImage,
+		&user.FollowerCount,
+		&user.FollowingCount,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -39,7 +40,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 	}
 
 	// karena manggil layer di dalam, maka pakai message dan error dari layer dalam
-	newUser, err := h.authService.Register(models.User{
+	_, err := h.authService.Register(models.User{
 		FullName: payload.FullName,
 		Username: payload.Username,
 		Email:    payload.Email,
@@ -49,7 +50,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully. Please login", Data: newUser})
+	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully. Please login"})
 	if err != nil {
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -82,7 +83,14 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: user})
+	userResponse := types.LoginResponse{
+		Id:       user.Id,
+		Username: user.Username,
+		FullName: user.FullName,
+		Token:    user.Token,
+	}
+
+	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userResponse})
 	if err != nil {
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -14,7 +15,7 @@ import (
 
 type AuthService interface {
 	Register(user models.User) (*models.User, error)
-	Login(email string, password string) (*models.User, error)
+	Login(email string, password string) (*types.User, error)
 }
 
 type Handler struct {

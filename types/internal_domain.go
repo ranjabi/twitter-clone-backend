@@ -1,11 +1,23 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
+)
 
 type User struct {
-	Id       int
-	Username string
-	Email    string
+	Id                 int
+	Username           string
+	FullName           string
+	Email              string
+	Password           string
+	Token              string
+	ProfileImage       pgtype.Text
+	FollowerCount      int
+	FollowingCount     int
+	RecentTweetsLength int
+	RecentTweets       []Tweet
 }
 
 type Tweet struct {

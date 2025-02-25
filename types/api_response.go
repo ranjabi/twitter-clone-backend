@@ -2,6 +2,13 @@ package types
 
 import "time"
 
+type LoginResponse struct {
+	Id       int    `json:"id"`
+	Username string `json:"username"`
+	FullName string `json:"fullName"`
+	Token    string `json:"token"`
+}
+
 type UserResponse struct {
 	Id       int    `json:"id"`
 	Username string `json:"username"`
