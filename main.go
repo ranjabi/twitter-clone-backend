@@ -69,7 +69,7 @@ func main() {
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	authHandler := auth.NewHandler(authService, validate)
-	userHandler := user.NewHandler(userService, authService, validate)
+	userHandler := user.NewHandler(userService, validate)
 	tweetHandler := tweet.NewHandler(tweetService)
 
 	// use mux.Handle so the error will goes into AppHandler

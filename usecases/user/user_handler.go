@@ -6,26 +6,19 @@ import (
 	"strconv"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
-	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-type AuthService interface {
-	Register(user models.User) (*models.User, error)
-	Login(email string, password string) (*types.User, error)
-}
-
 type Handler struct {
 	userService Service
-	authService AuthService
 	validate    *validator.Validate
 }
 
-func NewHandler(userService Service, authService AuthService, validate *validator.Validate) Handler {
-	return Handler{userService, authService, validate}
+func NewHandler(userService Service, validate *validator.Validate) Handler {
+	return Handler{userService, validate}
 }
 
 func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
