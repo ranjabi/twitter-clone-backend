@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/usecases/user"
 
 	"github.com/jackc/pgx/v5"
@@ -30,6 +31,18 @@ func (s *Service) Create(tweet models.Tweet) (*models.Tweet, error) {
 	}
 
 	return newTweet, nil
+}
+
+func (s *Service) FindById(id int) (*types.TweetWithUser, error) {
+	tweet, err := s.tweetRepository.FindByIdV2(id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &models.AppError{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}
+		}
+		return nil, err
+	}
+
+	return tweet, nil
 }
 
 func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {

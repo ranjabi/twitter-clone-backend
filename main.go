@@ -82,6 +82,7 @@ func main() {
 	mux.Handle("GET		/v2/users/{id}/feed", userHandler.HandleGetFeed)
 
 	mux.Handle("POST 	/v2/tweets", tweetHandler.HandleCreateTweet)
+	mux.Handle("GET 	/v2/tweets/{id}", tweetHandler.HandleGetTweet)
 	mux.Handle("PUT 	/v2/tweets", tweetHandler.HandleUpdateTweet)
 	mux.Handle("DELETE 	/v2/tweets/{id}", tweetHandler.HandleDeleteTweet)
 	mux.Handle("POST 	/v2/tweets/{id}/like", tweetHandler.HandleLikeTweet)

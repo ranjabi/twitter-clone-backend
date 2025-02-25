@@ -8,6 +8,7 @@ import (
 	"time"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -59,6 +60,41 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		UserId:    newTweet.UserId,
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet created successfully", Data: newTweetResponse})
+	if err != nil {
+		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+
+	return nil
+}
+
+func (h Handler) HandleGetTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+	tweetIdStr := r.PathValue("id")
+	tweetId, err := strconv.Atoi(tweetIdStr)
+	if err != nil {
+		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+	}
+
+	tweet, err := h.service.FindById(tweetId)
+	if err != nil {
+		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
+	}
+
+	tweetWithUserResponse := types.TweetWithUserResponse{
+		Id:        tweet.Id,
+		Content:   tweet.Content,
+		CreatedAt: tweet.CreatedAt,
+		LikeCount: tweet.LikeCount,
+		User: types.UserResponse{
+			Id:       tweet.User.Id,
+			Username: tweet.User.Username,
+			Email:    tweet.User.Email,
+		},
+	}
+
+	res, err := json.Marshal(models.SuccessResponse{Data: tweetWithUserResponse})
 	if err != nil {
 		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}

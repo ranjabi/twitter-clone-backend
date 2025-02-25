@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -47,6 +48,41 @@ func (r *TweetRepository) FindById(id int) (*models.Tweet, error) {
 	}
 
 	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&tweet.Id, &tweet.Content, &tweet.CreatedAt, &tweet.UserId, &tweet.LikeCount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tweet, nil
+}
+
+func (r *TweetRepository) FindByIdV2(id int) (*types.TweetWithUser, error) {
+	var tweet types.TweetWithUser
+	query := `
+		SELECT 
+			t.id, 
+			content, 
+			t.created_at, 
+			like_count,
+			u.id, 
+			username
+		FROM 
+			tweets t
+		INNER JOIN
+			users u ON t.user_id = u.id
+		WHERE 
+			t.id = @id`
+	args := pgx.NamedArgs{
+		"id": id,
+	}
+
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(
+		&tweet.Id,
+		&tweet.Content,
+		&tweet.CreatedAt,
+		&tweet.LikeCount,
+		&tweet.User.Id,
+		&tweet.User.Username,
+	)
 	if err != nil {
 		return nil, err
 	}
