@@ -2,16 +2,18 @@ package it
 
 import (
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/jackc/pgx/v5"
 )
 
 func (s *TestSuite) TestTweetCreate_Ok() {
-	testTweet := models.Tweet{
+	testTweet := types.Tweet{
 		Content: faker.Sentence(),
-		UserId:  s.validUser.Id,
+		User: types.User{
+			Id: s.validUser.Id,
+		},
 	}
 
 	newTweet, err := s.tweetService.Create(testTweet)
@@ -19,7 +21,7 @@ func (s *TestSuite) TestTweetCreate_Ok() {
 	s.NoError(err)
 	s.NotNil(newTweet)
 	s.Equal(testTweet.Content, newTweet.Content)
-	s.Equal(testTweet.UserId, newTweet.UserId)
+	s.Equal(testTweet.User.Id, newTweet.User.Id)
 }
 
 func (s *TestSuite) TestTweetUpdate_Ok() {

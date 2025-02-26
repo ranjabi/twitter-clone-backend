@@ -25,6 +25,7 @@ type Tweet struct {
 	Content   string
 	CreatedAt time.Time
 	LikeCount int
+	User      User
 }
 
 type TweetWithUser struct {

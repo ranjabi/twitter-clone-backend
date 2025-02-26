@@ -40,6 +40,37 @@ func (r *TweetRepository) Create(tweet models.Tweet) (*models.Tweet, error) {
 	return &newTweet, nil
 }
 
+func (r *TweetRepository) CreateV2(tweet types.Tweet) (*types.Tweet, error) {
+	var newTweet types.Tweet
+	query := `
+		INSERT INTO 
+			tweets (content, user_id)
+		VALUES 
+			(@content, @user_id)
+		RETURNING 
+			id, 
+			content, 
+			created_at, 
+			user_id
+	`
+	args := pgx.NamedArgs{
+		"content": tweet.Content,
+		"user_id": tweet.User.Id,
+	}
+
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(
+		&newTweet.Id,
+		&newTweet.Content,
+		&newTweet.CreatedAt,
+		&newTweet.User.Id,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &newTweet, nil
+}
+
 func (r *TweetRepository) FindById(id int) (*models.Tweet, error) {
 	var tweet models.Tweet
 	query := `SELECT id, content, created_at, user_id, like_count from tweets WHERE id = @id`

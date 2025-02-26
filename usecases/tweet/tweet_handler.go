@@ -47,19 +47,21 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *app.
 		}
 	}
 
-	newTweet, err := h.service.Create(models.Tweet{
+	newTweet, err := h.service.Create(types.Tweet{
 		Content: payload.Content,
-		UserId:  int(userId),
+		User: types.User{
+			Id: int(userId),
+		},
 	})
 	if err != nil {
 		return utils.HandleErr(err)
 	}
 
-	newTweetResponse := models.Tweet{
+	newTweetResponse := types.Tweet{
 		Id:        newTweet.Id,
 		Content:   newTweet.Content,
 		CreatedAt: newTweet.CreatedAt,
-		UserId:    newTweet.UserId,
+		User:      newTweet.User,
 	}
 
 	if err := response.Json(w, http.StatusCreated, response.Payload{Data: newTweetResponse}); err != nil {

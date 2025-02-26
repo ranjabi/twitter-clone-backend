@@ -20,13 +20,13 @@ func NewService(tweetRepository TweetRepository, userRepository user.Repository)
 	return Service{tweetRepository: tweetRepository, userRepository: userRepository}
 }
 
-func (s *Service) Create(tweet models.Tweet) (*models.Tweet, error) {
-	newTweet, err := s.tweetRepository.Create(tweet)
+func (s *Service) Create(tweet types.Tweet) (*types.Tweet, error) {
+	newTweet, err := s.tweetRepository.CreateV2(tweet)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to create tweet"}
 	}
 
-	err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.UserId)
+	err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.User.Id)
 	if err != nil {
 		return nil, err
 	}
