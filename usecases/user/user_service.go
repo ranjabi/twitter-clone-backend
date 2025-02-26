@@ -7,7 +7,7 @@ import (
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errcode"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/jackc/pgx/v5"
@@ -23,7 +23,7 @@ func NewService(ctx context.Context, userRepository Repository) Service {
 	return Service{ctx, userRepository}
 }
 
-func (s Service) FindById(id int) (*models.User, error) {
+func (s Service) FindById(id int) (*types.User, error) {
 	user, err := s.userRepository.FindById(id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -35,7 +35,7 @@ func (s Service) FindById(id int) (*models.User, error) {
 	return user, nil
 }
 
-func (s *Service) GetRecentTweets(userId int, page int) ([]models.Tweet, error) {
+func (s *Service) GetRecentTweets(userId int, page int) ([]types.Tweet, error) {
 	lastTenTweets, err := s.userRepository.GetRecentTweets(userId, page)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to get recent tweets"}
@@ -44,7 +44,7 @@ func (s *Service) GetRecentTweets(userId int, page int) ([]models.Tweet, error) 
 	return lastTenTweets, nil
 }
 
-func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string, followerId int, page int) (*models.User, error) {
+func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string, followerId int, page int) (*types.User, error) {
 	user, err := s.userRepository.FindByUsername(username)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string
 
 	if userCacheStr != "" {
 		// $ ada
-		var userCache []models.User
+		var userCache []types.User
 		err = json.Unmarshal([]byte(userCacheStr), &userCache)
 		if err != nil {
 			return nil, err
@@ -80,7 +80,7 @@ func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string
 		if page == 1 {
 			if userRecentTweetsCacheStr != "" {
 				// $.recentTweets ada
-				var userRecentTweetsCache [][]models.Tweet
+				var userRecentTweetsCache [][]types.Tweet
 				err = json.Unmarshal([]byte(userRecentTweetsCacheStr), &userRecentTweetsCache)
 				if err != nil {
 					return nil, err
@@ -173,7 +173,7 @@ func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string
 	return user, nil
 }
 
-func (s Service) GetFeed(id int, email string, page int) (*models.Feed, error) {
+func (s Service) GetFeed(id int, email string, page int) (*types.Feed, error) {
 	isUserExist, err := s.userRepository.IsUserExistByEmail(email)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to check user account"}

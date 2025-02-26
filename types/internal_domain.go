@@ -18,6 +18,8 @@ type User struct {
 	FollowingCount     int
 	RecentTweetsLength int
 	RecentTweets       []Tweet
+	IsFollowed         bool
+	NextPageId         *int
 }
 
 type Tweet struct {
@@ -27,4 +29,15 @@ type Tweet struct {
 	ModifiedAt time.Time
 	LikeCount  int
 	User       User
+	IsLiked    bool
+}
+
+type Feed struct {
+	Tweets     []Tweet
+	NextPageId *int
+}
+
+type TweetInteraction struct {
+	TweetId int
+	IsLiked bool
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"twitter-clone-backend/models"
 	"twitter-clone-backend/types"
 
 	"github.com/jackc/pgx/v5"
@@ -85,7 +84,7 @@ func (r *Repository) GetUserCache(id int) (string, error) {
 	return res, nil
 }
 
-func (r *Repository) SetUserCache(user *models.User) (string, error) {
+func (r *Repository) SetUserCache(user *types.User) (string, error) {
 	res, err := r.rdConn.JSONSet(r.ctx, getUserProfileCacheKey(user.Id), userProfilePath, user).Result()
 	if err != nil {
 		return "", err
@@ -107,7 +106,7 @@ func (r *Repository) GetUserRecentTweetsCache(id int) (string, error) {
 	return res, nil
 }
 
-func (r *Repository) SetUserRecentTweetsCache(user *models.User, tweets []models.Tweet) (string, error) {
+func (r *Repository) SetUserRecentTweetsCache(user *types.User, tweets []types.Tweet) (string, error) {
 	res, err := r.rdConn.JSONSet(r.ctx, getRecentTweetsCacheKey(user.Id), userProfileRecentTWeetsPath, tweets).Result()
 	if err != nil {
 		return "", err
@@ -129,7 +128,7 @@ func (r *Repository) DeleteUserRecentTweetsCache(id int) error {
 	return nil
 }
 
-func (r *Repository) GetFeed(id int, page int) (*models.Feed, error) {
+func (r *Repository) GetFeed(id int, page int) (*types.Feed, error) {
 	limit := 10
 	offset := (page - 1) * limit
 
@@ -155,7 +154,7 @@ func (r *Repository) GetFeed(id int, page int) (*models.Feed, error) {
 		return nil, err
 	}
 
-	tweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Tweet])
+	tweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Tweet])
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +167,7 @@ func (r *Repository) GetFeed(id int, page int) (*models.Feed, error) {
 		nextPageId = &nextPage
 	}
 
-	feed := models.Feed{
+	feed := types.Feed{
 		Tweets:     tweets,
 		NextPageId: nextPageId,
 	}
@@ -176,7 +175,7 @@ func (r *Repository) GetFeed(id int, page int) (*models.Feed, error) {
 	return &feed, nil
 }
 
-func (r *Repository) GetRecentTweets(userId int, page int) ([]models.Tweet, error) {
+func (r *Repository) GetRecentTweets(userId int, page int) ([]types.Tweet, error) {
 	limit := 10
 	offset := (page - 1) * limit
 	query := `
@@ -210,7 +209,7 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]models.Tweet, erro
 		return nil, err
 	}
 
-	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[models.Tweet])
+	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[types.Tweet])
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +217,7 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]models.Tweet, erro
 	return lastTenTweets, nil
 }
 
-func (r *Repository) GetTweetsInteractions(userId int, tweetsId []int) ([]models.TweetInteraction, error) {
+func (r *Repository) GetTweetsInteractions(userId int, tweetsId []int) ([]types.TweetInteraction, error) {
 	query := `
 		SELECT tweet_id as tweet_id, 
 			CASE WHEN user_id = @userId THEN TRUE ELSE FALSE END as is_liked
@@ -235,7 +234,7 @@ func (r *Repository) GetTweetsInteractions(userId int, tweetsId []int) ([]models
 		return nil, err
 	}
 
-	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.TweetInteraction])
+	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.TweetInteraction])
 	if err != nil {
 		return nil, err
 	}
@@ -258,8 +257,8 @@ func (r *Repository) IsUserExistByEmail(email string) (bool, error) {
 	return isUserExist, nil
 }
 
-func (r *Repository) FindById(id int) (*models.User, error) {
-	var user models.User
+func (r *Repository) FindById(id int) (*types.User, error) {
+	var user types.User
 	query := `SELECT id, username, email, password, follower_count, following_count FROM users WHERE id=@id`
 	args := pgx.NamedArgs{
 		"id": id,
@@ -273,8 +272,8 @@ func (r *Repository) FindById(id int) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *Repository) FindByUsername(username string) (*models.User, error) {
-	var user models.User
+func (r *Repository) FindByUsername(username string) (*types.User, error) {
+	var user types.User
 	query := `
 		SELECT 
 			id AS user_id,
@@ -293,7 +292,7 @@ func (r *Repository) FindByUsername(username string) (*models.User, error) {
 	}
 
 	rows, _ := r.pgConn.Query(r.ctx, query, args)
-	user, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[models.User])
+	user, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.User])
 	if err != nil {
 		return nil, err
 	}
