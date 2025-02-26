@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
 	"twitter-clone-backend/types"
 	"twitter-clone-backend/usecases/user"
 
@@ -34,7 +33,7 @@ func (s *Service) Create(tweet types.Tweet) (*types.Tweet, error) {
 	return newTweet, nil
 }
 
-func (s *Service) FindById(id int) (*types.TweetWithUser, error) {
+func (s *Service) FindById(id int) (*types.Tweet, error) {
 	tweet, err := s.tweetRepository.FindByIdV2(id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -46,7 +45,7 @@ func (s *Service) FindById(id int) (*types.TweetWithUser, error) {
 	return tweet, nil
 }
 
-func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
+func (s *Service) UpdateTweet(tweet types.Tweet) (*types.Tweet, error) {
 	isTweetExist, err := s.tweetRepository.IsTweetExistById(tweet.Id)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to check tweet"}
@@ -60,7 +59,7 @@ func (s *Service) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
 		return nil, &app.Error{Err: err, Message: "Failed to update tweet"}
 	}
 
-	err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.UserId)
+	err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.User.Id)
 	if err != nil {
 		// TODO: what is the output if it goes into this?
 		return nil, err

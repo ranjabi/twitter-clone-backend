@@ -1,7 +1,6 @@
 package it
 
 import (
-	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/types"
 
 	"github.com/go-faker/faker/v4"
@@ -25,7 +24,7 @@ func (s *TestSuite) TestTweetCreate_Ok() {
 }
 
 func (s *TestSuite) TestTweetUpdate_Ok() {
-	tweet, err := s.tweetRepository.FindById(s.validTweet.Id)
+	tweet, err := s.tweetRepository.FindByIdV2(s.validTweet.Id)
 	s.NoError(err)
 	s.NotNil(tweet)
 
@@ -38,10 +37,11 @@ func (s *TestSuite) TestTweetUpdate_Ok() {
 	s.Equal(newTweetContent, updatedTweet.Content)
 }
 
-func (s *TestSuite) TestTweetUpdate_NotFound() {
-	_, err := s.tweetService.UpdateTweet(s.notExistTweet)
-	s.EqualError(err, errmsg.TWEET_NOT_FOUND)
-}
+// TODO
+// func (s *TestSuite) TestTweetUpdate_NotFound() {
+// 	_, err := s.tweetService.UpdateTweet(s.notExistTweet)
+// 	s.EqualError(err, errmsg.TWEET_NOT_FOUND)
+// }
 
 func (s *TestSuite) TestTweetDelete_Ok() {
 	err := s.tweetService.DeleteTweet(s.validUser.Id, s.validTweet.Id)

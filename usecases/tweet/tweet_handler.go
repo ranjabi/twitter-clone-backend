@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
 	"twitter-clone-backend/response"
 	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var validate *validator.Validate
@@ -126,7 +123,7 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *app.
 
 	// not propagate because if db error we can't track it since repo send
 	// errors.New() insead of its error
-	newTweet, err := h.service.UpdateTweet(models.Tweet{
+	newTweet, err := h.service.UpdateTweet(types.Tweet{
 		Id:      payload.TweetId,
 		Content: payload.Content,
 	})
@@ -134,18 +131,14 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *app.
 		return utils.HandleErr(err)
 	}
 
-	newTweetResponse := struct {
-		Id         int              `json:"id"`
-		Content    string           `json:"content"`
-		CreatedAt  time.Time        `json:"createdAt"`
-		ModifiedAt pgtype.Timestamp `json:"modifiedAt"`
-		UserId     int              `json:"userId"`
-	}{
-		Id:         newTweet.Id,
-		Content:    newTweet.Content,
-		CreatedAt:  newTweet.CreatedAt,
-		ModifiedAt: newTweet.ModifiedAt,
-		UserId:     newTweet.UserId,
+	newTweetResponse := types.TweetWithUserResponse{
+		Id:        newTweet.Id,
+		Content:   newTweet.Content,
+		CreatedAt: newTweet.CreatedAt,
+		LikeCount: newTweet.LikeCount,
+		User: types.UserResponse{
+			Id: newTweet.User.Id,
+		},
 	}
 
 	if err := response.Json(w, http.StatusOK, response.Payload{Data: newTweetResponse}); err != nil {

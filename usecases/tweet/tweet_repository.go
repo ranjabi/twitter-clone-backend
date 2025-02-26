@@ -86,8 +86,8 @@ func (r *TweetRepository) FindById(id int) (*models.Tweet, error) {
 	return &tweet, nil
 }
 
-func (r *TweetRepository) FindByIdV2(id int) (*types.TweetWithUser, error) {
-	var tweet types.TweetWithUser
+func (r *TweetRepository) FindByIdV2(id int) (*types.Tweet, error) {
+	var tweet types.Tweet
 	query := `
 		SELECT 
 			t.id, 
@@ -136,16 +136,33 @@ func (r *TweetRepository) IsTweetExistById(id int) (bool, error) {
 	return isTweetExist, nil
 }
 
-func (r *TweetRepository) UpdateTweet(tweet models.Tweet) (*models.Tweet, error) {
-	query := `UPDATE tweets SET content=@content, modified_at=@modifiedAt WHERE id=@tweetId RETURNING id as tweet_id, content as tweet_content, modified_at as tweet_modified_at, user_id as tweet_user_id`
+func (r *TweetRepository) UpdateTweet(tweet types.Tweet) (*types.Tweet, error) {
+	query := `
+		UPDATE 
+			tweets 
+		SET 
+			content=@content, 
+			modified_at = @modifiedAt 
+		WHERE 
+			id = @tweetId 
+		RETURNING 
+			id, 
+			content, 
+			modified_at, 
+			user_id
+	`
 	args := pgx.NamedArgs{
 		"tweetId":    tweet.Id,
 		"content":    tweet.Content,
 		"modifiedAt": time.Now(),
 	}
 
-	rows, _ := r.pgConn.Query(r.ctx, query, args)
-	updatedTweet, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[models.Tweet])
+	var updatedTweet types.Tweet
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(
+		&updatedTweet.Id,
+		&updatedTweet.Content,
+		&updatedTweet.ModifiedAt,
+	)
 	if err != nil {
 		return nil, err
 	}

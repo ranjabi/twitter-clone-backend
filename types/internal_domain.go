@@ -21,14 +21,10 @@ type User struct {
 }
 
 type Tweet struct {
-	Id        int
-	Content   string
-	CreatedAt time.Time
-	LikeCount int
-	User      User
-}
-
-type TweetWithUser struct {
-	Tweet
-	User User
+	Id         int
+	Content    string
+	CreatedAt  time.Time
+	ModifiedAt time.Time
+	LikeCount  int
+	User       User
 }
