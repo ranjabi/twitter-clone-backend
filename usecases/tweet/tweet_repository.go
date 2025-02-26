@@ -126,6 +126,7 @@ func (r *TweetRepository) UpdateTweet(tweet types.Tweet) (*types.Tweet, error) {
 		&updatedTweet.Id,
 		&updatedTweet.Content,
 		&updatedTweet.ModifiedAt,
+		&updatedTweet.User.Id,
 	)
 	if err != nil {
 		return nil, err

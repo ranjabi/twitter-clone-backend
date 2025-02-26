@@ -133,16 +133,36 @@ func (r *Repository) GetFeed(id int, page int) (*types.Feed, error) {
 	offset := (page - 1) * limit
 
 	query := `
-		SELECT t.*, u.full_name as full_name, u.username as username, u.profile_image as profile_image,
-			CASE WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked
-		FROM tweets t
-		LEFT JOIN follows f ON t.user_id = f.following_id
-		LEFT JOIN likes tl ON t.id = tl.tweet_id AND tl.user_id = @id
-		INNER JOIN users u ON u.id = t.user_id
-		WHERE f.follower_id = @id OR t.user_id = @id
-		ORDER BY t.created_at DESC, t.user_id DESC
-		LIMIT @limit
-		OFFSET @offset
+		SELECT 
+			t.id,
+			t.content,
+			t.created_at,
+			t.modified_at,
+			t.like_count,
+			CASE 
+				WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE 
+			END AS is_liked
+
+			u.id,
+			u.username,
+			u.full_name,
+			u.profile_image
+		FROM 
+			tweets t
+		LEFT JOIN 
+			follows f ON t.user_id = f.following_id
+		LEFT JOIN 
+			likes tl ON t.id = tl.tweet_id AND tl.user_id = @id
+		INNER JOIN 
+			users u ON u.id = t.user_id
+		WHERE 
+			f.follower_id = @id OR t.user_id = @id
+		ORDER BY 
+			t.created_at DESC, t.user_id DESC
+		LIMIT 
+			@limit
+		OFFSET 
+			@offset
 	`
 	args := pgx.NamedArgs{
 		"id":     id,
@@ -154,8 +174,31 @@ func (r *Repository) GetFeed(id int, page int) (*types.Feed, error) {
 		return nil, err
 	}
 
-	tweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.Tweet])
-	if err != nil {
+	var tweets []types.Tweet
+	for rows.Next() {
+		var tweet types.Tweet
+		var user types.User
+
+		err := rows.Scan(
+			&tweet.Id,
+			&tweet.Content,
+			&tweet.CreatedAt,
+			&tweet.ModifiedAt,
+			&tweet.LikeCount,
+			&tweet.IsLiked,
+			&user.Id,
+			&user.Username,
+			&user.FullName,
+			&user.ProfileImage,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		tweet.User = user
+		tweets = append(tweets, tweet)
+	}
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -180,24 +223,29 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]types.Tweet, error
 	offset := (page - 1) * limit
 	query := `
 		SELECT 
-			t.id AS tweet_id,
-			t.content AS tweet_content,
-			t.created_at AS tweet_created_at,
-			t.modified_at AS tweet_modified_at,
-			t.like_count AS tweet_like_count,
-			t.user_id AS tweet_user_id,
-			FALSE AS tweet_is_liked,
+			t.id,
+			t.content,
+			t.created_at,
+			t.modified_at,
+			t.like_count,
+			FALSE,
 
-			u.id AS user_id,
-			u.username AS user_username,
-			u.full_name AS user_full_name,
-			u.profile_image AS user_profile_image
-		FROM tweets t
-		INNER JOIN users u ON u.id = t.user_id
-		WHERE t.user_id = @userId
-		ORDER BY t.created_at DESC
-		LIMIT @limit
-		OFFSET @offset
+			u.id,
+			u.username,
+			u.full_name,
+			u.profile_image
+		FROM 
+			tweets t
+		INNER JOIN 
+			users u ON u.id = t.user_id
+		WHERE 
+			t.user_id = @userId
+		ORDER BY 
+			t.created_at DESC
+		LIMIT 
+			@limit
+		OFFSET 
+			@offset
 	`
 	args := pgx.NamedArgs{
 		"userId": userId,
@@ -209,8 +257,31 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]types.Tweet, error
 		return nil, err
 	}
 
-	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[types.Tweet])
-	if err != nil {
+	var lastTenTweets []types.Tweet
+	for rows.Next() {
+		var tweet types.Tweet
+		var user types.User
+
+		err := rows.Scan(
+			&tweet.Id,
+			&tweet.Content,
+			&tweet.CreatedAt,
+			&tweet.ModifiedAt,
+			&tweet.LikeCount,
+			&tweet.IsLiked,
+			&user.Id,
+			&user.Username,
+			&user.FullName,
+			&user.ProfileImage,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		tweet.User = user
+		lastTenTweets = append(lastTenTweets, tweet)
+	}
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -219,11 +290,16 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]types.Tweet, error
 
 func (r *Repository) GetTweetsInteractions(userId int, tweetsId []int) ([]types.TweetInteraction, error) {
 	query := `
-		SELECT tweet_id as tweet_id, 
-			CASE WHEN user_id = @userId THEN TRUE ELSE FALSE END as is_liked
-        FROM likes
-        WHERE tweet_id = ANY(@tweetsId)
-        AND user_id = @userId
+		SELECT 
+			tweet_id, 
+			CASE 
+				WHEN user_id = @userId THEN TRUE ELSE FALSE 
+			END as is_liked
+        FROM 
+			likes
+        WHERE 
+			tweet_id = ANY(@tweetsId)
+        	AND user_id = @userId
 	`
 	args := pgx.NamedArgs{
 		"userId":   userId,
@@ -234,12 +310,25 @@ func (r *Repository) GetTweetsInteractions(userId int, tweetsId []int) ([]types.
 		return nil, err
 	}
 
-	lastTenTweets, err := pgx.CollectRows(rows, pgx.RowToStructByName[types.TweetInteraction])
-	if err != nil {
+	var tweetsInteraction []types.TweetInteraction
+	for rows.Next() {
+		var tweetInteraction types.TweetInteraction
+
+		err := rows.Scan(
+			&tweetInteraction.TweetId,
+			&tweetInteraction.IsLiked,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		tweetsInteraction = append(tweetsInteraction, tweetInteraction)
+	}
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return lastTenTweets, nil
+	return tweetsInteraction, nil
 }
 
 func (r *Repository) IsUserExistByEmail(email string) (bool, error) {
@@ -273,26 +362,34 @@ func (r *Repository) FindById(id int) (*types.User, error) {
 }
 
 func (r *Repository) FindByUsername(username string) (*types.User, error) {
-	var user types.User
 	query := `
 		SELECT 
-			id AS user_id,
-			username AS user_username,
-			full_name AS user_full_name,
-			email AS user_email,
-			profile_image AS user_profile_image,
-			password AS user_password,
-			follower_count AS user_follower_count,
-			following_count AS user_following_count
-		FROM users
-		WHERE username = @username
+			id,
+			username,
+			full_name,
+			email,
+			profile_image,
+			follower_count,
+			following_count
+		FROM 
+			users
+		WHERE 
+			username = @username
 	`
 	args := pgx.NamedArgs{
 		"username": username,
 	}
 
-	rows, _ := r.pgConn.Query(r.ctx, query, args)
-	user, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[types.User])
+	var user types.User
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(
+		&user.Id,
+		&user.Username,
+		&user.FullName,
+		&user.Email,
+		&user.ProfileImage,
+		&user.FollowerCount,
+		&user.FollowingCount,
+	)
 	if err != nil {
 		return nil, err
 	}
