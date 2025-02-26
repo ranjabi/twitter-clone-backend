@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/types"
@@ -21,7 +22,7 @@ func NewHandler(authService Service, validate *validator.Validate) Handler {
 	return Handler{authService, validate}
 }
 
-func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *app.Error {
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
 		FullName string `json:"fullName" validate:"required"`
@@ -30,12 +31,12 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 		Password string `json:"password" validate:"required"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusBadRequest}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusBadRequest}
 	}
 
 	if err := h.validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusBadRequest}
+			return &app.Error{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusBadRequest}
 		}
 	}
 
@@ -52,7 +53,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 
 	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully. Please login"})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -61,20 +62,20 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *mod
 	return nil
 }
 
-func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *app.Error {
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusInternalServerError}
 	}
 
 	err := h.validate.Struct(payload)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &app.Error{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
@@ -92,7 +93,7 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *models
 
 	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userResponse})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

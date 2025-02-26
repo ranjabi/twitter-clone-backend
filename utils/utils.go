@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"twitter-clone-backend/models"
+	"twitter-clone-backend/app"
 )
 
 type contextKey string
@@ -24,13 +24,13 @@ func ColorLog(message string, colorCode string) string {
 	return fmt.Sprintf("%s%s\033[0m", colorCode, message)
 }
 
-func HandleErr(err error) *models.AppError {
+func HandleErr(err error) *app.Error {
 	// TODO kelemahan: cuman bisa nampilin track sampai handler
-	if e, ok := err.(*models.AppError); ok {
+	if e, ok := err.(*app.Error); ok {
 		return e
 	} else {
 		HandleErrLog(err.Error())
-		return &models.AppError{Err: err, Message: err.Error()}
+		return &app.Error{Err: err, Message: err.Error()}
 	}
 }
 

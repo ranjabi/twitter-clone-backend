@@ -3,6 +3,7 @@ package it
 import (
 	"net/http"
 	"strings"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 
@@ -31,8 +32,8 @@ func (s *TestSuite) TestAuthRegister_EmailAlreadyExist() {
 	_, err := s.authService.Register(duplicateUser)
 
 	s.ErrorContains(err, errmsg.EMAIL_ALREADY_EXIST)
-	s.IsType(&models.AppError{}, err)
-	s.Equal(http.StatusConflict, err.(*models.AppError).GetCode())
+	s.IsType(&app.Error{}, err)
+	s.Equal(http.StatusConflict, err.(*app.Error).GetCode())
 }
 
 func (s *TestSuite) TestAuthLogin_Ok() {
@@ -49,14 +50,14 @@ func (s *TestSuite) TestAuthLogin_UserNotFound() {
 	_, err := s.authService.Login(faker.Email(), faker.Password())
 
 	s.ErrorContains(err, errmsg.USER_NOT_FOUND)
-	s.IsType(&models.AppError{}, err)
-	s.Equal(http.StatusNotFound, err.(*models.AppError).GetCode())
+	s.IsType(&app.Error{}, err)
+	s.Equal(http.StatusNotFound, err.(*app.Error).GetCode())
 }
 
 func (s *TestSuite) TestAuthLogin_WrongCredential() {
 	_, err := s.authService.Login(s.validUser.Email, faker.Password())
 
 	s.ErrorContains(err, errmsg.WRONG_CREDENTIAL)
-	s.IsType(&models.AppError{}, err)
-	s.Equal(http.StatusUnauthorized, err.(*models.AppError).GetCode())
+	s.IsType(&app.Error{}, err)
+	s.Equal(http.StatusUnauthorized, err.(*app.Error).GetCode())
 }

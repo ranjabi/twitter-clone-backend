@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -21,13 +22,13 @@ func NewHandler(userService Service, validate *validator.Validate) Handler {
 	return Handler{userService, validate}
 }
 
-func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *app.Error {
 	username := r.PathValue("username")
 	queryParams := r.URL.Query()
 	page := queryParams.Get("page")
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	followerId := userInfo["id"].(float64)
@@ -38,7 +39,7 @@ func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *model
 
 	res, err := json.Marshal(models.SuccessResponse{Data: user})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -47,14 +48,14 @@ func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *model
 	return nil
 }
 
-func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *app.Error {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	followerId := userInfo["id"].(float64)
 
 	followingIdStr := r.PathValue("id")
 	followingId, err := strconv.Atoi(followingIdStr)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	err = h.userService.FollowOtherUser(int(followerId), followingId)
@@ -64,7 +65,7 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 
 	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been followed"})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -73,14 +74,14 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 	return nil
 }
 
-func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request) *app.Error {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	followerId := userInfo["id"].(float64)
 
 	followingIdStr := r.PathValue("id")
 	followingId, err := strconv.Atoi(followingIdStr)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	err = h.userService.UnfollowOtherUser(int(followerId), followingId)
@@ -90,7 +91,7 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 
 	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been unfollowed"})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -99,11 +100,11 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *app.Error {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
@@ -113,7 +114,7 @@ func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *models.A
 	pageStr := query.Get("page")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	feed, err := h.userService.GetFeed(id, email, page)
@@ -123,7 +124,7 @@ func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *models.A
 
 	res, err := json.Marshal(models.SuccessResponse{Data: feed})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

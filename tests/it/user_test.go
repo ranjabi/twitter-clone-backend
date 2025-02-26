@@ -3,6 +3,7 @@ package it
 import (
 	"fmt"
 	"net/http"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 )
@@ -56,8 +57,8 @@ func (s *TestSuite) TestUserFollow_FolloweeNotExist() {
 
 	// After
 	s.EqualError(err, errmsg.USER_NOT_FOUND)
-	s.IsType(&models.AppError{}, err)
-	s.Equal(http.StatusNotFound, err.(*models.AppError).GetCode())
+	s.IsType(&app.Error{}, err)
+	s.Equal(http.StatusNotFound, err.(*app.Error).GetCode())
 }
 
 func (s *TestSuite) TestUserUnfollow_Ok() {

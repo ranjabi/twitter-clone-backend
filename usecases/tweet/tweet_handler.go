@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/types"
@@ -28,7 +29,7 @@ func NewHandler(service Service) Handler {
 	return Handler{service: service, validate: validate}
 }
 
-func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *app.Error {
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
 	userId := userInfo["id"].(float64)
 
@@ -36,12 +37,12 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 		Content string `json:"content" validate:"required"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusInternalServerError}
 	}
 
 	if err := validate.Struct(payload); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &app.Error{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
@@ -61,7 +62,7 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet created successfully", Data: newTweetResponse})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -70,16 +71,16 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *mode
 	return nil
 }
 
-func (h Handler) HandleGetTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleGetTweet(w http.ResponseWriter, r *http.Request) *app.Error {
 	tweetIdStr := r.PathValue("id")
 	tweetId, err := strconv.Atoi(tweetIdStr)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	tweet, err := h.service.FindById(tweetId)
 	if err != nil {
-		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
 	}
 
 	tweetWithUserResponse := types.TweetWithUserResponse{
@@ -96,7 +97,7 @@ func (h Handler) HandleGetTweet(w http.ResponseWriter, r *http.Request) *models.
 
 	res, err := json.Marshal(models.SuccessResponse{Data: tweetWithUserResponse})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -105,26 +106,26 @@ func (h Handler) HandleGetTweet(w http.ResponseWriter, r *http.Request) *models.
 	return nil
 }
 
-func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *app.Error {
 	decoder := json.NewDecoder(r.Body)
 	payload := struct {
 		TweetId int    `json:"tweetId"`
 		Content string `json:"content"`
 	}{}
 	if err := decoder.Decode(&payload); err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_REQUEST_BODY, Code: http.StatusInternalServerError}
 	}
 
 	err := validate.Struct(payload)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			// TODO: make variable for fmt.Sprintf("Validation
-			return &models.AppError{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
+			return &app.Error{Err: nil, Message: fmt.Sprintf("Validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()), Code: http.StatusInternalServerError}
 		}
 	}
 
 	if err != nil {
-		return &models.AppError{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: err.Error(), Code: http.StatusInternalServerError}
 	}
 
 	// not propagate because if db error we can't track it since repo send
@@ -152,7 +153,7 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet updated successfully", Data: newTweetResponse})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -161,11 +162,11 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *mode
 	return nil
 }
 
-func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *app.Error {
 	tweetIdStr := r.PathValue("id")
 	tweetId, err := strconv.Atoi(tweetIdStr)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
@@ -178,7 +179,7 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -187,11 +188,11 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *mode
 	return nil
 }
 
-func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *app.Error {
 	id := r.PathValue("id")
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
@@ -211,7 +212,7 @@ func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *models
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet liked", Data: likeTweetResponse})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -220,11 +221,11 @@ func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *models
 	return nil
 }
 
-func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *models.AppError {
+func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *app.Error {
 	id := r.PathValue("id")
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_PARSE_PATH_VALUE}
 	}
 
 	userInfo := r.Context().Value(utils.UserInfoKey).(jwt.MapClaims)
@@ -244,7 +245,7 @@ func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *mode
 	}
 	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet unliked", Data: likeTweetResponse})
 	if err != nil {
-		return &models.AppError{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

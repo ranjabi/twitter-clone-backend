@@ -1,23 +1,23 @@
-package models
+package app
 
 import (
 	"os"
 	"strings"
 )
 
-type AppError struct {
+type Error struct {
 	Err     error
 	Message string
 	Code    int
 }
 
-func (e *AppError) Error() string {
+func (e *Error) Error() string {
 	if strings.Contains(os.Getenv("ENV_NAME"), "test") && e.Err != nil {
 		return e.Message + ": " + e.Err.Error()
 	}
 	return e.Message
 }
 
-func (e *AppError) GetCode() int {
+func (e *Error) GetCode() int {
 	return e.Code
 }

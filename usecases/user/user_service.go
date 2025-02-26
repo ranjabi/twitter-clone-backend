@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/constants"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
@@ -26,9 +27,9 @@ func (s Service) FindById(id int) (*models.User, error) {
 	user, err := s.userRepository.FindById(id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+			return nil, &app.Error{Err: err, Message: "User not found", Code: http.StatusNotFound}
 		}
-		return nil, &models.AppError{Err: err, Message: "Failed to get user"}
+		return nil, &app.Error{Err: err, Message: "Failed to get user"}
 	}
 
 	return user, nil
@@ -37,7 +38,7 @@ func (s Service) FindById(id int) (*models.User, error) {
 func (s *Service) GetRecentTweets(userId int, page int) ([]models.Tweet, error) {
 	lastTenTweets, err := s.userRepository.GetRecentTweets(userId, page)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to get recent tweets"}
+		return nil, &app.Error{Err: err, Message: "Failed to get recent tweets"}
 	}
 
 	return lastTenTweets, nil
@@ -159,7 +160,7 @@ func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string
 
 	tweetsInteractions, err := s.userRepository.GetTweetsInteractions(user.Id, tweetsId)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to get recent tweets interactions"}
+		return nil, &app.Error{Err: err, Message: "Failed to get recent tweets interactions"}
 	}
 	for i := range tweetsId {
 		for j := range tweetsInteractions {
@@ -175,10 +176,10 @@ func (s Service) GetProfileByUsernameWithRecentTweetsForFollower(username string
 func (s Service) GetFeed(id int, email string, page int) (*models.Feed, error) {
 	isUserExist, err := s.userRepository.IsUserExistByEmail(email)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
+		return nil, &app.Error{Err: err, Message: "Failed to check user account"}
 	}
 	if !isUserExist {
-		return nil, &models.AppError{Err: err, Message: "User not found", Code: http.StatusNotFound}
+		return nil, &app.Error{Err: err, Message: "User not found", Code: http.StatusNotFound}
 	}
 
 	feed, err := s.userRepository.GetFeed(id, page)
@@ -195,7 +196,7 @@ func (s Service) FollowOtherUser(followerId int, followingId int) error {
 			if pgErr.Code == constants.SQL_ERR_UNIQUE_VIOLATION {
 				return nil
 			} else if pgErr.Code == constants.SQL_ERR_FOREIGN_KEY_CONSTRAINT_VIOLATION {
-				return &models.AppError{Err: nil, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
+				return &app.Error{Err: nil, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
 			}
 		}
 		return err

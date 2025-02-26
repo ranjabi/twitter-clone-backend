@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
@@ -28,21 +29,21 @@ func NewService(ctx context.Context, cfg *config.Config, userRepository user.Rep
 func (s Service) Register(user models.User) (*models.User, error) {
 	isUserExist, err := s.userRepository.IsUserExistByEmail(user.Email)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to check user account"}
+		return nil, &app.Error{Err: err, Message: "Failed to check user account"}
 	}
 	if isUserExist {
-		return nil, &models.AppError{Err: err, Message: errmsg.EMAIL_ALREADY_EXIST, Code: http.StatusConflict}
+		return nil, &app.Error{Err: err, Message: errmsg.EMAIL_ALREADY_EXIST, Code: http.StatusConflict}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to hash password"}
+		return nil, &app.Error{Err: err, Message: "Failed to hash password"}
 	}
 
 	user.Password = string(hashedPassword)
 	newUser, err := s.userRepository.Create(user)
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to create account"}
+		return nil, &app.Error{Err: err, Message: "Failed to create account"}
 	}
 
 	return newUser, nil
@@ -52,7 +53,7 @@ func (s Service) Login(email string, password string) (*types.User, error) {
 	user, err := s.userRepository.FindByEmail(email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, &models.AppError{Err: err, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
+			return nil, &app.Error{Err: err, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
 		}
 
 		return nil, err
@@ -60,7 +61,7 @@ func (s Service) Login(email string, password string) (*types.User, error) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: errmsg.WRONG_CREDENTIAL, Code: http.StatusUnauthorized}
+		return nil, &app.Error{Err: err, Message: errmsg.WRONG_CREDENTIAL, Code: http.StatusUnauthorized}
 	}
 
 	claims := jwt.MapClaims{
@@ -72,7 +73,7 @@ func (s Service) Login(email string, password string) (*types.User, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(s.cfg.JwtSecret))
 	if err != nil {
-		return nil, &models.AppError{Err: err, Message: "Failed to sign token"}
+		return nil, &app.Error{Err: err, Message: "Failed to sign token"}
 	}
 
 	user.Token = signedToken

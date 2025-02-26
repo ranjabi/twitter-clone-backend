@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -52,7 +53,7 @@ func (mux *AppMux) Handle(pattern string, handler any) {
 	var wrappedHandler http.Handler
 
 	switch h := handler.(type) {
-	case func(http.ResponseWriter, *http.Request) *models.AppError:
+	case func(http.ResponseWriter, *http.Request) *app.Error:
 		wrappedHandler = AppHandler(h)
 	case http.Handler:
 		wrappedHandler = h
@@ -63,7 +64,7 @@ func (mux *AppMux) Handle(pattern string, handler any) {
 	mux.ServeMux.Handle(pattern, wrappedHandler)
 }
 
-type AppHandler func(http.ResponseWriter, *http.Request) *models.AppError
+type AppHandler func(http.ResponseWriter, *http.Request) *app.Error
 
 // TODO: confirm this by looking at error trace when err is nul at ServiceError <--- The ServeHTTP method called by the appHandler function and displays the returned error
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
