@@ -1,4 +1,4 @@
-package constants
+package errcode
 
 const (
 	SQL_ERR_UNIQUE_VIOLATION                 string = "23505"

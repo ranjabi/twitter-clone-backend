@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"twitter-clone-backend/app"
-	"twitter-clone-backend/constants"
+	"twitter-clone-backend/errcode"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
 	"twitter-clone-backend/utils"
@@ -193,9 +193,9 @@ func (s Service) GetFeed(id int, email string, page int) (*models.Feed, error) {
 func (s Service) FollowOtherUser(followerId int, followingId int) error {
 	if err := s.userRepository.FollowOtherUser(followerId, followingId); err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgErr.Code == constants.SQL_ERR_UNIQUE_VIOLATION {
+			if pgErr.Code == errcode.SQL_ERR_UNIQUE_VIOLATION {
 				return nil
-			} else if pgErr.Code == constants.SQL_ERR_FOREIGN_KEY_CONSTRAINT_VIOLATION {
+			} else if pgErr.Code == errcode.SQL_ERR_FOREIGN_KEY_CONSTRAINT_VIOLATION {
 				return &app.Error{Err: nil, Message: errmsg.USER_NOT_FOUND, Code: http.StatusNotFound}
 			}
 		}
