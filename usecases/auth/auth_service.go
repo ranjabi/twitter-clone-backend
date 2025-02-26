@@ -40,7 +40,7 @@ func (s Service) Register(user types.User) (*types.User, error) {
 	}
 
 	user.Password = string(hashedPassword)
-	newUser, err := s.userRepository.CreateV2(user)
+	newUser, err := s.userRepository.Create(user)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to create account"}
 	}

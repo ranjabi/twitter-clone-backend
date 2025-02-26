@@ -20,7 +20,7 @@ func NewService(tweetRepository TweetRepository, userRepository user.Repository)
 }
 
 func (s *Service) Create(tweet types.Tweet) (*types.Tweet, error) {
-	newTweet, err := s.tweetRepository.CreateV2(tweet)
+	newTweet, err := s.tweetRepository.Create(tweet)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to create tweet"}
 	}
@@ -34,7 +34,7 @@ func (s *Service) Create(tweet types.Tweet) (*types.Tweet, error) {
 }
 
 func (s *Service) FindById(id int) (*types.Tweet, error) {
-	tweet, err := s.tweetRepository.FindByIdV2(id)
+	tweet, err := s.tweetRepository.FindById(id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, &app.Error{Err: err, Message: errmsg.TWEET_NOT_FOUND, Code: http.StatusNotFound}

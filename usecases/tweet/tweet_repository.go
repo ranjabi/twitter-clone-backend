@@ -3,7 +3,6 @@ package tweet
 import (
 	"context"
 	"time"
-	"twitter-clone-backend/models"
 	"twitter-clone-backend/types"
 
 	"github.com/jackc/pgx/v5"
@@ -20,27 +19,7 @@ func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Clie
 	return TweetRepository{ctx: ctx, pgConn: pgConn}
 }
 
-func (r *TweetRepository) Create(tweet models.Tweet) (*models.Tweet, error) {
-	var newTweet models.Tweet
-	query := `
-		INSERT INTO tweets (content, user_id)
-		VALUES (@content, @user_id)
-		RETURNING id, content, created_at, user_id
-	`
-	args := pgx.NamedArgs{
-		"content": tweet.Content,
-		"user_id": tweet.UserId,
-	}
-
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&newTweet.Id, &newTweet.Content, &newTweet.CreatedAt, &newTweet.UserId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &newTweet, nil
-}
-
-func (r *TweetRepository) CreateV2(tweet types.Tweet) (*types.Tweet, error) {
+func (r *TweetRepository) Create(tweet types.Tweet) (*types.Tweet, error) {
 	var newTweet types.Tweet
 	query := `
 		INSERT INTO 
@@ -71,22 +50,7 @@ func (r *TweetRepository) CreateV2(tweet types.Tweet) (*types.Tweet, error) {
 	return &newTweet, nil
 }
 
-func (r *TweetRepository) FindById(id int) (*models.Tweet, error) {
-	var tweet models.Tweet
-	query := `SELECT id, content, created_at, user_id, like_count from tweets WHERE id = @id`
-	args := pgx.NamedArgs{
-		"id": id,
-	}
-
-	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(&tweet.Id, &tweet.Content, &tweet.CreatedAt, &tweet.UserId, &tweet.LikeCount)
-	if err != nil {
-		return nil, err
-	}
-
-	return &tweet, nil
-}
-
-func (r *TweetRepository) FindByIdV2(id int) (*types.Tweet, error) {
+func (r *TweetRepository) FindById(id int) (*types.Tweet, error) {
 	var tweet types.Tweet
 	query := `
 		SELECT 

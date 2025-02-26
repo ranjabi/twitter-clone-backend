@@ -36,44 +36,7 @@ func NewRepository(ctx context.Context, pgConn *pgxpool.Pool, rdConn *redis.Clie
 	return Repository{ctx, pgConn, rdConn}
 }
 
-func (r *Repository) Create(user models.User) (*models.User, error) {
-	var newUser models.User
-	query := `
-		INSERT INTO users (
-			full_name, 
-			username, 
-			email, 
-			password
-		) 
-		VALUES (
-			@full_name, 
-			LOWER(@username), 
-			LOWER(@email), 
-			@password
-		) 
-		RETURNING 
-			id AS user_id, 
-			full_name as user_full_name, 
-			username as user_username, 
-			email as user_email
-	`
-	args := pgx.NamedArgs{
-		"full_name": user.FullName,
-		"username":  user.Username,
-		"email":     user.Email,
-		"password":  user.Password,
-	}
-
-	rows, _ := r.pgConn.Query(r.ctx, query, args)
-	newUser, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByNameLax[models.User])
-	if err != nil {
-		return nil, err
-	}
-
-	return &newUser, nil
-}
-
-func (r *Repository) CreateV2(user types.User) (*types.User, error) {
+func (r *Repository) Create(user types.User) (*types.User, error) {
 	query := `
 		INSERT INTO users (
 			full_name, 
