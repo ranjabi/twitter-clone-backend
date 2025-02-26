@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 )
 
@@ -76,7 +76,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(utils.ColorLog(strconv.Itoa(e.Code), utils.RED), utils.ColorLog(http.StatusText(e.Code), utils.RED))
 		fmt.Println(utils.ColorLog(e.Error(), utils.RED))
 
-		res, err := json.Marshal(models.ErrorResponse{Message: e.Message})
+		res, err := json.Marshal(types.ErrorResponse{Message: e.Message})
 		if err != nil {
 			http.Error(w, errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, http.StatusInternalServerError)
 		}

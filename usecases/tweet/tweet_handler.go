@@ -60,7 +60,7 @@ func (h Handler) HandleCreateTweet(w http.ResponseWriter, r *http.Request) *app.
 		CreatedAt: newTweet.CreatedAt,
 		UserId:    newTweet.UserId,
 	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet created successfully", Data: newTweetResponse})
+	res, err := json.Marshal(types.SuccessResponse{Message: "Tweet created successfully", Data: newTweetResponse})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -95,7 +95,7 @@ func (h Handler) HandleGetTweet(w http.ResponseWriter, r *http.Request) *app.Err
 		},
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Data: tweetWithUserResponse})
+	res, err := json.Marshal(types.SuccessResponse{Data: tweetWithUserResponse})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -151,7 +151,7 @@ func (h Handler) HandleUpdateTweet(w http.ResponseWriter, r *http.Request) *app.
 		ModifiedAt: newTweet.ModifiedAt,
 		UserId:     newTweet.UserId,
 	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet updated successfully", Data: newTweetResponse})
+	res, err := json.Marshal(types.SuccessResponse{Message: "Tweet updated successfully", Data: newTweetResponse})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -177,7 +177,7 @@ func (h Handler) HandleDeleteTweet(w http.ResponseWriter, r *http.Request) *app.
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})
+	res, err := json.Marshal(types.SuccessResponse{Message: "Tweet deleted successfully", Data: nil})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -210,7 +210,7 @@ func (h Handler) HandleLikeTweet(w http.ResponseWriter, r *http.Request) *app.Er
 		Id:        idInt,
 		LikeCount: likeCount,
 	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet liked", Data: likeTweetResponse})
+	res, err := json.Marshal(types.SuccessResponse{Message: "Tweet liked", Data: likeTweetResponse})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -243,7 +243,7 @@ func (h Handler) HandleUnlikeTweet(w http.ResponseWriter, r *http.Request) *app.
 		Id:        idInt,
 		LikeCount: likeCount,
 	}
-	res, err := json.Marshal(models.SuccessResponse{Message: "Tweet unliked", Data: likeTweetResponse})
+	res, err := json.Marshal(types.SuccessResponse{Message: "Tweet unliked", Data: likeTweetResponse})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}

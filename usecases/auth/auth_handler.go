@@ -51,7 +51,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *app
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Message: "Account created successfully. Please login"})
+	res, err := json.Marshal(types.SuccessResponse{Message: "Account created successfully. Please login"})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -91,7 +91,7 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *app.Er
 		Token:    user.Token,
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Message: "Login success", Data: userResponse})
+	res, err := json.Marshal(types.SuccessResponse{Message: "Login success", Data: userResponse})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}

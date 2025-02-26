@@ -7,7 +7,7 @@ import (
 	"strings"
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -32,7 +32,7 @@ func JwtAuthorization(cfg *config.Config) func(next http.Handler) http.Handler {
 
 			authorizationHeader := r.Header.Get("Authorization")
 			if !strings.Contains(authorizationHeader, "Bearer") {
-				res, err := json.Marshal(models.ErrorResponse{Message: "Unauthorized access"})
+				res, err := json.Marshal(types.ErrorResponse{Message: "Unauthorized access"})
 				if err != nil {
 					http.Error(w, errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, http.StatusInternalServerError)
 				}

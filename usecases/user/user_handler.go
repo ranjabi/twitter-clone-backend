@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -37,7 +37,7 @@ func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *app.E
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Data: user})
+	res, err := json.Marshal(types.SuccessResponse{Data: user})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -63,7 +63,7 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been followed"})
+	res, err := json.Marshal(types.SuccessResponseMessage{Message: "User has been followed"})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -89,7 +89,7 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponseMessage{Message: "User has been unfollowed"})
+	res, err := json.Marshal(types.SuccessResponseMessage{Message: "User has been unfollowed"})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
@@ -122,7 +122,7 @@ func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *app.Erro
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(models.SuccessResponse{Data: feed})
+	res, err := json.Marshal(types.SuccessResponse{Data: feed})
 	if err != nil {
 		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
 	}
