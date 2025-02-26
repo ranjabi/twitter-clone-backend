@@ -73,6 +73,47 @@ func (r *Repository) Create(user models.User) (*models.User, error) {
 	return &newUser, nil
 }
 
+func (r *Repository) CreateV2(user types.User) (*types.User, error) {
+	query := `
+		INSERT INTO users (
+			full_name, 
+			username, 
+			email, 
+			password
+		) 
+		VALUES (
+			@full_name, 
+			LOWER(@username), 
+			LOWER(@email), 
+			@password
+		) 
+		RETURNING 
+			id, 
+			full_name, 
+			username, 
+			email
+	`
+	args := pgx.NamedArgs{
+		"full_name": user.FullName,
+		"username":  user.Username,
+		"email":     user.Email,
+		"password":  user.Password,
+	}
+
+	var newUser types.User
+	err := r.pgConn.QueryRow(r.ctx, query, args).Scan(
+		&newUser.Id,
+		&newUser.FullName,
+		&newUser.Username,
+		&newUser.Email,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &newUser, nil
+}
+
 func (r *Repository) GetUserCache(id int) (string, error) {
 	res, err := r.rdConn.JSONGet(r.ctx, getUserProfileCacheKey(id), userProfilePath).Result()
 	if err != nil {

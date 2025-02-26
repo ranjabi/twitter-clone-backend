@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
 	"twitter-clone-backend/response"
 	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
@@ -42,7 +41,7 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *app
 	}
 
 	// karena manggil layer di dalam, maka pakai message dan error dari layer dalam
-	_, err := h.authService.Register(models.User{
+	_, err := h.authService.Register(types.User{
 		FullName: payload.FullName,
 		Username: payload.Username,
 		Email:    payload.Email,

@@ -7,7 +7,6 @@ import (
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
 	"twitter-clone-backend/types"
 	"twitter-clone-backend/usecases/user"
 
@@ -26,7 +25,7 @@ func NewService(ctx context.Context, cfg *config.Config, userRepository user.Rep
 	return Service{ctx, cfg, userRepository}
 }
 
-func (s Service) Register(user models.User) (*models.User, error) {
+func (s Service) Register(user types.User) (*types.User, error) {
 	isUserExist, err := s.userRepository.IsUserExistByEmail(user.Email)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to check user account"}
@@ -41,7 +40,7 @@ func (s Service) Register(user models.User) (*models.User, error) {
 	}
 
 	user.Password = string(hashedPassword)
-	newUser, err := s.userRepository.Create(user)
+	newUser, err := s.userRepository.CreateV2(user)
 	if err != nil {
 		return nil, &app.Error{Err: err, Message: "Failed to create account"}
 	}

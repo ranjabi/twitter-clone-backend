@@ -5,13 +5,13 @@ import (
 	"strings"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/models"
+	"twitter-clone-backend/types"
 
 	"github.com/go-faker/faker/v4"
 )
 
 func (s *TestSuite) TestAuthRegister_Ok() {
-	testUser := models.User{
+	testUser := types.User{
 		Email:    faker.Email(),
 		Password: faker.Password(),
 	}
@@ -24,7 +24,7 @@ func (s *TestSuite) TestAuthRegister_Ok() {
 }
 
 func (s *TestSuite) TestAuthRegister_EmailAlreadyExist() {
-	duplicateUser := models.User{
+	duplicateUser := types.User{
 		Email:    s.validUser.Email,
 		Password: faker.Password(),
 	}
