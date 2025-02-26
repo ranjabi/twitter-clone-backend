@@ -7,6 +7,7 @@ import (
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
 	"twitter-clone-backend/models"
+	"twitter-clone-backend/response"
 	"twitter-clone-backend/types"
 	"twitter-clone-backend/utils"
 
@@ -51,13 +52,9 @@ func (h Handler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) *app
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(types.SuccessResponse{Message: "Account created successfully. Please login"})
-	if err != nil {
-		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+	if err := response.Json(w, http.StatusCreated, response.Payload{Message: "Account created successfully. Please login"}); err != nil {
+		return err
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
 
 	return nil
 }
@@ -91,13 +88,9 @@ func (h Handler) HandleLoginUser(w http.ResponseWriter, r *http.Request) *app.Er
 		Token:    user.Token,
 	}
 
-	res, err := json.Marshal(types.SuccessResponse{Message: "Login success", Data: userResponse})
-	if err != nil {
-		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+	if err := response.Json(w, http.StatusOK, response.Payload{Message: "Login success", Data: userResponse}); err != nil {
+		return err
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
 
 	return nil
 }

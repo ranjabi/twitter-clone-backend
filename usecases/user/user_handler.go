@@ -1,12 +1,11 @@
 package user
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/types"
+	"twitter-clone-backend/response"
 	"twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -37,13 +36,9 @@ func (h Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) *app.E
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(types.SuccessResponse{Data: user})
-	if err != nil {
-		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+	if err := response.Json(w, http.StatusOK, response.Payload{Data: user}); err != nil {
+		return err
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
 
 	return nil
 }
@@ -63,13 +58,9 @@ func (h Handler) HandleFollowOtherUser(w http.ResponseWriter, r *http.Request) *
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(types.SuccessResponseMessage{Message: "User has been followed"})
-	if err != nil {
-		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+	if err := response.Json(w, http.StatusOK, nil); err != nil {
+		return err
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
 
 	return nil
 }
@@ -89,13 +80,9 @@ func (h Handler) HandleUnfollowOtherUser(w http.ResponseWriter, r *http.Request)
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(types.SuccessResponseMessage{Message: "User has been unfollowed"})
-	if err != nil {
-		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+	if err := response.Json(w, http.StatusOK, nil); err != nil {
+		return err
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
 
 	return nil
 }
@@ -122,13 +109,9 @@ func (h Handler) HandleGetFeed(w http.ResponseWriter, r *http.Request) *app.Erro
 		return utils.HandleErr(err)
 	}
 
-	res, err := json.Marshal(types.SuccessResponse{Data: feed})
-	if err != nil {
-		return &app.Error{Err: err, Message: errmsg.FAILED_TO_SERIALIZE_RESPONSE_BODY, Code: http.StatusInternalServerError}
+	if err := response.Json(w, http.StatusOK, response.Payload{Data: feed}); err != nil {
+		return err
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
 
 	return nil
 }
