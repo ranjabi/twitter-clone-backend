@@ -7,7 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"twitter-clone-backend/utils"
+
+	"github.com/ranjabi/twitter-clone-backend/utils"
 )
 
 func Logging(next http.Handler) http.Handler {

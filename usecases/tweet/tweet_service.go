@@ -2,11 +2,12 @@ package tweet
 
 import (
 	"net/http"
-	"twitter-clone-backend/app"
-	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/messagebroker"
-	"twitter-clone-backend/types"
-	"twitter-clone-backend/usecases/user"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
+	"github.com/ranjabi/twitter-clone-backend/messagebroker"
+	"github.com/ranjabi/twitter-clone-backend/types"
+	"github.com/ranjabi/twitter-clone-backend/usecases/user"
 
 	"github.com/jackc/pgx/v5"
 )

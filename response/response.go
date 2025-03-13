@@ -3,8 +3,9 @@ package response
 import (
 	"encoding/json"
 	"net/http"
-	"twitter-clone-backend/app"
-	"twitter-clone-backend/errmsg"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
 )
 
 type Payload struct {

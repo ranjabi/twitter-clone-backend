@@ -1,4 +1,4 @@
-module twitter-clone-backend
+module github.com/ranjabi/twitter-clone-backend
 
 go 1.23.3
 

@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"twitter-clone-backend/app"
-	"twitter-clone-backend/errcode"
-	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/types"
-	"twitter-clone-backend/utils"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
+	"github.com/ranjabi/twitter-clone-backend/errcode"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
+	"github.com/ranjabi/twitter-clone-backend/types"
+	"github.com/ranjabi/twitter-clone-backend/utils"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"

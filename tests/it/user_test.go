@@ -3,9 +3,10 @@ package it
 import (
 	"fmt"
 	"net/http"
-	"twitter-clone-backend/app"
-	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/types"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
+	"github.com/ranjabi/twitter-clone-backend/types"
 )
 
 func (s *TestSuite) TestUserFollow_Ok() {

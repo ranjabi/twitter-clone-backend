@@ -3,9 +3,10 @@ package it
 import (
 	"net/http"
 	"strings"
-	"twitter-clone-backend/app"
-	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/types"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
+	"github.com/ranjabi/twitter-clone-backend/types"
 
 	"github.com/go-faker/faker/v4"
 )

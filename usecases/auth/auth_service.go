@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"twitter-clone-backend/app"
-	"twitter-clone-backend/config"
-	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/types"
-	"twitter-clone-backend/usecases/user"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
+	"github.com/ranjabi/twitter-clone-backend/config"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
+	"github.com/ranjabi/twitter-clone-backend/types"
+	"github.com/ranjabi/twitter-clone-backend/usecases/user"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"

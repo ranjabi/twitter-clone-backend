@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"twitter-clone-backend/types"
+
+	"github.com/ranjabi/twitter-clone-backend/types"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

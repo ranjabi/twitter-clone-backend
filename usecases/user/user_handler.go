@@ -3,10 +3,11 @@ package user
 import (
 	"net/http"
 	"strconv"
-	"twitter-clone-backend/app"
-	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/response"
-	"twitter-clone-backend/utils"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
+	"github.com/ranjabi/twitter-clone-backend/response"
+	"github.com/ranjabi/twitter-clone-backend/utils"
 
 	"github.com/go-playground/validator/v10"
 	jwt "github.com/golang-jwt/jwt/v5"

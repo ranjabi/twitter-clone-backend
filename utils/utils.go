@@ -6,7 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"twitter-clone-backend/app"
+
+	"github.com/ranjabi/twitter-clone-backend/app"
 )
 
 type contextKey string

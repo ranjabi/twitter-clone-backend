@@ -14,13 +14,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 
-	"twitter-clone-backend/config"
-	"twitter-clone-backend/db"
-	"twitter-clone-backend/messagebroker"
-	"twitter-clone-backend/middleware"
-	"twitter-clone-backend/usecases/auth"
-	"twitter-clone-backend/usecases/tweet"
-	"twitter-clone-backend/usecases/user"
+	"github.com/ranjabi/twitter-clone-backend/config"
+	"github.com/ranjabi/twitter-clone-backend/db"
+	"github.com/ranjabi/twitter-clone-backend/messagebroker"
+	"github.com/ranjabi/twitter-clone-backend/middleware"
+	"github.com/ranjabi/twitter-clone-backend/usecases/auth"
+	"github.com/ranjabi/twitter-clone-backend/usecases/tweet"
+	"github.com/ranjabi/twitter-clone-backend/usecases/user"
 )
 
 func main() {

@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"twitter-clone-backend/config"
-	"twitter-clone-backend/errmsg"
-	"twitter-clone-backend/response"
-	"twitter-clone-backend/utils"
+
+	"github.com/ranjabi/twitter-clone-backend/config"
+	"github.com/ranjabi/twitter-clone-backend/errmsg"
+	"github.com/ranjabi/twitter-clone-backend/response"
+	"github.com/ranjabi/twitter-clone-backend/utils"
 
 	"github.com/golang-jwt/jwt/v5"
 )

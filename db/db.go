@@ -8,7 +8,8 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"twitter-clone-backend/config"
+
+	"github.com/ranjabi/twitter-clone-backend/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pressly/goose/v3"
