@@ -14,17 +14,13 @@ import (
 	"github.com/ranjabi/twitter-clone-backend/usecases/tweet"
 	"github.com/ranjabi/twitter-clone-backend/usecases/user"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
 )
 
 type TestSuite struct {
 	suite.Suite
-	pgConn         *pgxpool.Pool
-	rdConn         *redis.Client
 	rabbitMq       messagebroker.RabbitMq
 	ctx            context.Context
 	cfg            *config.Config
@@ -65,8 +61,8 @@ func (s *TestSuite) SetupSuite() {
 	err = s.rabbitMq.DeclareFeedQeueu()
 	s.NoError(err)
 
-	s.userRepository = user.NewRepository(s.ctx, s.pgConn, s.rdConn)
-	s.tweetRepository = tweet.NewRepository(s.ctx, s.pgConn, s.rdConn)
+	s.userRepository = user.NewRepository(s.ctx, db.PgConn, db.RdConn)
+	s.tweetRepository = tweet.NewRepository(s.ctx, db.PgConn, db.RdConn)
 
 	s.authService = auth.NewService(s.ctx, s.cfg, s.userRepository)
 	s.userService = user.NewService(s.ctx, s.userRepository)
@@ -85,7 +81,7 @@ func (s *TestSuite) SetupSuite() {
 }
 
 func (s *TestSuite) TearDownSuite() {
-	s.pgConn.Close()
+	db.PgConn.Close()
 }
 
 func (s *TestSuite) SetupTest() {
