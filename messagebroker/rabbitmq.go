@@ -51,4 +51,18 @@ func (r *RabbitMq) SendFeed(tweetId int, userId int) error {
 	return nil
 }
 
-// TODO continue with receive
+func (r *RabbitMq) ReceiveFeed() (<-chan amqp.Delivery, error) {
+	msgs, err := r.ch.Consume(
+		r.q.Name, // queue
+		"",       // consumer
+		true,     // auto-ack
+		false,    // exclusive
+		false,    // no-local
+		false,    // no-wait
+		nil,      // args
+	)
+	if err != nil {
+		return nil, err
+	}
+	return msgs, nil
+}
