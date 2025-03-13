@@ -13,30 +13,44 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var (
 	pgOnce sync.Once
-	pgConn *pgxpool.Pool
+	PgConn *pgxpool.Pool
 	rdOnce sync.Once
-	rdConn *redis.Client
+	RdConn *redis.Client
+	RbConn *amqp.Connection
+	RbCh   *amqp.Channel
+	err    error
 )
 
-func SetupConnection(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, *redis.Client, error) {
+func SetupConnection(ctx context.Context, cfg *config.Config) error {
 	log.SetPrefix("DB: ")
 	defer log.SetPrefix("")
 
-	pgConn, err := GetPostgresConnection(ctx, cfg.PgConnString)
+	PgConn, err = GetPostgresConnection(ctx, cfg.PgConnString)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
-	rdConn, err := GetRedisConnection()
+	RdConn, err = GetRedisConnection()
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
-	return pgConn, rdConn, nil
+	RbConn, err = GetRabbitMqConnection()
+	if err != nil {
+		return err
+	}
+	RbCh, err = RbConn.Channel()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GetPostgresConnection(ctx context.Context, connString string) (*pgxpool.Pool, error) {
@@ -44,14 +58,14 @@ func GetPostgresConnection(ctx context.Context, connString string) (*pgxpool.Poo
 
 	pgOnce.Do(func() {
 		var err error
-		pgConn, err = pgxpool.New(ctx, connString)
+		PgConn, err = pgxpool.New(ctx, connString)
 		if err != nil {
 			initErr = fmt.Errorf("error creating postgres database connection: %w", err)
 			return
 		}
 
 		var testResult int
-		err = pgConn.QueryRow(ctx, "SELECT 1").Scan(&testResult)
+		err = PgConn.QueryRow(ctx, "SELECT 1").Scan(&testResult)
 		if err != nil {
 			initErr = fmt.Errorf("postgres failed to run test query: %w", err)
 			return
@@ -64,25 +78,33 @@ func GetPostgresConnection(ctx context.Context, connString string) (*pgxpool.Poo
 		return nil, initErr
 	}
 
-	return pgConn, nil
+	return PgConn, nil
 }
 
 func GetRedisConnection() (*redis.Client, error) {
 	rdOnce.Do(func() {
-		rdConn = redis.NewClient(&redis.Options{
+		RdConn = redis.NewClient(&redis.Options{
 			Addr: fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
 			DB:   0, // Use default DB
 		})
 	})
 
-	_, err := rdConn.Ping(context.Background()).Result()
+	_, err := RdConn.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err
 	}
 
 	log.Println("Redis database connection successfully obtained:")
 
-	return rdConn, nil
+	return RdConn, nil
+}
+
+func GetRabbitMqConnection() (*amqp.Connection, error) {
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
 
 func ApplyMigrationsAndSeed(ctx context.Context, cfg *config.Config, actions []string, migrationsPath string, seedPath string, isSilent bool) error {

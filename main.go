@@ -16,6 +16,7 @@ import (
 
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/db"
+	"twitter-clone-backend/messagebroker"
 	"twitter-clone-backend/middleware"
 	"twitter-clone-backend/usecases/auth"
 	"twitter-clone-backend/usecases/tweet"
@@ -36,8 +37,12 @@ func main() {
 	}
 
 	ctx := context.Background()
-	pgConn, rdConn, err := db.SetupConnection(ctx, cfg)
-	if err != nil {
+	if err = db.SetupConnection(ctx, cfg); err != nil {
+		log.Fatal(err)
+	}
+
+	rabbitMq := messagebroker.NewRabbitMq(ctx, db.RbConn, db.RbCh)
+	if err = rabbitMq.DeclareFeedQeueu(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -60,12 +65,12 @@ func main() {
 	mux.RegisterMiddleware(middleware.Logging)
 	mux.RegisterMiddleware(middleware.JwtAuthorization(cfg))
 
-	userRepository := user.NewRepository(ctx, pgConn, rdConn)
-	tweetRepository := tweet.NewRepository(ctx, pgConn, rdConn)
+	userRepository := user.NewRepository(ctx, db.PgConn, db.RdConn)
+	tweetRepository := tweet.NewRepository(ctx, db.PgConn, db.RdConn)
 
 	authService := auth.NewService(ctx, cfg, userRepository)
 	userService := user.NewService(ctx, userRepository)
-	tweetService := tweet.NewService(tweetRepository, userRepository)
+	tweetService := tweet.NewService(tweetRepository, userRepository, rabbitMq)
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	authHandler := auth.NewHandler(authService, validate)

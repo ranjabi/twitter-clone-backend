@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"twitter-clone-backend/app"
 	"twitter-clone-backend/errmsg"
+	"twitter-clone-backend/messagebroker"
 	"twitter-clone-backend/types"
 	"twitter-clone-backend/usecases/user"
 
@@ -13,10 +14,11 @@ import (
 type Service struct {
 	tweetRepository TweetRepository
 	userRepository  user.Repository
+	rabbitMq        messagebroker.RabbitMq
 }
 
-func NewService(tweetRepository TweetRepository, userRepository user.Repository) Service {
-	return Service{tweetRepository: tweetRepository, userRepository: userRepository}
+func NewService(tweetRepository TweetRepository, userRepository user.Repository, rabbitMq messagebroker.RabbitMq) Service {
+	return Service{tweetRepository, userRepository, rabbitMq}
 }
 
 func (s *Service) Create(tweet types.Tweet) (*types.Tweet, error) {
@@ -25,8 +27,11 @@ func (s *Service) Create(tweet types.Tweet) (*types.Tweet, error) {
 		return nil, &app.Error{Err: err, Message: "Failed to create tweet"}
 	}
 
-	err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.User.Id)
-	if err != nil {
+	if err = s.userRepository.DeleteUserRecentTweetsCache(newTweet.User.Id); err != nil {
+		return nil, err
+	}
+
+	if err = s.rabbitMq.SendFeed(newTweet.Id, newTweet.User.Id); err != nil {
 		return nil, err
 	}
 

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"twitter-clone-backend/config"
 	"twitter-clone-backend/db"
+	"twitter-clone-backend/messagebroker"
 	"twitter-clone-backend/types"
 	"twitter-clone-backend/usecases/auth"
 	"twitter-clone-backend/usecases/tweet"
@@ -23,6 +24,7 @@ type TestSuite struct {
 	suite.Suite
 	pgConn         *pgxpool.Pool
 	rdConn         *redis.Client
+	rabbitMq       messagebroker.RabbitMq
 	ctx            context.Context
 	cfg            *config.Config
 	migrationsPath string
@@ -55,7 +57,11 @@ func (s *TestSuite) SetupSuite() {
 	s.cfg, err = config.Load()
 	s.NoError(err)
 
-	s.pgConn, s.rdConn, err = db.SetupConnection(s.ctx, s.cfg)
+	err = db.SetupConnection(s.ctx, s.cfg)
+	s.NoError(err)
+
+	s.rabbitMq = messagebroker.NewRabbitMq(s.ctx, db.RbConn, db.RbCh)
+	err = s.rabbitMq.DeclareFeedQeueu()
 	s.NoError(err)
 
 	s.userRepository = user.NewRepository(s.ctx, s.pgConn, s.rdConn)
@@ -63,7 +69,7 @@ func (s *TestSuite) SetupSuite() {
 
 	s.authService = auth.NewService(s.ctx, s.cfg, s.userRepository)
 	s.userService = user.NewService(s.ctx, s.userRepository)
-	s.tweetService = tweet.NewService(s.tweetRepository, s.userRepository)
+	s.tweetService = tweet.NewService(s.tweetRepository, s.userRepository, s.rabbitMq)
 
 	cwd, err := os.Getwd()
 	s.NoError(err)
