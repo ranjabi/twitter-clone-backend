@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	PgConnString string
+	RbConnString string
 	HashAlg      string
 	JwtSecret    string
 	SaltRound    int
@@ -22,9 +23,10 @@ func Load() (*Config, error) {
 			os.Getenv("POSTGRES_PORT"),
 			os.Getenv("POSTGRES_DB"),
 		),
-		HashAlg:   "HS256",
-		JwtSecret: "secret",
-		SaltRound: 10,
+		RbConnString: "amqp://guest:guest@localhost:5672/",
+		HashAlg:      "HS256",
+		JwtSecret:    "secret",
+		SaltRound:    10,
 	}
 
 	return &config, nil

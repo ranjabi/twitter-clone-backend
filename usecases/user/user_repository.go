@@ -143,7 +143,6 @@ func (r *Repository) GetFeed(id int, page int) (*types.Feed, error) {
 			CASE 
 				WHEN tl.user_id IS NOT NULL THEN TRUE ELSE FALSE 
 			END AS is_liked
-
 			u.id,
 			u.username,
 			u.full_name,
@@ -270,6 +269,7 @@ func (r *Repository) GetRecentTweets(userId int, page int) ([]types.Tweet, error
 			&tweet.ModifiedAt,
 			&tweet.LikeCount,
 			&tweet.IsLiked,
+
 			&user.Id,
 			&user.Username,
 			&user.FullName,

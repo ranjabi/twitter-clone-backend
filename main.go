@@ -19,6 +19,7 @@ import (
 	"github.com/ranjabi/twitter-clone-backend/messagebroker"
 	"github.com/ranjabi/twitter-clone-backend/middleware"
 	"github.com/ranjabi/twitter-clone-backend/usecases/auth"
+	"github.com/ranjabi/twitter-clone-backend/usecases/feed"
 	"github.com/ranjabi/twitter-clone-backend/usecases/tweet"
 	"github.com/ranjabi/twitter-clone-backend/usecases/user"
 )
@@ -67,15 +68,18 @@ func main() {
 
 	userRepository := user.NewRepository(ctx, db.PgConn, db.RdConn)
 	tweetRepository := tweet.NewRepository(ctx, db.PgConn, db.RdConn)
+	feedRepository := feed.NewRepository(ctx, db.PgConn, db.RdConn, 2)
 
 	authService := auth.NewService(ctx, cfg, userRepository)
 	userService := user.NewService(ctx, userRepository)
 	tweetService := tweet.NewService(tweetRepository, userRepository, rabbitMq)
+	feedService := feed.NewService(ctx, feedRepository)
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	authHandler := auth.NewHandler(authService, validate)
 	userHandler := user.NewHandler(userService, validate)
 	tweetHandler := tweet.NewHandler(tweetService)
+	feedHandler := feed.NewHandler(feedService)
 
 	// use mux.Handle so the error will goes into AppHandler
 	mux.Handle("POST 	/v2/register", authHandler.HandleRegisterUser)
@@ -85,6 +89,7 @@ func main() {
 	mux.Handle("POST 	/v2/users/{id}/unfollow", userHandler.HandleUnfollowOtherUser)
 	mux.Handle("GET		/v2/users/{username}", userHandler.HandleGetProfile)
 	mux.Handle("GET		/v2/users/{id}/feed", userHandler.HandleGetFeed)
+	mux.Handle("GET		/v3/users/{id}/feed", feedHandler.HandleGetFeed)
 
 	mux.Handle("POST 	/v2/tweets", tweetHandler.HandleCreateTweet)
 	mux.Handle("GET 	/v2/tweets/{id}", tweetHandler.HandleGetTweet)
